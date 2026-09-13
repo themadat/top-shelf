@@ -4,7 +4,7 @@
   const App = window.LocalApp;
   const config = App.config;
   const u = App.utils;
-  const SYNC_FORMAT = "local-first-app-data";
+  const SYNC_FORMAT = "top-shelf-app-data";
   const SYNC_VERSION = 1;
   // Older apps reject v5 instead of mistaking this compact envelope for empty v4 state.
   const SYNC_SCHEMA_VERSION = 5;
@@ -12,61 +12,10 @@
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
     branch: u.cleanLine(config.cloudSync?.branch || "main", 250) || "main",
-    path: u.cleanLine(config.cloudSync?.path || "data/app-template.json", 500).replace(/^\/+/, "") || "data/app-template.json"
+    path: u.cleanLine(config.cloudSync?.path || "data/top-shelf.json", 500).replace(/^\/+/, "") || "data/top-shelf.json"
   });
   const STATUS_IDS = new Set(config.statuses.map(function (status) { return status.id; }));
   const MODULE_IDS = ["roadmap"];
-  const ICON_CATEGORIES = App.iconLibrary && Array.isArray(App.iconLibrary.categories) ? App.iconLibrary.categories : [];
-  const ICON_CATEGORY_IDS = new Set(ICON_CATEGORIES.map(function (category) { return category.id; }));
-  const ICON_CATEGORY_BY_ID = new Map(ICON_CATEGORIES.map(function (category) { return [category.id, category]; }));
-  const ICON_CATEGORY_PARENT_IDS = new Set(ICON_CATEGORIES.map(function (category) { return category.parent || ""; }).filter(Boolean));
-  const ICON_BY_ID = new Map((App.iconLibrary && Array.isArray(App.iconLibrary.icons) ? App.iconLibrary.icons : []).map(function (icon) { return [icon.id, icon]; }));
-  const ICON_RETIRED_IDS = new Map(Array.from(ICON_BY_ID.values()).flatMap(function (icon) { return (icon.retiredIds || []).map(function (id) { return [id, icon.id]; }); }));
-  const ICON_CATEGORY_ALIASES = new Map([["actions", "interface"], ["maps-travel", "geography"], ["maps", "geography-mapping"], ["locations", "geography"], ["locations-countries", "geography-countries"], ["locations-regions", "geography-regions"], ["locations-mapping", "geography-mapping"], ["locations-places", "geography-places"], ["games", "recreation-games"], ["sports-recreation", "recreation-sport"], ["norway-sweden", "commerce"], ["rays", "rays-sparkles"], ["sparkled", "rays-sparkles"], ["badged-shield", "badged-shapes-shield"]]);
-  const ICON_SOURCE_IDS = new Set(App.iconLibrary && Array.isArray(App.iconLibrary.sourceRepositories) ? App.iconLibrary.sourceRepositories : []);
-
-  function normalizeIconCategoryId(value) {
-    const categoryId = u.cleanLine(value, 80);
-    return ICON_CATEGORY_ALIASES.get(categoryId) || categoryId;
-  }
-
-  function normalizeIconOverrides(value) {
-    const overrides = new Map();
-    (Array.isArray(value) ? value : []).slice(0, config.controls.maxIconOverrides).sort(function (a, b) {
-      // Explicit edits to the surviving icon win over edits to a retired alias.
-      return Number(ICON_RETIRED_IDS.has(u.cleanLine(u.plainObject(b).iconId, 160))) - Number(ICON_RETIRED_IDS.has(u.cleanLine(u.plainObject(a).iconId, 160)));
-    }).forEach(function (item) {
-      const source = u.plainObject(item);
-      const originalId = u.cleanLine(source.iconId, 160);
-      const iconId = ICON_RETIRED_IDS.get(originalId) || originalId;
-      const label = u.cleanIconLabel(source.label, 120);
-      if (!iconId || !label) return;
-      const selected = new Set((Array.isArray(source.categories) ? source.categories : []).map(normalizeIconCategoryId).filter(function (categoryId) { return ICON_CATEGORY_IDS.has(categoryId); }));
-      if ((Array.isArray(source.categories) ? source.categories : []).includes("other")) {
-        (ICON_BY_ID.get(iconId)?.categories || []).forEach(function (categoryId) { if (ICON_CATEGORY_IDS.has(categoryId)) selected.add(categoryId); });
-      }
-      if (!selected.size && ICON_CATEGORY_IDS.has("interface")) selected.add("interface");
-      Array.from(selected).forEach(function (categoryId) {
-        let parent = ICON_CATEGORY_BY_ID.get(categoryId)?.parent;
-        while (parent) {
-          selected.add(parent);
-          parent = ICON_CATEGORY_BY_ID.get(parent)?.parent;
-        }
-      });
-      const categories = ICON_CATEGORIES.map(function (category) { return category.id; }).filter(function (categoryId) { return selected.has(categoryId); });
-      const kind = ["sf-symbol", "custom"].includes(source.kind) ? source.kind : "";
-      const sourceId = u.cleanLine(source.source, 100);
-      overrides.set(iconId, { iconId: iconId, label: label, kind: kind, categories: categories, source: ICON_SOURCE_IDS.has(sourceId) ? sourceId : "" });
-    });
-    return Array.from(overrides.values()).filter(function (override) {
-      const base = ICON_BY_ID.get(override.iconId);
-      if (!base) return true;
-      return override.label !== base.label || (override.kind || base.kind) !== base.kind
-        || (override.source || "") !== (base.source || "")
-        || JSON.stringify(override.categories.slice().sort()) !== JSON.stringify((base.categories || []).slice().sort());
-    }).sort(function (a, b) { return a.iconId.localeCompare(b.iconId); });
-  }
-
   function demoRecords(now) {
     return [];
   }
@@ -97,7 +46,7 @@
         tombstones: { records: [], documents: [] }
       },
       workspace: {
-        title: "My App",
+        title: config.identity.name,
         records: records,
         documents: documents
       },
@@ -130,7 +79,6 @@
         selectedRecordId: records[0] ? records[0].id : "",
         selectedDocumentId: documents[0] ? documents[0].id : "",
         search: "",
-        searchNameOnly: false,
         records: {
           statusFilter: "all",
           categoryFilter: "all",
@@ -160,7 +108,6 @@
         supportTab: "settings"
       },
       modules: {
-        iconLibrary: { category: "all", kind: "all", source: "all", weight: "bold", sidebarWidth: 204, minimumLabelLength: 0, collapsedCategories: ["badged"], overrides: [] },
         records: { showDemoFields: true },
         documents: { enabled: config.features.documents },
         roadmap: { search: "", state: "all", priority: "all", target: "all", effort: "all", sortBy: "priority", sortDirection: "asc" },
@@ -404,7 +351,6 @@
     const sourcePanels = u.plainObject(sourceUi.panels);
     const sourceNavigation = u.plainObject(sourceUi.navigation);
     const sourceModules = u.plainObject(source.modules);
-    const sourceIconLibrary = u.plainObject(sourceModules.iconLibrary);
     const sourceRoadmap = u.plainObject(sourceModules.roadmap);
     const sourceCloud = u.plainObject(sourceModules.cloudSync);
     const theme = defaultTheme();
@@ -472,7 +418,6 @@
         selectedRecordId: recordIds.has(sourceUi.selectedRecordId) ? sourceUi.selectedRecordId : (records[0] ? records[0].id : ""),
         selectedDocumentId: documentIds.has(sourceUi.selectedDocumentId) ? sourceUi.selectedDocumentId : (documents[0] ? documents[0].id : ""),
         search: u.cleanLine(sourceUi.search, 200),
-        searchNameOnly: sourceUi.searchNameOnly === true,
         records: {
           statusFilter: sourceRecordUi.statusFilter === "all" || STATUS_IDS.has(sourceRecordUi.statusFilter) ? (sourceRecordUi.statusFilter || "all") : "all",
           categoryFilter: sourceRecordUi.categoryFilter === "all" || categories.has(sourceRecordUi.categoryFilter) ? (sourceRecordUi.categoryFilter || "all") : "all",
@@ -502,19 +447,6 @@
         supportTab: ["settings", "dataSync", "help", "releases", "shortcuts", "roadmap", "developer"].includes(sourceUi.supportTab) ? sourceUi.supportTab : "settings"
       },
       modules: {
-        iconLibrary: {
-          category: (function () {
-            const category = normalizeIconCategoryId(sourceIconLibrary.category || "all") || "all";
-            return category === "all" || ICON_CATEGORY_IDS.has(category) ? category : "all";
-          })(),
-          kind: ["all", "sf-symbol", "custom"].includes(sourceIconLibrary.kind) ? sourceIconLibrary.kind : "all",
-          source: u.cleanLine(sourceIconLibrary.source || "all", 80) || "all",
-          weight: ["ultralight", "light", "medium", "bold", "black"].includes(sourceIconLibrary.weight) ? sourceIconLibrary.weight : "bold",
-          sidebarWidth: u.clamp(sourceIconLibrary.sidebarWidth, 156, 360, base.modules.iconLibrary.sidebarWidth),
-          minimumLabelLength: Math.round(u.clamp(sourceIconLibrary.minimumLabelLength, 0, 120, 0)),
-          collapsedCategories: Array.from(new Set((Array.isArray(sourceIconLibrary.collapsedCategories) ? sourceIconLibrary.collapsedCategories : base.modules.iconLibrary.collapsedCategories).map(normalizeIconCategoryId).filter(function (categoryId) { return ICON_CATEGORY_PARENT_IDS.has(categoryId); }))).slice(0, 100),
-          overrides: normalizeIconOverrides(sourceIconLibrary.overrides)
-        },
         records: Object.assign({}, base.modules.records, u.plainObject(sourceModules.records)),
         documents: { enabled: config.features.documents && u.plainObject(sourceModules.documents).enabled !== false },
         roadmap: {
@@ -580,16 +512,12 @@
     const next = u.clone(state);
     next.preferences = defaults.preferences;
     next.ui.search = "";
-    next.ui.searchNameOnly = false;
     next.ui.records = defaults.ui.records;
     next.ui.documents = defaults.ui.documents;
     next.ui.panels = defaults.ui.panels;
     next.ui.navigation = defaults.ui.navigation;
     next.ui.dismissedHints = [];
     next.ui.supportTab = "settings";
-    const iconOverrides = u.clone(next.modules.iconLibrary.overrides || []);
-    next.modules.iconLibrary = defaults.modules.iconLibrary;
-    next.modules.iconLibrary.overrides = iconOverrides;
     next.modules.roadmap = defaults.modules.roadmap;
     next.modules.cloudSync.advancedOpen = false;
     return normalize(touch(next));
@@ -597,7 +525,7 @@
 
   function exportEnvelope(state) {
     return {
-      exportFormat: "local-first-workspace-backup",
+      exportFormat: "top-shelf-backup",
       exportedAt: u.isoNow(),
       application: {
         name: config.identity.name,
@@ -616,7 +544,6 @@
     const data = {};
     const notes = u.richTextToPlainText(normalized.workspace.documents[0].html, config.controls.maxDocumentHtmlLength);
     if (notes) data.notes = notes;
-    if (normalized.modules.iconLibrary.overrides.length) data.iconOverrides = normalized.modules.iconLibrary.overrides;
     // Preserve real content from older backups, without exporting empty scaffolding.
     if (normalized.workspace.records.length) data.records = normalized.workspace.records.map(function (record) {
       const item = Object.assign({}, record);
@@ -640,22 +567,19 @@
     if (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || Object.keys(data).some(function (key) { return !["notes", "iconOverrides", "records"].includes(key); })
+      || Object.keys(data).some(function (key) { return !["notes", "records"].includes(key); })
       || ("notes" in data && (typeof data.notes !== "string" || data.notes.length > config.controls.maxDocumentHtmlLength))
-      || ("iconOverrides" in data && (!Array.isArray(data.iconOverrides) || data.iconOverrides.length > config.controls.maxIconOverrides))
       || ("records" in data && (!Array.isArray(data.records) || data.records.length > config.controls.maxRecords))) {
       throw new Error("The cloud file contains invalid or unsupported content.");
     }
-    if ((data.iconOverrides || []).some(function (item) { return !item || typeof item.iconId !== "string" || !item.iconId || typeof item.label !== "string" || !item.label; })
-      || (data.records || []).some(function (item) { return !item || typeof item.id !== "string" || !item.id; })) {
+    if ((data.records || []).some(function (item) { return !item || typeof item.id !== "string" || !item.id; })) {
       throw new Error("The cloud file contains an invalid saved item.");
     }
     const state = normalize({
       workspace: {
         documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(data.notes || "").replace(/\n/g, "<br>") }],
         records: data.records || []
-      },
-      modules: { iconLibrary: { overrides: data.iconOverrides || [] } }
+      }
     });
     return { state: state, legacy: false, migrations: [], validation: validate(state) };
   }
@@ -665,7 +589,6 @@
     const remote = normalize(remoteState);
     next.workspace.documents = remote.workspace.documents;
     next.workspace.records = remote.workspace.records;
-    next.modules.iconLibrary.overrides = remote.modules.iconLibrary.overrides;
     next.meta.tombstones = remote.meta.tombstones;
     return normalize(touch(next));
   }
@@ -676,7 +599,7 @@
     if (local.notes && remote.notes && local.notes !== remote.notes) throw new Error("Notes differ. Choose which copy to keep.");
     const data = {};
     if (local.notes || remote.notes) data.notes = local.notes || remote.notes;
-    [["iconOverrides", "iconId", config.controls.maxIconOverrides], ["records", "id", config.controls.maxRecords]].forEach(function (entry) {
+    [["records", "id", config.controls.maxRecords]].forEach(function (entry) {
       const items = new Map();
       (local[entry[0]] || []).concat(remote[entry[0]] || []).forEach(function (item) {
         const current = items.get(item[entry[1]]);

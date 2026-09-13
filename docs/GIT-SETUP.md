@@ -9,7 +9,7 @@ Replace the all-caps placeholders before running a command. On a managed work la
 Keep this repository’s saved remote canonical:
 
 ```text
-git@github.com:themadat/app-template.git
+git@github.com:themadat/top-shelf.git
 ```
 
 The repository should not store an SSH alias, an absolute private-key path, or a computer-specific `core.sshCommand`. Each computer selects its own credentials outside the repository. A commit’s `user.name` and `user.email` identify its author; they do not select the GitHub account used for authentication.
@@ -48,7 +48,7 @@ git remote get-url origin
 git push --dry-run origin main
 ```
 
-On the work computer, the first command should retain `git@github.com:themadat/app-template.git`; the second can resolve to `git@gh-personal:themadat/app-template.git`. The ordinary `git pull` and `git push origin main` commands then work on either computer without editing the remote when switching devices.
+On the work computer, the first command should retain `git@github.com:themadat/top-shelf.git`; the second can resolve to `git@gh-personal:themadat/top-shelf.git`. The ordinary `git pull` and `git push origin main` commands then work on either computer without editing the remote when switching devices.
 
 If a combined commit-and-push command reports a successful commit followed by `Permission ... denied to ...`, the commit is already saved locally. Fix authentication and retry the push; do not recreate or reset that commit.
 
@@ -147,8 +147,8 @@ If the key has no passphrase, omit `UseKeychain yes`. GitHub documents this macO
 Run this on each laptop after its SSH test succeeds:
 
 ```sh
-git clone git@github.com:OWNER/REPOSITORY.git
-cd REPOSITORY
+git clone git@github.com:themadat/top-shelf.git
+cd top-shelf
 git remote -v
 git status
 ```
