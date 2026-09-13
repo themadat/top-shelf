@@ -1,0 +1,252 @@
+[
+  {
+    "name": "2_h_circle",
+    "id": "2-h-circle-60fd51",
+    "canonical": "2h_circle"
+  },
+  {
+    "name": "4_a_circle",
+    "id": "4-a-circle-f57823",
+    "canonical": "4a_circle"
+  },
+  {
+    "name": "4_h_circle",
+    "id": "4-h-circle-792d8d",
+    "canonical": "4h_circle"
+  },
+  {
+    "name": "4_l_circle",
+    "id": "4-l-circle-19e7f8",
+    "canonical": "4l_circle"
+  },
+  {
+    "name": "123",
+    "id": "123-f54f20",
+    "canonical": "numbers"
+  },
+  {
+    "name": "a_z",
+    "id": "a-z-9b12e8",
+    "canonical": "textformat_characters"
+  },
+  {
+    "name": "abc",
+    "id": "abc-5c6bbf",
+    "canonical": "characters_uppercase"
+  },
+  {
+    "name": "bake_updated_index",
+    "id": "bake-updated-index-54988e",
+    "canonical": "oven_fill"
+  },
+  {
+    "name": "battery_100_percent_circle",
+    "id": "battery-100-percent-circle-d763fa",
+    "canonical": "battery_100percent_circle"
+  },
+  {
+    "name": "building_columns_circle",
+    "id": "building-columns-circle-4d48e5",
+    "canonical": "building_classical_columns_circle"
+  },
+  {
+    "name": "bullet_clipboard_fill",
+    "id": "bullet-clipboard-fill-95b7b6",
+    "canonical": "list_bullet_clipboard_fill"
+  },
+  {
+    "name": "circle_grid_3_x3_circle",
+    "id": "circle-grid-3-x3-circle-8beede",
+    "canonical": "circle_grid_3x3_circle"
+  },
+  {
+    "name": "compressed_table",
+    "id": "compressed-table-6d5744",
+    "canonical": "rectangle_expand_diagonal"
+  },
+  {
+    "name": "data_source_notes",
+    "id": "data-source-notes-089cb0",
+    "canonical": "info_circle"
+  },
+  {
+    "name": "dismiss",
+    "id": "dismiss-8e1303",
+    "canonical": "xmark"
+  },
+  {
+    "name": "drink_coffee",
+    "id": "drink-coffee-555d6c",
+    "canonical": "cup_and_saucer_fill"
+  },
+  {
+    "name": "drink_water",
+    "id": "drink-water-d05471",
+    "canonical": "drop_fill"
+  },
+  {
+    "name": "drink_wine",
+    "id": "drink-wine-9a8578",
+    "canonical": "wineglass_fill"
+  },
+  {
+    "name": "editor_amp_legend",
+    "id": "editor-amp-legend-f74d54",
+    "canonical": "pencil"
+  },
+  {
+    "name": "eye_off",
+    "id": "eye-off-25ea29",
+    "canonical": "eye_slash"
+  },
+  {
+    "name": "fit_view",
+    "id": "fit-view-f2efb2",
+    "canonical": "viewfinder"
+  },
+  {
+    "name": "hide_medals",
+    "id": "hide-medals-d1ac6a",
+    "canonical": "medal_fill"
+  },
+  {
+    "name": "hide_non_participants",
+    "id": "hide-non-participants-16a06c",
+    "canonical": "checkmark_seal_fill"
+  },
+  {
+    "name": "hide_play",
+    "id": "hide-play-a1748f",
+    "canonical": "percent"
+  },
+  {
+    "name": "hide_qp",
+    "id": "hide-qp-4923cc",
+    "canonical": "number_sign"
+  },
+  {
+    "name": "highlight_by_confederation",
+    "id": "highlight-by-confederation-273b79",
+    "canonical": "inset_filled_center_rectangle"
+  },
+  {
+    "name": "light_mode",
+    "id": "light-mode-9f1d41",
+    "canonical": "sun_max_fill"
+  },
+  {
+    "name": "macwindow_and_pointer_arrow",
+    "id": "macwindow-and-pointer-arrow-dec22b",
+    "canonical": "interface_window_and_pointer_arrow"
+  },
+  {
+    "name": "music_microphone_circle",
+    "id": "music-microphone-circle-72ef67",
+    "canonical": "microphone_dynamic_on_stand_circle"
+  },
+  {
+    "name": "my_bar",
+    "id": "manage-my-bar-329d9e",
+    "canonical": "waterbottle_fill"
+  },
+  {
+    "name": "number",
+    "id": "number-5dfb3e",
+    "canonical": "number_sign"
+  },
+  {
+    "name": "number_circle",
+    "id": "number-circle-36c001",
+    "canonical": "number_sign_circle"
+  },
+  {
+    "name": "rectangle_grid_1_x2_fill",
+    "id": "rectangle-grid-1-x2-fill-fb98a9",
+    "canonical": "rectangle_grid_1x2_fill"
+  },
+  {
+    "name": "rectangle_grid_1_x3_fill",
+    "id": "rectangle-grid-1-x3-fill-e43741",
+    "canonical": "rectangle_grid_1x3_fill"
+  },
+  {
+    "name": "rectangle_split_3_x1",
+    "id": "rectangle-split-3-x1-1aff1c",
+    "canonical": "rectangle_split_3x1"
+  },
+  {
+    "name": "relationship_delete",
+    "id": "relationship-delete-8cfdd4",
+    "canonical": "person_2_badge_minus_fill"
+  },
+  {
+    "name": "relationship_edit",
+    "id": "relationship-edit-71dd91",
+    "canonical": "person_2_badge_gearshape_fill"
+  },
+  {
+    "name": "rotate_3_d_circle",
+    "id": "rotate-3-d-circle-0aa90a",
+    "canonical": "rotate_3d_circle"
+  },
+  {
+    "name": "settings",
+    "id": "settings-a722fb",
+    "canonical": "gearshape_fill"
+  },
+  {
+    "name": "square_3_layers_3_d",
+    "id": "square-3-layers-3-d-48b0b1",
+    "canonical": "square_3_layers_3d"
+  },
+  {
+    "name": "square_3_layers_3_d_bottom_filled",
+    "id": "square-3-layers-3-d-bottom-filled-9f9e69",
+    "canonical": "square_3_layers_3d_bottom_filled"
+  },
+  {
+    "name": "square_3_layers_3_d_middle_filled",
+    "id": "square-3-layers-3-d-middle-filled-532a8f",
+    "canonical": "square_3_layers_3d_middle_filled"
+  },
+  {
+    "name": "square_3_layers_3_d_top_filled",
+    "id": "square-3-layers-3-d-top-filled-414dfd",
+    "canonical": "square_3_layers_3d_top_filled"
+  },
+  {
+    "name": "square_fill_text_grid_1_x2",
+    "id": "square-fill-text-grid-1-x2-2b1bdd",
+    "canonical": "square_fill_text_grid_1x2"
+  },
+  {
+    "name": "square_grid_2_x2",
+    "id": "square-grid-2-x2-121f8f",
+    "canonical": "square_grid_2x2"
+  },
+  {
+    "name": "square_grid_3_x1_below_line_grid_1_x2_fill",
+    "id": "square-grid-3-x1-below-line-grid-1-x2-fill-54c210",
+    "canonical": "square_grid_3x1_below_line_grid_1x2_fill"
+  },
+  {
+    "name": "square_grid_3_x1_folder_fill_badge_plus",
+    "id": "square-grid-3-x1-folder-fill-badge-plus-54487a",
+    "canonical": "square_grid_3x1_folder_fill_badge_plus"
+  },
+  {
+    "name": "square_grid_4_x3_fill",
+    "id": "square-grid-4-x3-fill-92d749",
+    "canonical": "square_grid_4x3_fill"
+  },
+  {
+    "name": "text_and_command_macwindow",
+    "id": "text-and-command-macwindow-5a76b2",
+    "canonical": "text_and_command_interface_window"
+  },
+  {
+    "name": "view_data_json",
+    "id": "view-data-json-276c1b",
+    "canonical": "ellipsis_curlybraces"
+  }
+]
