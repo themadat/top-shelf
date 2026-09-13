@@ -2,9 +2,9 @@
 
 Read AGENTS.md, this handoff, and context/WISHES.md before working. Preserve existing/manual edits. Run git status --short at session start. If work is in flight, inspect recent commits, the current diff, and its plan’s Resume block.
 
-Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the initial direction. Version 0.0.1.1 is a clean foundation with a blank semantic main workspace; no rating-list data model or features have been implemented.
+Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the initial direction. Version 0.0.1.2 adds My Stuff-style top-bar navigation for Movies, TV, Books, Podcasts, Music, Restaurants, Food, and Scotches, using the supplied inline artwork. Tabs show zero counts and starter views; list entry/scoring is not implemented. Number keys 1–8 switch shelves outside editable controls/dialogs; Left/Right/Home/End work within navigation. ui.selectedShelf is normalized, persists locally, and stays out of cloud content. The header keeps navigation and search together on wide screens and uses a horizontally scrolling shelf row on narrow screens.
 
-Retained shell: app icon/theme and hold-for-Developer controls, name/version/Beta badges, centered search across Notes and support, one blank-on-first-run plain-text Notes modal, vertical Settings, appearance/backup/reset, dedicated Data Sync with JSON preview, generic Help, one initial release, empty Roadmap, Shortcuts, and Developer diagnostics. Local persistence/recovery, JSON portability, optional GitHub Sync, accessible shared components, PWA updates, and offline assets remain.
+Retained shell: app icon/theme and hold-for-Developer controls, name/version/Beta badges, centered search across Notes and support, one blank-on-first-run plain-text Notes modal, vertical Settings, appearance/backup/reset, dedicated Data Sync with JSON preview, generic Help, release history, empty Roadmap, Shortcuts, and Developer diagnostics. Local persistence/recovery, JSON portability, optional GitHub Sync, accessible shared components, PWA updates, and offline assets remain.
 
 Identity and configuration live in assets/js/config.js. Storage keys use topShelf, the cache uses top-shelf-shell, the manifest id is ./top-shelf, full backups use top-shelf-backup, and content sync uses top-shelf-app-data v1. Local state schema v4 retains legacy record/document compatibility without exposing their old interfaces. Cloud schema v5 excludes device settings, credentials, timestamps, and empty collections. New app data never loads old browser namespaces.
 
@@ -20,7 +20,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.2.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.3.
 
 ## Workflows
 

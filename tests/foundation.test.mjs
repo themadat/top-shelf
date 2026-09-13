@@ -60,6 +60,7 @@ test('every static interface symbol and literal helper request resolves independ
     for (const match of source.matchAll(/icons\.markup\("([^"]+)"\)/g)) names.add(match[1]);
     for (const match of source.matchAll(/(?:symbol|actionSymbol): "([^"]+)"/g)) names.add(match[1]);
   }
+  App.config.shelves.forEach(shelf => names.add(shelf.symbol));
   for (const name of names) assert.match(App.icons.markup(name), /^<svg\b/, name);
 });
 
@@ -77,4 +78,18 @@ test('fresh content is empty, fixed sync target survives imports, and unknown mo
   assert.equal(normalized.modules.cloudSync.path, 'data/top-shelf.json');
   assert.equal(model.exportEnvelope(normalized).exportFormat, 'top-shelf-backup');
   assert.throws(() => model.prepareSync({ syncFormat: 'another-app', syncVersion: 1, schemaVersion: 5, data: {} }), /not supported/);
+});
+
+
+test('shelf selection is normalized and local-only', () => {
+  const model = App.stateModel;
+  const state = model.normalize(model.createDefaultState());
+  assert.equal(state.ui.selectedShelf, 'movies');
+  const initial = model.syncHash(state);
+  state.ui.selectedShelf = 'scotches';
+  assert.equal(model.normalize(state).ui.selectedShelf, 'scotches');
+  assert.equal(model.syncHash(state), initial);
+  state.ui.selectedShelf = 'invalid';
+  assert.equal(model.normalize(state).ui.selectedShelf, 'movies');
+  assert.equal(new Set(App.config.shelves.map(shelf => shelf.shortcut)).size, 8);
 });

@@ -2,7 +2,7 @@
 
 Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the first planned areas.
 
-Version **0.0.1.1** is the new application foundation: a blank main workspace, centered search for Notes and support content, one autosaving Notes modal, vertical Settings, appearance controls, Help, one initial release, an empty Roadmap, shortcuts, and optional Developer Mode. Rating-list features and their data model have not been implemented.
+Version **0.0.1.2** adds eight rating-list tabs with supplied icons, counts, keyboard navigation (1–8), and remembered selection. Each opens a starter view. The foundation retains centered search for Notes and support content, one autosaving Notes modal, vertical Settings, appearance controls, Help, one initial release, an empty Roadmap, shortcuts, and optional Developer Mode. Rating-list entry, scoring, and their data model have not been implemented.
 
 ## Run locally
 

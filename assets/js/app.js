@@ -26,7 +26,6 @@
     { keys: "Esc", hintKey: "Esc", chordKey: "Esc", label: "Close a dialog or menu", group: "Global" },
     { keys: "H or ?", hintKey: "H", chordKey: "H", label: "Open Help Center", group: "Global" },
     { keys: ",", hintKey: ",", chordKey: ",", label: "Open Settings", group: "Global" },
-    { keys: "2", hintKey: "2", chordKey: "2", label: "Open Roadmap in Settings", group: "Navigation" },
     { keys: "N", hintKey: "N", chordKey: "N", label: "Open Notes", group: "Actions" },
     { keys: "V", hintKey: "V", chordKey: "V", label: "Open What’s New", group: "Actions" },
     { keys: "R", hintKey: "R", chordKey: "R", label: "Force refresh an available app update", group: "Updates" },
@@ -37,6 +36,8 @@
     { keys: "D or |", hintKey: "D", secondaryHintKey: "|", chordKey: "D or |", label: "Toggle hidden Developer Mode", group: "Developer" },
     { keys: "Arrow keys", label: "Move through tabs, menus, and list choices", group: "Navigation", chord: false }
   ];
+
+  SHORTCUTS.push.apply(SHORTCUTS, config.shelves.map(function (shelf) { return { keys: shelf.shortcut, label: "Open " + shelf.label, group: "Rating lists", chord: false }; }));
 
   function state() {
     return storage.getState();
@@ -99,6 +100,44 @@
     if (/\/beta(\/|$)/.test(path)) return true;
     const beta = new URLSearchParams(location.search || "").get("beta");
     return beta === "1" || beta === "true";
+  }
+
+  function renderShelves() {
+    const selected = config.shelves.find(function (shelf) { return shelf.id === state().ui.selectedShelf; }) || config.shelves[0];
+    $$("[data-shelf]").forEach(function (button) {
+      const active = button.dataset.shelf === selected.id;
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
+    $("#shelfTitle").textContent = selected.label;
+    icons.set($("#shelfSymbol"), selected.symbol);
+    $("#shelfDescription").textContent = selected.id === "movies" || selected.id === "tv" ? "Your " + selected.label.toLowerCase() + " ratings will live here. List entry and scoring are coming next." : "A place for your " + selected.label.toLowerCase() + " ratings. We’re starting with movies and TV.";
+  }
+
+  function selectShelf(id, focusContent) {
+    if (!config.shelves.some(function (shelf) { return shelf.id === id; })) return;
+    storage.mutate(function (next) { next.ui.selectedShelf = id; }, { touch: false, reason: "shelf-navigation" });
+    renderShelves();
+    const button = $('[data-shelf="' + id + '"]');
+    button.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
+    if (focusContent) $("#shelfTitle").focus({ preventScroll: true });
+  }
+
+  function bindShelfNavigation() {
+    const nav = $("#shelfNavigation");
+    nav.innerHTML = config.shelves.map(function (shelf) {
+      return '<button type="button" class="shelf-tab" data-shelf="' + shelf.id + '" aria-controls="mainContent" aria-keyshortcuts="' + shelf.shortcut + '" title="' + shelf.label + ' (' + shelf.shortcut + ')" aria-label="' + shelf.label + ', 0 ratings"><span class="shelf-tab-icon" aria-hidden="true">' + icons.markup(shelf.symbol) + '</span><span class="shelf-tab-label">' + shelf.label + '</span><small class="shelf-tab-count" aria-hidden="true">0</small></button>';
+    }).join("");
+    nav.addEventListener("click", function (event) { const button = event.target.closest("[data-shelf]"); if (button) selectShelf(button.dataset.shelf, true); });
+    nav.addEventListener("keydown", function (event) {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      const buttons = $$("[data-shelf]", nav), index = buttons.indexOf(event.target);
+      if (index < 0) return;
+      event.preventDefault();
+      const target = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + buttons.length) % buttons.length;
+      selectShelf(buttons[target].dataset.shelf, false);
+      buttons[target].focus({ preventScroll: true });
+    });
   }
 
   function renderHeader() {
@@ -820,12 +859,13 @@
     }
     if (event.repeat) return;
     const mainPageActive = !$("dialog[open]");
+    const shelf = config.shelves.find(function (item) { return item.shortcut === event.key; });
+    if (mainPageActive && shelf && !event.ctrlKey && !event.altKey && !event.shiftKey) { runShortcut(event, function () { selectShelf(shelf.id, true); }); return; }
     const updateToast = $("#appToast");
     const updateToastVisible = updateToast?.dataset.context === "pwa-update" && updateToast.classList.contains("visible");
     if ((event.code === "Backslash" && event.shiftKey) || event.key === "|") runShortcut(event, function () { toggleDeveloperMode(undefined, { openPanel: true }); });
     else if (event.code === "KeyH") runShortcut(event, function () { openSupport("help", event.target); });
     else if (event.code === "Comma") runShortcut(event, function () { openSupport("settings", event.target); });
-    else if (event.code === "Digit2" && activeModuleEnabled("roadmap")) runShortcut(event, function () { openSupport("roadmap", event.target); });
     else if (event.code === "KeyN") runShortcut(event, function () { openNotes(event.target); });
     else if (event.code === "KeyV") runShortcut(event, function () { openSupport("releases", event.target); });
     else if (event.code === "KeyR" && mainPageActive && updateToastVisible && shortcutModifiersAllowed(event)) runShortcut(event, function () { $("#appToast [data-toast-action]").click(); });
@@ -891,6 +931,7 @@
   function renderAll() {
     applyAppearance();
     renderHeader();
+    renderShelves();
     renderNotesEditor();
     renderGlobalSearchResults();
     if ($("#supportDialog").open) renderSupport();
@@ -951,6 +992,7 @@
     applyIdentity();
     components.init();
     portability.init();
+    bindShelfNavigation();
     bindGeneralEvents();
     bindRuntimeEvents();
     pwa.init();

@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.1",
-      "buildId": "0.0.1.1",
+      "version": "0.0.1.2",
+      "buildId": "0.0.1.2",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -32,6 +32,56 @@
         "manifestDark": "manifest-dark.webmanifest"
       }
     },
+    "shelves": [
+      {
+        "id": "movies",
+        "label": "Movies",
+        "symbol": "shelfMovies",
+        "shortcut": "1"
+      },
+      {
+        "id": "tv",
+        "label": "TV",
+        "symbol": "shelfTV",
+        "shortcut": "2"
+      },
+      {
+        "id": "books",
+        "label": "Books",
+        "symbol": "shelfBooks",
+        "shortcut": "3"
+      },
+      {
+        "id": "podcasts",
+        "label": "Podcasts",
+        "symbol": "shelfPodcasts",
+        "shortcut": "4"
+      },
+      {
+        "id": "music",
+        "label": "Music",
+        "symbol": "shelfMusic",
+        "shortcut": "5"
+      },
+      {
+        "id": "restaurants",
+        "label": "Restaurants",
+        "symbol": "shelfRestaurants",
+        "shortcut": "6"
+      },
+      {
+        "id": "food",
+        "label": "Food",
+        "symbol": "shelfFood",
+        "shortcut": "7"
+      },
+      {
+        "id": "scotches",
+        "label": "Scotches",
+        "symbol": "shelfScotches",
+        "shortcut": "8"
+      }
+    ],
     "schemaVersion": 4,
     "storage": {
       "stateKey": "topShelf.state.v4",
@@ -100,6 +150,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.2", "date": "2026-09-13T18:00:00.000Z", "title": "Rating-list navigation", "summary": "Eight top-bar tabs with supplied artwork, counts, and keyboard navigation.", "features": ["Movies, TV, Books, Podcasts, Music, Restaurants, Food, and Scotches tabs"], "improvements": ["Number keys 1\u20138 switch shelves; selection stays on this device", "Compact icon, label, and count layout inspired by My Stuff"], "fixes": [], "knownIssues": ["Rating-list entry and scoring are not implemented yet."]},
       {
         "version": "0.0.1.1",
         "date": "2026-09-13T12:00:00.000Z",
@@ -124,7 +175,7 @@
         "title": "Getting started",
         "section": "Basics",
         "keywords": "start top shelf movies tv ratings lists search",
-        "html": "<p>Top Shelf is the foundation for personal rating lists across different domains, starting with movies and TV. The workspace is currently blank. Use Notes to collect ideas, Settings to adjust appearance, and <kbd>/</kbd> to search Notes and application support.</p>"
+        "html": "<p>Top Shelf is the foundation for personal rating lists across different domains, starting with movies and TV. Choose a shelf in the top bar or press 1–8. Each shelf currently shows a starter view; rating-list entry is coming later. Use Notes to collect ideas, Settings to adjust appearance, and <kbd>/</kbd> to search Notes and application support.</p>"
       },
       {
         "id": "notes",
@@ -173,7 +224,7 @@
         "title": "Keyboard access",
         "section": "Accessibility",
         "keywords": "keyboard shortcuts slash escape alt option shift control hints hover version update refresh developer countdown",
-        "html": "<p>Press <kbd>/</kbd> for search, <kbd>N</kbd> for Notes, <kbd>V</kbd> for What’s New, <kbd>T</kbd> for theme, <kbd>|</kbd> or <kbd>D</kbd> for Developer Mode, <kbd>,</kbd> for Settings, <kbd>2</kbd> for Roadmap, <kbd>S</kbd> for sync, <kbd>E</kbd> for backup export, and <kbd>H</kbd> or <kbd>?</kbd> for Help. What’s New closes after 30 seconds or with <kbd>X</kbd>. When an update is ready, use <kbd>R</kbd> to Force Refresh or <kbd>X</kbd> to close its notice. Hold Shift–Control–Option to reveal available shortcut badges. Escape closes dialogs.</p>"
+        "html": "<p>Press <kbd>/</kbd> for search, <kbd>N</kbd> for Notes, <kbd>V</kbd> for What’s New, <kbd>T</kbd> for theme, <kbd>|</kbd> or <kbd>D</kbd> for Developer Mode, <kbd>,</kbd> for Settings, <kbd>1</kbd>–<kbd>8</kbd> for shelves, <kbd>S</kbd> for sync, <kbd>E</kbd> for backup export, and <kbd>H</kbd> or <kbd>?</kbd> for Help. What’s New closes after 30 seconds or with <kbd>X</kbd>. When an update is ready, use <kbd>R</kbd> to Force Refresh or <kbd>X</kbd> to close its notice. Hold Shift–Control–Option to reveal available shortcut badges. Escape closes dialogs.</p>"
       }
     ]
   };

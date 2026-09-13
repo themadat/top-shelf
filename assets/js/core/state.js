@@ -78,6 +78,7 @@
         activeModule: "roadmap",
         selectedRecordId: records[0] ? records[0].id : "",
         selectedDocumentId: documents[0] ? documents[0].id : "",
+        selectedShelf: config.shelves[0].id,
         search: "",
         records: {
           statusFilter: "all",
@@ -417,6 +418,7 @@
         activeModule: activeModule,
         selectedRecordId: recordIds.has(sourceUi.selectedRecordId) ? sourceUi.selectedRecordId : (records[0] ? records[0].id : ""),
         selectedDocumentId: documentIds.has(sourceUi.selectedDocumentId) ? sourceUi.selectedDocumentId : (documents[0] ? documents[0].id : ""),
+        selectedShelf: config.shelves.some(function (shelf) { return shelf.id === sourceUi.selectedShelf; }) ? sourceUi.selectedShelf : config.shelves[0].id,
         search: u.cleanLine(sourceUi.search, 200),
         records: {
           statusFilter: sourceRecordUi.statusFilter === "all" || STATUS_IDS.has(sourceRecordUi.statusFilter) ? (sourceRecordUi.statusFilter || "all") : "all",
