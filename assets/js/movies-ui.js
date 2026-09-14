@@ -123,7 +123,7 @@
     $("#moviesWorkspace").addEventListener("click", function (event) {
       const button = event.target.closest("button"); if (!button) return;
       if (button.hasAttribute("data-movie-filter")) { filter = button.dataset.movieFilter; render(); }
-      if (button.hasAttribute("data-add-movie")) open(null, button);
+      if (button.hasAttribute("data-add-movie")) open(null, button, button.dataset.addStatus);
       if (button.dataset.editMovie) open(button.dataset.editMovie, button);
       if (button.dataset.watchMovie) { open(button.dataset.watchMovie, button); $("#movieStatus").value = "watched"; statusFields(); $("#movieForm").elements.watchedDate.focus(); }
     });

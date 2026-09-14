@@ -17,3 +17,5 @@ Local persistence and full backups use schema v5. Compatibility record/document 
 Storage, secrets, recovery, service-worker cache prefixes, manifest identity, and the GitHub path belong to Top Shelf. Imports cannot redirect the fixed GitHub target. Credentials are stored separately in browser-local or tab-only storage and never exported. Replacements require recovery; differing content is never resolved from general save timestamps.
 
 The runtime requires no account for local use. Optional GitHub Sync and explicit TMDB lookups perform authenticated requests. Future product work should add the smallest useful model and UI without introducing speculative infrastructure.
+
+`core/pivots.js` derives watched-only aggregates without modifying movie records; `pivots-ui.js` provides the Movies dashboard and session-only display controls. Neither changes the backup or sync contract.

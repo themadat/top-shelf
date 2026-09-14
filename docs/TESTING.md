@@ -25,3 +25,5 @@ The dependency-free tests cover optional/required state fields, whole-number pri
 Check empty/ambiguous/error responses, 401/429, abort on close or query changes, no stale result application, and hidden credentials in exports. Verify existing notes/settings survive v4 migration. Refresh both devices before testing the movie-capable sync envelope. Do not put a live token in test fixtures, screenshots, or logs.
 
 Historical movie checks: save each of 100!, YES, MEH, NO, RUN with an unknown watch date; verify mapped score, label, backup/sync round trip, and offline reload. Switch to a numeric rating and later supply a known date. Check movie preferences, reference links, and the separate spreadsheet history in Settings.
+
+Pivot checks: validate watched-only scope despite list filters; multi-value membership counts, decimal/historical averages, missing metadata and dates, release/watched years, sorting and thresholds. Verify empty and populated views, live updates after movie changes, safe names containing HTML, 320/390px layouts, and offline reload.

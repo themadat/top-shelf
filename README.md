@@ -2,7 +2,7 @@
 
 Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the first planned areas.
 
-Version **0.0.1.4** adds the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
+Version **0.0.1.5** includes the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
 
 ## Movies
 
@@ -45,3 +45,7 @@ The [repository](https://github.com/themadat/top-shelf) retains its GitHub Pages
 See [architecture](docs/ARCHITECTURE.md), [components](docs/COMPONENTS.md), [customization](docs/CUSTOMIZATION.md), [testing](docs/TESTING.md), and [two-laptop Git setup](docs/GIT-SETUP.md). Agent lifecycle contracts live in [the handoff](context/LLM_HANDOFF.md).
 
 Historical ratings preserve their labels and map to numeric scores: 100! = 5, YES = 4, MEH = 3, NO = 2, RUN = 1. Leave a watched date blank when unknown. Settings includes the original movie database background, favorites, and reference links; Roadmap and What’s New retain its backlog and spreadsheet history.
+
+### Movie pivots
+
+Choose **Movies → Pivots** for counts and average ratings across genres, ratings, years, collections, actors, directors, and production companies. All watched movies are included, regardless of list filters. Each table has a minimum movie count and sorting by count, average, or name/value. Switch years between release year and watched year. Unknown dates and missing metadata get their own groups. Historical scores are included; averages display two decimal places. A movie can count in several groups, once per group. Actor pivots use the saved cast (up to ten actors per movie). Dashboard controls last for the current session; results update automatically and work offline.

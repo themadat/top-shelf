@@ -999,6 +999,7 @@
     portability.init();
     bindShelfNavigation();
     App.moviesUI.init();
+    App.pivotsUI.init();
     bindGeneralEvents();
     bindRuntimeEvents();
     pwa.init();

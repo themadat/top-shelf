@@ -789,3 +789,40 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .movie-empty > span { display: grid; place-items: center; }
 .movie-search input, .movie-input-preview input { width: 100%; }
 #movieError:empty { display: none; }
+
+/* Watched movie pivot dashboard. */
+.movie-view-switch { display: flex; gap: .4rem; margin: .4rem 0 1.2rem; }
+.movie-view-switch button { padding: .65rem 1.1rem; }
+.pivot-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+.pivot-heading h2 { margin: 0; font-size: 1.3rem; }
+.pivot-heading > label { display: grid; gap: .35rem; flex: 0 0 170px; font-size: .8rem; }
+.pivot-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; margin: 1rem 0; }
+.pivot-summary > div { display: grid; gap: .25rem; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: var(--radius-small); }
+.pivot-summary strong { font-size: 1.8rem; font-variant-numeric: tabular-nums; }
+.pivot-summary span { color: var(--muted); font-size: .8rem; }
+.pivot-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 1rem; margin-top: 1.3rem; }
+.pivot-card { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; }
+.pivot-card header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem; margin-bottom: .8rem; }
+.pivot-card h3 { margin: 0; }
+.pivot-card header small { color: var(--muted); }
+.pivot-controls { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr); gap: .6rem; margin-bottom: .8rem; }
+.pivot-controls label { display: grid; gap: .35rem; font-size: .75rem; color: var(--muted); }
+.pivot-controls input, .pivot-controls select { width: 100%; min-width: 0; }
+.pivot-table-scroll { max-height: 420px; overflow: auto; border-radius: 6px; }
+.pivot-card table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.pivot-card th, .pivot-card td { padding: .65rem .4rem; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+.pivot-card th:first-child { text-align: left; overflow-wrap: anywhere; }
+.pivot-card tbody th { font-weight: 500; width: 50%; }
+.pivot-card thead th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); font-size: .72rem; }
+.pivot-count-bar { display: block; min-width: 45px; padding: .3rem; background: linear-gradient(to right, var(--accent-soft) var(--share), transparent var(--share)); border-radius: 4px; }
+.pivot-card .movie-score { white-space: nowrap; font-size: .75rem; }
+@media (max-width: 700px) {
+  .pivot-grid { grid-template-columns: minmax(0,1fr); }
+  .pivot-heading { display: grid; }
+  .pivot-heading > label { width: 100%; }
+  .pivot-summary { gap: .4rem; }
+  .pivot-summary > div { padding: .6rem; }
+  .pivot-summary strong { font-size: 1.4rem; }
+  .pivot-summary span { font-size: .7rem; }
+  .pivot-card { padding: .75rem; }
+}
