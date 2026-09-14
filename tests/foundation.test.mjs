@@ -19,7 +19,7 @@ test('foundation identity, release, deployment, and storage surfaces agree', () 
   assert.equal(config.identity.version, config.identity.buildId);
   assert.equal(config.releases[0].version, config.identity.version);
   assert.match(read('.github/workflows/deploy-pages.yml').split('\n')[0], new RegExp('v' + config.identity.version.replaceAll('.', '\\.') + '$'));
-  assert.equal(config.roadmap.length, 0);
+  assert.equal(config.roadmap.length, 2);
   assert.deepEqual(Array.from(config.storage.legacyKeys), ['topShelf.state.v4']);
   for (const [key, value] of Object.entries(config.storage)) {
     if (key !== 'legacyKeys') assert.ok(value.startsWith('topShelf.'), key);

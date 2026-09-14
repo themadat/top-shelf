@@ -255,7 +255,7 @@ test('first upload still requires a choice; a synchronized copy needs no write',
 test('empty foundations sync only an empty content envelope, independent of device, UI, or save metadata', () => {
   const h = harness(), model = h.App.stateModel;
   const original = JSON.stringify(model.syncPayload(h.state));
-  assert.deepEqual(JSON.parse(original), { syncFormat: 'top-shelf-app-data', syncVersion: 2, schemaVersion: 6, data: {} });
+  assert.deepEqual(JSON.parse(original), { syncFormat: 'top-shelf-app-data', syncVersion: 3, schemaVersion: 7, data: {} });
   assert.ok(Buffer.byteLength(JSON.stringify(model.syncPayload(h.state), null, 2)) < 120);
   h.App.storage.mutate(state => {
     state.preferences.appearance.mode = 'dark'; state.ui.search = 'cloud'; state.ui.supportTab = 'dataSync';
@@ -302,7 +302,7 @@ test('legacy whole-state files migrate without false conflicts and compact on ex
   await h.sync.syncNow();
   const written = JSON.parse(Buffer.from(JSON.parse(h.requests.find(r => r.options.method === 'PUT').options.body).content, 'base64').toString());
   assert.deepEqual(written.data, {});
-  assert.equal(written.syncVersion, 2);
+  assert.equal(written.syncVersion, 3);
   assert.equal(h.state.preferences.appearance.mode, 'system');
 });
 
@@ -378,7 +378,7 @@ test('nonempty legacy records survive compact round trips without save timestamp
 });
 
 test('invalid or future cloud data is rejected without replacing or uploading content', async () => {
-  for (const transform of [p => ({ ...p, syncVersion: 3 }), p => ({ ...p, data: { notes: [] } }), p => ({ ...p, data: { unknown: 'content' } }), p => ({ ...p, data: { records: [{}] } }), () => null]) {
+  for (const transform of [p => ({ ...p, syncVersion: 999 }), p => ({ ...p, data: { notes: [] } }), p => ({ ...p, data: { unknown: 'content' } }), p => ({ ...p, data: { records: [{}] } }), () => null]) {
     const h = harness(); h.confirmation = true;
     const invalid = transform(h.App.stateModel.syncPayload(h.state));
     h.respond = () => response(200, { type: 'file', sha: 'sha', content: Buffer.from(JSON.stringify(invalid)).toString('base64') });
@@ -400,7 +400,7 @@ test('movie fields validate state-specific requirements and preserve decimal rat
   assert.equal(wishlist.availableDate, '');
   for (const priority of [0, 6, 2.5]) assert.throws(() => movieFixture(h.App, { priority }), /whole number/);
   for (const rating of [0, 5.1, 'invalid']) assert.throws(() => movieFixture(h.App, { rating }), /Rating/);
-  assert.throws(() => movieFixture(h.App, { status: 'watched' }), /watched date/);
+  assert.throws(() => movieFixture(h.App, { status: 'watched' }), /rating and review/);
   assert.throws(() => movieFixture(h.App, { status: 'invalid' }), /Wishlist or Watched/);
   assert.throws(() => movieFixture(h.App, { availableDate: '2026-02-30' }), /Invalid movie date/);
   const watched = movieFixture(h.App, { status: 'watched', rating: 4.75, watchedDate: '2026-09-13', review: 'A <literal> review' });
@@ -427,8 +427,8 @@ test('movie content round trips through backups and sync with credentials omitte
   const h = harness(), model = h.App.stateModel;
   h.state.workspace.movies = [movieFixture(h.App, { how: 'Cinema', other: 'With friends', priority: 1, notes: 'See in IMAX' })];
   const payload = model.syncPayload(h.state);
-  assert.equal(payload.syncVersion, 2);
-  assert.equal(payload.schemaVersion, 6);
+  assert.equal(payload.syncVersion, 3);
+  assert.equal(payload.schemaVersion, 7);
   assert.equal(payload.data.movies[0].how, 'Cinema');
   assert.equal(model.syncHash(model.prepareSync(payload).state), model.syncHash(h.state));
   assert.equal(model.prepare(model.exportEnvelope(h.state)).state.workspace.movies[0].notes, 'See in IMAX');
@@ -476,6 +476,37 @@ test('malformed and duplicate movie imports fail without silently discarding con
   const h = harness(), model = h.App.stateModel;
   const movie = movieFixture(h.App);
   for (const movies of [{}, [{}], [movie, movie], [movie, { ...movie, id: 'another-id' }]]) {
-    assert.throws(() => model.prepareSync({ syncFormat: 'top-shelf-app-data', syncVersion: 2, schemaVersion: 6, data: { movies } }));
+    assert.throws(() => model.prepareSync({ syncFormat: 'top-shelf-app-data', syncVersion: 3, schemaVersion: 7, data: { movies } }));
   }
+});
+
+
+test('historical ratings retain labels, map scores, and allow unknown watch dates through backup and sync', () => {
+  const h = harness(), model = h.App.stateModel;
+  for (const [historicalRating, score] of Object.entries({ '100!': 5, YES: 4, MEH: 3, NO: 2, RUN: 1 })) {
+    const movie = movieFixture(h.App, { status: 'watched', historicalRating, rating: 4.75, review: 'From my spreadsheet' });
+    assert.equal(movie.rating, score);
+    assert.equal(movie.watchedDate, '');
+    h.state.workspace.movies = [movie];
+    for (const restored of [model.prepare(model.exportEnvelope(h.state)).state, model.prepareSync(model.syncPayload(h.state)).state]) {
+      assert.equal(restored.workspace.movies[0].historicalRating, historicalRating);
+      assert.equal(restored.workspace.movies[0].rating, score);
+      assert.equal(restored.workspace.movies[0].watchedDate, '');
+    }
+  }
+  assert.throws(() => movieFixture(h.App, { historicalRating: 'MAYBE' }), /historical rating/);
+  const numeric = movieFixture(h.App, { status: 'watched', rating: 4.75, review: 'Numeric only' });
+  assert.equal(numeric.historicalRating, '');
+  assert.equal(numeric.rating, 4.75);
+  assert.throws(() => movieFixture(h.App, { status: 'watched', historicalRating: 'YES', review: 'Test', watchedDate: '2024-02-30' }), /Invalid movie date/);
+});
+
+test('previous movie sync format remains readable', () => {
+  const h = harness();
+  const movie = movieFixture(h.App, { status: 'watched', rating: 4, watchedDate: '2024-01-01', review: 'Old movie' });
+  delete movie.historicalRating;
+  const result = h.App.stateModel.prepareSync({ syncFormat: 'top-shelf-app-data', syncVersion: 2, schemaVersion: 6, data: { movies: [movie] } });
+  assert.equal(result.legacy, true);
+  assert.equal(result.state.workspace.movies[0].historicalRating, '');
+  assert.equal(result.state.workspace.movies[0].rating, 4);
 });

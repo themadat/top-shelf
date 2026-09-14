@@ -2,14 +2,14 @@
 
 Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the first planned areas.
 
-Version **0.0.1.3** adds the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
+Version **0.0.1.4** adds the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
 
 ## Movies
 
 Choose **Add movie**, search by title and select the correct match, or enter a numeric TMDB ID. Lookup fills release date, TMDB ID, genres, production companies, directors, the top ten cast members, and collection. Title can be edited; How and Other are free text. TMDB sometimes has no release date or collection, which is shown explicitly.
 
 - **Wishlist:** optional available date, whole-number priority 1–5, and Notes.
-- **Watched:** required watched date, decimal rating 1–5, and review.
+- **Watched:** optional watched date (blank means unknown), required decimal rating 1–5 or mapped historical rating, and review.
 - Add in either state, edit existing movies, or use Mark watched. One active entry per TMDB movie is allowed. Original Wishlist extras remain stored when you change state.
 - Ratings use dark colors from red at 0 to green at 5; entry accepts 1–5. Priorities use light colors from green at 1 to red at 5. Labels and numbers keep the meaning available without color.
 
@@ -34,7 +34,7 @@ GitHub Sync is enabled and fixed to `themadat/app-data/main/data/top-shelf.json`
 
 The target is configured locally; file existence, token permissions, and a real round trip remain unverified until this checklist is completed. See [reset/setup checklist](docs/RESET.md).
 
-Update all app copies to **0.0.1.3** before syncing movies. Local state/backups now use schema v5, cloud content uses format v2/schema v6, and prior local/cloud content remains readable. Older builds reject the new format. A merge combines disjoint movies but requires a choice for differing edits or deletion conflicts. Full replacement/import saves recovery first.
+Update all app copies to **0.0.1.4** before syncing movies. Local state/backups now use schema v5, cloud content uses format v3/schema v7, and prior local/cloud content remains readable. Older builds reject the new format. A merge combines disjoint movies but requires a choice for differing edits or deletion conflicts. Full replacement/import saves recovery first.
 
 ## Artwork and hosting
 
@@ -43,3 +43,5 @@ Update all app copies to **0.0.1.3** before syncing movies. Local state/backups 
 The [repository](https://github.com/themadat/top-shelf) retains its GitHub Pages Actions workflow. Set Pages Source to GitHub Actions for a single deployment path. No repository creation, commits, push, or deployment is part of this reset.
 
 See [architecture](docs/ARCHITECTURE.md), [components](docs/COMPONENTS.md), [customization](docs/CUSTOMIZATION.md), [testing](docs/TESTING.md), and [two-laptop Git setup](docs/GIT-SETUP.md). Agent lifecycle contracts live in [the handoff](context/LLM_HANDOFF.md).
+
+Historical ratings preserve their labels and map to numeric scores: 100! = 5, YES = 4, MEH = 3, NO = 2, RUN = 1. Leave a watched date blank when unknown. Settings includes the original movie database background, favorites, and reference links; Roadmap and What’s New retain its backlog and spreadsheet history.

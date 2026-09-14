@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 2;
+  const SYNC_VERSION = 3;
   // Older builds reject this movie-capable envelope instead of dropping its content.
-  const SYNC_SCHEMA_VERSION = 6;
+  const SYNC_SCHEMA_VERSION = 7;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -578,7 +578,8 @@
       return Object.assign({}, prepare(input), { legacy: true });
     }
     const legacyContent = input.syncFormat === SYNC_FORMAT && input.syncVersion === 1 && input.schemaVersion === 5;
-    if (!legacyContent && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const priorMovies = input.syncFormat === SYNC_FORMAT && input.syncVersion === 2 && input.schemaVersion === 6;
+    if (!legacyContent && !priorMovies && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
       || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"]).includes(key); })
@@ -596,7 +597,7 @@
         records: data.records || []
       }
     });
-    return { state: state, legacy: legacyContent, migrations: [], validation: validate(state) };
+    return { state: state, legacy: legacyContent || priorMovies, migrations: [], validation: validate(state) };
   }
 
   function applySync(localState, remoteState) {

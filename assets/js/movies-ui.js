@@ -11,7 +11,10 @@
   function statusFields() {
     const watched = $("#movieStatus").value === "watched";
     $("#wishlistFields").hidden = watched; $("#watchedFields").hidden = !watched;
-    ["watchedDate", "rating", "review"].forEach(function (name) { $("#movieForm").elements[name].required = watched; });
+    ["rating", "review"].forEach(function (name) { $("#movieForm").elements[name].required = watched; });
+    const form = $("#movieForm"), historical = form.elements.historicalRating.value;
+    form.elements.rating.readOnly = !!historical;
+    if (historical) form.elements.rating.value = model.historicalRatings[historical];
     $("#movieRatingPreview").style.background = model.color($("#movieForm").elements.rating.value || 1, false);
     $("#moviePriorityPreview").style.background = model.color($("#movieForm").elements.priority.value || 1, true);
   }
@@ -69,7 +72,7 @@
     finally { if (sequence === generation) { $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); } }
   }
   function badge(movie) {
-    if (movie.status === "watched") return '<span class="movie-score" style="background:' + model.color(movie.rating, false) + '">Rating ' + (Number.isInteger(movie.rating) ? movie.rating.toFixed(1) : String(movie.rating)) + '</span>';
+    if (movie.status === "watched") return '<span class="movie-score" style="background:' + model.color(movie.rating, false) + '">' + (movie.historicalRating ? esc(movie.historicalRating) + ' · ' : 'Rating ') + (Number.isInteger(movie.rating) ? movie.rating.toFixed(1) : String(movie.rating)) + '</span>';
     return movie.priority == null ? '' : '<span class="movie-priority" style="background:' + model.color(movie.priority, true) + '">Priority ' + movie.priority + '</span>';
   }
   function render() {
@@ -87,7 +90,7 @@
     $("#movieResultsCount").textContent = visible.length + " shown";
     $("#movieList").innerHTML = visible.length ? visible.map(function (movie) {
       const details = [["How", movie.how], ["Other", movie.other], ["Genres", movie.genres.join(", ")], ["Production companies", movie.productionCompanies.join(", ")], ["Director", movie.directors.join(", ")], ["Actors", movie.actors.join(", ")], ["Collections", movie.collections.join(", ")]];
-      return '<article class="movie-card"><div class="movie-card-top"><span class="movie-state">' + (movie.status === "watched" ? "Watched" : "Wishlist") + '</span>' + badge(movie) + '</div><h2>' + esc(movie.title) + '</h2><p class="movie-muted">Released ' + esc(movie.releaseDate || "TBA") + ' · <a href="https://www.themoviedb.org/movie/' + movie.tmdbId + '" target="_blank" rel="noopener noreferrer">TMDB ' + movie.tmdbId + '</a></p><p class="movie-date">' + (movie.status === "watched" ? 'Watched ' + esc(movie.watchedDate) : movie.availableDate ? 'Available ' + esc(movie.availableDate) : 'No availability date set') + '</p>' + (movie.status === "watched" ? '<p class="movie-review">' + esc(movie.review) + '</p>' : movie.notes ? '<p class="movie-review">' + esc(movie.notes) + '</p>' : '') + '<details><summary>Movie details</summary><dl class="movie-details">' + details.map(function (entry) { return '<div><dt>' + entry[0] + '</dt><dd>' + esc(entry[1] || "—") + '</dd></div>'; }).join("") + '</dl></details><footer><button class="button" type="button" data-edit-movie="' + esc(movie.id) + '">Edit movie</button>' + (movie.status === "wishlist" ? '<button type="button" class="button primary" data-watch-movie="' + esc(movie.id) + '">Mark watched</button>' : '') + '</footer></article>';
+      return '<article class="movie-card"><div class="movie-card-top"><span class="movie-state">' + (movie.status === "watched" ? "Watched" : "Wishlist") + '</span>' + badge(movie) + '</div><h2>' + esc(movie.title) + '</h2><p class="movie-muted">Released ' + esc(movie.releaseDate || "TBA") + ' · <a href="https://www.themoviedb.org/movie/' + movie.tmdbId + '" target="_blank" rel="noopener noreferrer">TMDB ' + movie.tmdbId + '</a></p><p class="movie-date">' + (movie.status === "watched" ? (movie.watchedDate ? 'Watched ' + esc(movie.watchedDate) : 'Watch date unknown') : movie.availableDate ? 'Available ' + esc(movie.availableDate) : 'No availability date set') + '</p>' + (movie.status === "watched" ? '<p class="movie-review">' + esc(movie.review) + '</p>' : movie.notes ? '<p class="movie-review">' + esc(movie.notes) + '</p>' : '') + '<details><summary>Movie details</summary><dl class="movie-details">' + details.map(function (entry) { return '<div><dt>' + entry[0] + '</dt><dd>' + esc(entry[1] || "—") + '</dd></div>'; }).join("") + '</dl></details><footer><button class="button" type="button" data-edit-movie="' + esc(movie.id) + '">Edit movie</button>' + (movie.status === "wishlist" ? '<button type="button" class="button primary" data-watch-movie="' + esc(movie.id) + '">Mark watched</button>' : '') + '</footer></article>';
     }).join("") : '<div class="movie-empty"><span aria-hidden="true">' + App.icons.markup("shelfMovies") + '</span><h2>' + (items.length ? "No movies match" : "Make room for a great movie") + '</h2><p>' + (items.length ? "Try another search or movie state." : "Build your wishlist or add something you’ve already watched.") + '</p><button type="button" class="button primary" data-add-movie>Add movie</button></div>';
     const tab = $('[data-shelf="movies"]');
     tab.querySelector("small").textContent = items.length;
@@ -126,6 +129,7 @@
     });
     $("#movieForm").addEventListener("submit", save);
     $("#movieStatus").addEventListener("change", statusFields);
+    $("#movieForm").elements.historicalRating.addEventListener("change", statusFields);
     $("#movieForm").elements.rating.addEventListener("input", statusFields);
     $("#movieForm").elements.priority.addEventListener("input", statusFields);
     $("#movieLookupButton").addEventListener("click", function () { lookup(); });
