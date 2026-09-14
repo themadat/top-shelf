@@ -109,6 +109,8 @@
       if (active) button.setAttribute("aria-current", "page");
       else button.removeAttribute("aria-current");
     });
+    $("#moviesWorkspace").hidden = selected.id !== "movies";
+    $(".shelf-starter").hidden = selected.id === "movies";
     $("#shelfTitle").textContent = selected.label;
     icons.set($("#shelfSymbol"), selected.symbol);
     $("#shelfDescription").textContent = selected.id === "movies" || selected.id === "tv" ? "Your " + selected.label.toLowerCase() + " ratings will live here. List entry and scoring are coming next." : "A place for your " + selected.label.toLowerCase() + " ratings. We’re starting with movies and TV.";
@@ -120,7 +122,7 @@
     renderShelves();
     const button = $('[data-shelf="' + id + '"]');
     button.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
-    if (focusContent) $("#shelfTitle").focus({ preventScroll: true });
+    if (focusContent) $(id === "movies" ? "#moviesTitle" : "#shelfTitle").focus({ preventScroll: true });
   }
 
   function bindShelfNavigation() {
@@ -295,6 +297,7 @@
     const needle = query.trim().toLowerCase();
     if (!needle) return [];
     const results = [];
+    state().workspace.movies.filter(function (movie) { return !movie.deleted && App.movies.searchable(movie).includes(needle); }).slice(0, 6).forEach(function (movie) { results.push({ type: "movie", id: movie.id, title: movie.title, meta: "Movies · " + movie.status }); });
     const notes = state().workspace.documents[0];
     if (config.features.documents && notes && (`notes ${documentText(notes)}`).toLowerCase().includes(needle)) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Local notes" });
     config.help.forEach(function (topic) {
@@ -323,11 +326,12 @@
     container.hidden = false;
     container.innerHTML = results.length ? results.map(function (result, index) {
       return '<button type="button" role="option" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '"><span><strong>' + highlightedSearchText(result.title, query) + '</strong><small>' + highlightedSearchText(result.meta, query) + "</small></span><span aria-hidden=\"true\">" + icons.markup("chevronRight") + "</span></button>";
-    }).join("") : '<div class="search-empty">No matching notes or support content.</div>';
+    }).join("") : '<div class="search-empty">No matching movies, notes, or support content.</div>';
   }
 
   function activateGlobalSearchResult(type, id) {
-    if (type === "notes") openNotes($("#globalSearch"));
+    if (type === "movie") { selectShelf("movies", false); App.moviesUI.open(id, $("#globalSearch")); }
+    else if (type === "notes") openNotes($("#globalSearch"));
     else if (type === "help") { openSupport("help"); setInputValue($("#helpSearch"), config.help.find(function (topic) { return topic.id === id; })?.title || ""); renderHelp(); }
     else if (type === "roadmap") {
       storage.mutate(function (next) { next.modules.roadmap.search = config.roadmap.find(function (item) { return item.id === id; })?.title || ""; }, { reason: "roadmap-search" });
@@ -567,15 +571,16 @@
   }
 
   async function resetPreferences() {
-    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, filters, panel layout, view state, and dismissed hints will return to defaults. Notes will be preserved.", confirmLabel: "Reset preferences", danger: true });
+    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, filters, panel layout, view state, and dismissed hints will return to defaults. Movies and Notes will be preserved.", confirmLabel: "Reset preferences", danger: true });
     if (!accepted) return;
-    storage.replace(model.resetPreferences(state()), { recoveryReason: "Before resetting preferences", reason: "reset-preferences", touch: false });
+    try { storage.replace(model.resetPreferences(state()), { recoveryReason: "Before resetting preferences", reason: "reset-preferences", touch: false }); }
+    catch (error) { components.message("Preferences kept", error.message); return; }
     renderAll();
-    components.toast("Preferences were reset; notes were preserved.", { title: "Preferences reset", kind: "success" });
+    components.toast("Preferences were reset; movies and notes were preserved.", { title: "Preferences reset", kind: "success" });
   }
 
   async function eraseAllData() {
-    const accepted = await components.confirm({ title: "Erase all application data?", message: "This permanently removes notes, preferences, sync settings, the stored token, and recovery data from this browser. Export a backup first if anything should be kept.", confirmLabel: "Erase everything", cancelLabel: "Keep my data", danger: true });
+    const accepted = await components.confirm({ title: "Erase all application data?", message: "This permanently removes movies, notes, preferences, sync settings, stored GitHub and TMDB tokens, and recovery data from this browser. Export a backup first if anything should be kept.", confirmLabel: "Erase everything", cancelLabel: "Keep my data", danger: true });
     if (!accepted) return;
     storage.clearAll();
     renderAll();
@@ -993,6 +998,7 @@
     components.init();
     portability.init();
     bindShelfNavigation();
+    App.moviesUI.init();
     bindGeneralEvents();
     bindRuntimeEvents();
     pwa.init();

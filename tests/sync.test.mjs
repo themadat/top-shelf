@@ -17,7 +17,7 @@ function harness({ token = 'test-token', online = true } = {}) {
     TextEncoder, TextDecoder, Uint8Array, AbortController, structuredClone, atob, btoa, URL, console,
     fetch: async (url, options) => { requests.push({ url, options }); return h.respond(url, options); }
   });
-  for (const file of ['config.js', 'icons.js', 'core/utils.js', 'core/state.js']) {
+  for (const file of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js', 'core/state.js']) {
     vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
     // Fixtures contain plain text; DOM sanitization is exercised in browser checks.
     if (file === 'core/utils.js') {
@@ -255,7 +255,7 @@ test('first upload still requires a choice; a synchronized copy needs no write',
 test('empty foundations sync only an empty content envelope, independent of device, UI, or save metadata', () => {
   const h = harness(), model = h.App.stateModel;
   const original = JSON.stringify(model.syncPayload(h.state));
-  assert.deepEqual(JSON.parse(original), { syncFormat: 'top-shelf-app-data', syncVersion: 1, schemaVersion: 5, data: {} });
+  assert.deepEqual(JSON.parse(original), { syncFormat: 'top-shelf-app-data', syncVersion: 2, schemaVersion: 6, data: {} });
   assert.ok(Buffer.byteLength(JSON.stringify(model.syncPayload(h.state), null, 2)) < 120);
   h.App.storage.mutate(state => {
     state.preferences.appearance.mode = 'dark'; state.ui.search = 'cloud'; state.ui.supportTab = 'dataSync';
@@ -302,7 +302,7 @@ test('legacy whole-state files migrate without false conflicts and compact on ex
   await h.sync.syncNow();
   const written = JSON.parse(Buffer.from(JSON.parse(h.requests.find(r => r.options.method === 'PUT').options.body).content, 'base64').toString());
   assert.deepEqual(written.data, {});
-  assert.equal(written.syncVersion, 1);
+  assert.equal(written.syncVersion, 2);
   assert.equal(h.state.preferences.appearance.mode, 'system');
 });
 
@@ -378,7 +378,7 @@ test('nonempty legacy records survive compact round trips without save timestamp
 });
 
 test('invalid or future cloud data is rejected without replacing or uploading content', async () => {
-  for (const transform of [p => ({ ...p, syncVersion: 2 }), p => ({ ...p, data: { notes: [] } }), p => ({ ...p, data: { unknown: 'content' } }), p => ({ ...p, data: { records: [{}] } }), () => null]) {
+  for (const transform of [p => ({ ...p, syncVersion: 3 }), p => ({ ...p, data: { notes: [] } }), p => ({ ...p, data: { unknown: 'content' } }), p => ({ ...p, data: { records: [{}] } }), () => null]) {
     const h = harness(); h.confirmation = true;
     const invalid = transform(h.App.stateModel.syncPayload(h.state));
     h.respond = () => response(200, { type: 'file', sha: 'sha', content: Buffer.from(JSON.stringify(invalid)).toString('base64') });
@@ -386,5 +386,96 @@ test('invalid or future cloud data is rejected without replacing or uploading co
     assert.equal(h.sync.getInfo().state, 'failed');
     assert.equal(h.replacements.length, 0);
     assert.ok(h.requests.every(request => request.options.method !== 'PUT'));
+  }
+});
+
+function movieFixture(App, overrides = {}) {
+  return App.movies.normalize({ id: 'movie-1', tmdbId: 872585, title: 'Oppenheimer', status: 'wishlist', ...overrides });
+}
+
+test('movie fields validate state-specific requirements and preserve decimal ratings', () => {
+  const h = harness(), movies = h.App.movies;
+  const wishlist = movieFixture(h.App);
+  assert.equal(wishlist.priority, null);
+  assert.equal(wishlist.availableDate, '');
+  for (const priority of [0, 6, 2.5]) assert.throws(() => movieFixture(h.App, { priority }), /whole number/);
+  for (const rating of [0, 5.1, 'invalid']) assert.throws(() => movieFixture(h.App, { rating }), /Rating/);
+  assert.throws(() => movieFixture(h.App, { status: 'watched' }), /watched date/);
+  assert.throws(() => movieFixture(h.App, { status: 'invalid' }), /Wishlist or Watched/);
+  assert.throws(() => movieFixture(h.App, { availableDate: '2026-02-30' }), /Invalid movie date/);
+  const watched = movieFixture(h.App, { status: 'watched', rating: 4.75, watchedDate: '2026-09-13', review: 'A <literal> review' });
+  assert.equal(watched.rating, 4.75);
+  assert.equal(watched.review, 'A <literal> review');
+  assert.equal(movies.color(0, false), 'hsl(0 52% 25%)');
+  assert.equal(movies.color(5, false), 'hsl(120 52% 25%)');
+  assert.equal(movies.color(1, true), 'hsl(120 52% 88%)');
+  assert.equal(movies.color(5, true), 'hsl(0 52% 88%)');
+});
+
+test('TMDB maps multiple directors, ordered top-ten cast, and optional collection', () => {
+  const h = harness();
+  const details = h.App.movies.fromTmdb({ id: 11, title: 'A movie', release_date: '2026-01-01', genres: [{ name: 'Drama' }], production_companies: [{ name: 'Studio' }], belongs_to_collection: { name: 'Collection, Volume I' }, credits: { crew: [{ job: 'Director', name: 'One' }, { job: 'Writer', name: 'Writer' }, { job: 'Director', name: 'Two' }], cast: Array.from({ length: 12 }, (_, i) => ({ name: 'Actor ' + (11 - i), order: 11 - i })) } });
+  assert.equal(details.actors.length, 10);
+  assert.equal(details.actors[0], 'Actor 0');
+  assert.equal(details.actors[9], 'Actor 9');
+  assert.equal(details.directors.join(', '), 'One, Two');
+  assert.equal(details.collections[0], 'Collection, Volume I');
+  assert.throws(() => h.App.movies.fromTmdb({ id: 11, title: 'Incomplete' }), /incomplete/);
+});
+
+test('movie content round trips through backups and sync with credentials omitted', async () => {
+  const h = harness(), model = h.App.stateModel;
+  h.state.workspace.movies = [movieFixture(h.App, { how: 'Cinema', other: 'With friends', priority: 1, notes: 'See in IMAX' })];
+  const payload = model.syncPayload(h.state);
+  assert.equal(payload.syncVersion, 2);
+  assert.equal(payload.schemaVersion, 6);
+  assert.equal(payload.data.movies[0].how, 'Cinema');
+  assert.equal(model.syncHash(model.prepareSync(payload).state), model.syncHash(h.state));
+  assert.equal(model.prepare(model.exportEnvelope(h.state)).state.workspace.movies[0].notes, 'See in IMAX');
+  assert.ok(!JSON.stringify(model.exportEnvelope(h.state)).includes('test-token'));
+  h.choice = 'upload';
+  h.respond = (url, options) => options.method === 'PUT' ? response(200, { content: { sha: 'movies-sha' } }) : h.file();
+  await h.sync.syncNow();
+  const write = h.requests.find(r => r.options.method === 'PUT');
+  assert.ok(write);
+  const uploaded = JSON.parse(Buffer.from(JSON.parse(write.options.body).content, 'base64').toString());
+  assert.equal(uploaded.data.movies[0].priority, 1);
+});
+
+test('movie deletions stay as tombstones and conflict with stale edits instead of resurrecting', () => {
+  const h = harness(), model = h.App.stateModel;
+  h.state.workspace.movies = [movieFixture(h.App)];
+  h.remote.workspace.movies = [{ id: 'movie-1', deleted: true }];
+  assert.equal(model.canMerge(h.state, h.remote), false);
+  const restored = model.applySync(h.state, h.remote);
+  assert.equal(restored.workspace.movies[0].deleted, true);
+  assert.equal(model.syncPayload(restored).data.movies[0].deleted, true);
+  h.state.workspace.movies = [movieFixture(h.App, { id: 'movie-2', tmdbId: 12 })];
+  assert.equal(model.canMerge(h.state, h.remote), true);
+  assert.equal(model.merge(h.state, h.remote).workspace.movies.length, 2);
+});
+
+test('old local and cloud data migrate without losing Notes or custom appearance', () => {
+  const h = harness(), model = h.App.stateModel;
+  const old = structuredClone(h.state); old.schemaVersion = 4; delete old.workspace.movies;
+  old.preferences.appearance.accent = '#315f73'; old.preferences.appearance.accent2 = '#b86b4b';
+  changeNotes(old, 'Keep my note');
+  const prepared = model.prepare(old).state;
+  assert.equal(prepared.workspace.documents[0].html, 'Keep my note');
+  assert.equal(prepared.preferences.appearance.accent, '#008080');
+  assert.equal(prepared.preferences.appearance.accent2, '#ff7f50');
+  old.preferences.appearance.accent = '#123456';
+  assert.equal(model.prepare(old).state.preferences.appearance.accent, '#123456');
+  const cloud = model.prepareSync({ syncFormat: 'top-shelf-app-data', syncVersion: 1, schemaVersion: 5, data: { notes: 'Old cloud' } });
+  assert.equal(cloud.legacy, true);
+  assert.equal(cloud.state.workspace.documents[0].html, 'Old cloud');
+  assert.equal(cloud.state.workspace.movies.length, 0);
+});
+
+test('malformed and duplicate movie imports fail without silently discarding content', () => {
+  const h = harness(), model = h.App.stateModel;
+  const movie = movieFixture(h.App);
+  for (const movies of [{}, [{}], [movie, movie], [movie, { ...movie, id: 'another-id' }]]) {
+    assert.throws(() => model.prepareSync({ syncFormat: 'top-shelf-app-data', syncVersion: 2, schemaVersion: 6, data: { movies } }));
   }
 });

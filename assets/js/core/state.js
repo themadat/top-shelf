@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 1;
-  // Older apps reject v5 instead of mistaking this compact envelope for empty v4 state.
-  const SYNC_SCHEMA_VERSION = 5;
+  const SYNC_VERSION = 2;
+  // Older builds reject this movie-capable envelope instead of dropping its content.
+  const SYNC_SCHEMA_VERSION = 6;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -47,6 +47,7 @@
       },
       workspace: {
         title: config.identity.name,
+        movies: [],
         records: records,
         documents: documents
       },
@@ -232,7 +233,15 @@
     return source;
   }
 
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4 };
+  function migrate4to5(input) {
+    const source = u.clone(input);
+    source.schemaVersion = 5;
+    const appearance = source.preferences?.appearance;
+    if (appearance?.accent === "#315f73") appearance.accent = config.themeDefaults.accent;
+    if (appearance?.accent2 === "#b86b4b") appearance.accent2 = config.themeDefaults.accent2;
+    return source;
+  }
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -387,6 +396,7 @@
       },
       workspace: {
         title: u.cleanLine(sourceWorkspace.title || base.workspace.title, 100) || base.workspace.title,
+        movies: App.movies.normalizeList(sourceWorkspace.movies),
         records: records,
         documents: documents
       },
@@ -546,6 +556,7 @@
     const data = {};
     const notes = u.richTextToPlainText(normalized.workspace.documents[0].html, config.controls.maxDocumentHtmlLength);
     if (notes) data.notes = notes;
+    if (normalized.workspace.movies.length) data.movies = normalized.workspace.movies;
     // Preserve real content from older backups, without exporting empty scaffolding.
     if (normalized.workspace.records.length) data.records = normalized.workspace.records.map(function (record) {
       const item = Object.assign({}, record);
@@ -566,10 +577,11 @@
     if (!("syncFormat" in input) && !("syncVersion" in input)) {
       return Object.assign({}, prepare(input), { legacy: true });
     }
-    if (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const legacyContent = input.syncFormat === SYNC_FORMAT && input.syncVersion === 1 && input.schemaVersion === 5;
+    if (!legacyContent && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || Object.keys(data).some(function (key) { return !["notes", "records"].includes(key); })
+      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"]).includes(key); })
       || ("notes" in data && (typeof data.notes !== "string" || data.notes.length > config.controls.maxDocumentHtmlLength))
       || ("records" in data && (!Array.isArray(data.records) || data.records.length > config.controls.maxRecords))) {
       throw new Error("The cloud file contains invalid or unsupported content.");
@@ -580,10 +592,11 @@
     const state = normalize({
       workspace: {
         documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(data.notes || "").replace(/\n/g, "<br>") }],
+        movies: App.movies.normalizeList(data.movies),
         records: data.records || []
       }
     });
-    return { state: state, legacy: false, migrations: [], validation: validate(state) };
+    return { state: state, legacy: legacyContent, migrations: [], validation: validate(state) };
   }
 
   function applySync(localState, remoteState) {
@@ -591,6 +604,7 @@
     const remote = normalize(remoteState);
     next.workspace.documents = remote.workspace.documents;
     next.workspace.records = remote.workspace.records;
+    next.workspace.movies = remote.workspace.movies;
     next.meta.tombstones = remote.meta.tombstones;
     return normalize(touch(next));
   }
@@ -601,7 +615,7 @@
     if (local.notes && remote.notes && local.notes !== remote.notes) throw new Error("Notes differ. Choose which copy to keep.");
     const data = {};
     if (local.notes || remote.notes) data.notes = local.notes || remote.notes;
-    [["records", "id", config.controls.maxRecords]].forEach(function (entry) {
+    [["records", "id", config.controls.maxRecords], ["movies", "id", config.controls.maxMovies]].forEach(function (entry) {
       const items = new Map();
       (local[entry[0]] || []).concat(remote[entry[0]] || []).forEach(function (item) {
         const current = items.get(item[entry[1]]);
@@ -611,6 +625,7 @@
       if (items.size > entry[2]) throw new Error("The combined content exceeds the saved item limit.");
       if (items.size) data[entry[0]] = Array.from(items.values());
     });
+    if (data.movies) data.movies = App.movies.normalizeList(data.movies);
     return { syncFormat: SYNC_FORMAT, syncVersion: SYNC_VERSION, schemaVersion: SYNC_SCHEMA_VERSION, data: data };
   }
 

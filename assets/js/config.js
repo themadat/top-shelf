@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.2",
-      "buildId": "0.0.1.2",
+      "version": "0.0.1.3",
+      "buildId": "0.0.1.3",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -82,12 +82,13 @@
         "shortcut": "8"
       }
     ],
-    "schemaVersion": 4,
+    "schemaVersion": 5,
     "storage": {
-      "stateKey": "topShelf.state.v4",
-      "legacyKeys": [],
+      "stateKey": "topShelf.state.v5",
+      "legacyKeys": ["topShelf.state.v4"],
       "recoveryKey": "topShelf.recovery.v1",
       "secretKey": "topShelf.githubToken.v1",
+      "tmdbSecretKey": "topShelf.tmdbToken.v1",
       "sessionSecretKey": "topShelf.githubToken.session.v1"
     },
     "cloudSync": {
@@ -112,6 +113,7 @@
       "whatsNewAutoDismissMs": 30000,
       "maxImportBytes": 5242880,
       "maxRecords": 5000,
+      "maxMovies": 5000,
       "maxDocuments": 500,
       "maxTextLength": 20000,
       "maxDocumentHtmlLength": 250000
@@ -143,13 +145,14 @@
       }
     ],
     "themeDefaults": {
-      "accent": "#315f73",
-      "accent2": "#b86b4b",
+      "accent": "#008080",
+      "accent2": "#ff7f50",
       "success": "#4f745f",
       "warning": "#9b6a24",
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.3", "date": "2026-09-13T20:00:00.000Z", "title": "Your movie lists", "summary": "Keep a wishlist, rate watched movies, and fill movie details from TMDB.", "features": ["Wishlist and Watched lists with editing, filtering, and sorting", "TMDB title search and ID lookup with movie metadata", "Teal and coral accents, dark rating colors, and light priority colors"], "improvements": ["Movies included in backups, recovery, and GitHub Sync", "TMDB credentials stored separately on each browser"], "fixes": [], "knownIssues": ["TMDB lookup needs an internet connection and an API Read Access Token.", "Update all copies to 0.0.1.3 before syncing movie data."]},
       {"version": "0.0.1.2", "date": "2026-09-13T18:00:00.000Z", "title": "Rating-list navigation", "summary": "Eight top-bar tabs with supplied artwork, counts, and keyboard navigation.", "features": ["Movies, TV, Books, Podcasts, Music, Restaurants, Food, and Scotches tabs"], "improvements": ["Number keys 1\u20138 switch shelves; selection stays on this device", "Compact icon, label, and count layout inspired by My Stuff"], "fixes": [], "knownIssues": ["Rating-list entry and scoring are not implemented yet."]},
       {
         "version": "0.0.1.1",
@@ -170,12 +173,13 @@
     ],
     "roadmap": [],
     "help": [
+      {"id": "movies", "title": "Movie lists and TMDB", "section": "Features", "keywords": "movies watched wishlist priority rating how other tmdb token review", "html": "<p>Add a movie to Wishlist or Watched. Search TMDB by title and choose a match, or enter its numeric movie ID. Release date, genres, production companies, directors, top ten actors, and collection are filled automatically. How and Other are free text. Wishlist allows an optional available date, priority 1\u20135, and Notes. Watched requires a watched date, rating 1\u20135, and review. Mark watched opens the editor. Dark ratings run red to green on a 0\u20135 scale; light priorities run green (1) to red (5). Movie lookup settings in the editor stores the TMDB API Read Access Token separately from backups and sync. Saved movie editing works offline. Update all app copies before syncing the new movie format.</p><p><img src=\"assets/icons/tmdb.svg\" class=\"tmdb-logo\" alt=\"TMDB\">This product uses the TMDB API but is not endorsed or certified by TMDB.</p><p><a href=\"https://www.themoviedb.org\" target=\"_blank\" rel=\"noopener noreferrer\">The Movie Database</a></p>"},
       {
         "id": "start",
         "title": "Getting started",
         "section": "Basics",
         "keywords": "start top shelf movies tv ratings lists search",
-        "html": "<p>Top Shelf is the foundation for personal rating lists across different domains, starting with movies and TV. Choose a shelf in the top bar or press 1–8. Each shelf currently shows a starter view; rating-list entry is coming later. Use Notes to collect ideas, Settings to adjust appearance, and <kbd>/</kbd> to search Notes and application support.</p>"
+        "html": "<p>Top Shelf is the foundation for personal rating lists across different domains, starting with movies and TV. Choose a shelf in the top bar or press 1–8. Movies supports Wishlist and Watched lists. Add movies by TMDB title search or ID; other shelves remain starter views. Use Notes to collect ideas, Settings to adjust appearance, and <kbd>/</kbd> to search Notes and application support.</p>"
       },
       {
         "id": "notes",
@@ -196,7 +200,7 @@
         "title": "GitHub synchronization",
         "section": "Data",
         "keywords": "github cloud sync token conflict merge",
-        "html": "<p>GitHub Sync is optional. This app uses <code>themadat/app-data/main/data/top-shelf.json</code>. Create that file with <code>{}</code>, then create a fine-grained token restricted to <strong>app-data</strong> with <strong>Contents: Read and write</strong>. Enter it only in Settings → Data Sync, choose whether to remember it, then Test and Save. Sync Notes with Sync Now and verify them on another configured browser. The JSON preview shows the upload content; appearance and settings stay on each device. Conflicts ask which copy to keep. Full JSON backups also preserve settings.</p>"
+        "html": "<p>GitHub Sync is optional. This app uses <code>themadat/app-data/main/data/top-shelf.json</code>. Create that file with <code>{}</code>, then create a fine-grained token restricted to <strong>app-data</strong> with <strong>Contents: Read and write</strong>. Enter it only in Settings → Data Sync, choose whether to remember it, then Test and Save. Sync Notes and movies with Sync Now and verify them on another configured browser. The JSON preview shows the upload content; appearance and settings stay on each device. Conflicts ask which copy to keep. Full JSON backups also preserve settings.</p>"
       },
       {
         "id": "install",
@@ -217,7 +221,7 @@
         "title": "Privacy and local data",
         "section": "Data",
         "keywords": "privacy local storage token secret",
-        "html": "<p>Notes remain in browser storage unless you export them or explicitly use GitHub Sync. Tokens are stored separately per device and excluded from backups and diagnostics.</p>"
+        "html": "<p>Notes and movies remain in browser storage unless you export them or explicitly use GitHub Sync. Tokens are stored separately per device and excluded from backups and diagnostics.</p>"
       },
       {
         "id": "shortcuts",

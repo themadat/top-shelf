@@ -140,7 +140,7 @@
   function replace(nextState, options) {
     const settings = Object.assign({ recoveryReason: "Before data replacement", saveRecovery: true, reason: "replace", touch: true }, options || {});
     const prepared = model.prepare(nextState);
-    if (settings.saveRecovery && currentState) saveRecovery(settings.recoveryReason, currentState);
+    if (settings.saveRecovery && currentState && !saveRecovery(settings.recoveryReason, currentState)) throw new Error("Could not save a recovery copy. Current data was kept.");
     currentState = prepared.state;
     if (settings.touch) model.touch(currentState);
     lastSavedJson = "";
@@ -163,8 +163,8 @@
 
   function clearAll() {
     scheduleSave.cancel();
-    [config.storage.stateKey, config.storage.recoveryKey, config.storage.secretKey, config.storage.sessionSecretKey].concat(config.storage.legacyKeys).forEach(removeLocal);
-    try { sessionStorage.removeItem(config.storage.sessionSecretKey); } catch (error) { /* unavailable */ }
+    [config.storage.stateKey, config.storage.tmdbSecretKey, config.storage.recoveryKey, config.storage.secretKey, config.storage.sessionSecretKey].concat(config.storage.legacyKeys).forEach(removeLocal);
+    try { sessionStorage.removeItem(config.storage.sessionSecretKey); sessionStorage.removeItem(config.storage.tmdbSecretKey); } catch (error) { /* unavailable */ }
     lastSavedJson = "";
     currentState = model.createDefaultState({ demo: false });
     saveNow();

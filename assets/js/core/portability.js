@@ -12,6 +12,7 @@
     const categories = new Set(state.workspace.records.map(function (record) { return record.category; }));
     return {
       workspaceTitle: state.workspace.title,
+      movies: state.workspace.movies.filter(function (movie) { return !movie.deleted; }).length,
       records: state.workspace.records.length,
       documents: state.workspace.documents.length,
       categories: categories.size,
@@ -55,6 +56,7 @@
     const current = summaryFor(storage.getState(), []);
     document.querySelector("[data-import-file]").textContent = fileName || "Selected backup";
     document.querySelector("[data-import-workspace]").textContent = summary.workspaceTitle;
+    document.querySelector("[data-import-movies]").textContent = summary.movies + " (current: " + current.movies + ")";
     document.querySelector("[data-import-documents]").textContent = summary.documents + " (current: " + current.documents + ")";
     document.querySelector("[data-import-version]").textContent = "State v" + summary.schemaVersion + " · app v" + (summary.appVersion || "unknown");
     document.querySelector("[data-import-updated]").textContent = u.dateLabel(summary.updatedAt);
@@ -89,7 +91,7 @@
     if (!pendingImport) return;
     const accepted = await App.components.confirm({
       title: "Replace current data?",
-      message: "The validated backup will replace notes, preferences, and module settings. A recoverable copy of the current data will be saved first.",
+      message: "The validated backup will replace movies, notes, preferences, and module settings. A recoverable copy of the current data will be saved first.",
       confirmLabel: "Replace data",
       cancelLabel: "Keep current data",
       danger: true,
@@ -97,10 +99,11 @@
     });
     if (!accepted) return;
     const summary = summaryFor(pendingImport.state, pendingImport.migrations);
-    storage.replace(pendingImport.state, { recoveryReason: "Before importing " + summary.workspaceTitle, reason: "import" });
+    try { storage.replace(pendingImport.state, { recoveryReason: "Before importing " + summary.workspaceTitle, reason: "import" }); }
+    catch (error) { App.components.message("Import unavailable", error.message); return; }
     pendingImport = null;
     App.components.closeDialog("#importPreviewDialog", "imported");
-    App.components.toast("Imported " + summary.documents + " notes.", { title: "Backup restored", kind: "success" });
+    App.components.toast("Imported " + summary.movies + " movies and " + summary.documents + " notes.", { title: "Backup restored", kind: "success" });
   }
 
   function init() {

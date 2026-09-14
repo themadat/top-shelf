@@ -2,7 +2,20 @@
 
 Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the first planned areas.
 
-Version **0.0.1.2** adds eight rating-list tabs with supplied icons, counts, keyboard navigation (1–8), and remembered selection. Each opens a starter view. The foundation retains centered search for Notes and support content, one autosaving Notes modal, vertical Settings, appearance controls, Help, one initial release, an empty Roadmap, shortcuts, and optional Developer Mode. Rating-list entry, scoring, and their data model have not been implemented.
+Version **0.0.1.3** adds the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
+
+## Movies
+
+Choose **Add movie**, search by title and select the correct match, or enter a numeric TMDB ID. Lookup fills release date, TMDB ID, genres, production companies, directors, the top ten cast members, and collection. Title can be edited; How and Other are free text. TMDB sometimes has no release date or collection, which is shown explicitly.
+
+- **Wishlist:** optional available date, whole-number priority 1–5, and Notes.
+- **Watched:** required watched date, decimal rating 1–5, and review.
+- Add in either state, edit existing movies, or use Mark watched. One active entry per TMDB movie is allowed. Original Wishlist extras remain stored when you change state.
+- Ratings use dark colors from red at 0 to green at 5; entry accepts 1–5. Priorities use light colors from green at 1 to red at 5. Labels and numbers keep the meaning available without color.
+
+In **Add movie → Movie lookup settings**, enter your **TMDB API Read Access Token** once per browser and choose device or tab storage. Tokens never appear in source, backups, diagnostics, or cloud content. Lookup needs internet; existing movies can be read and edited offline. The provided read token was verified in a temporary test browser; configure it in your own app browser before lookup.
+
+TMDB search deliberately requires selecting a result instead of guessing the first title. Credits are fetched with details using [append_to_response](https://developer.themoviedb.org/docs/append-to-response). The checked-in logo comes from [TMDB’s attribution page](https://www.themoviedb.org/about/logos-attribution). This product uses the TMDB API but is not endorsed or certified by TMDB.
 
 ## Run locally
 
@@ -10,7 +23,7 @@ This is static HTML, CSS, and JavaScript with no build step or runtime dependenc
 
 ## Data and GitHub Sync
 
-Notes save in browser storage under a Top Shelf namespace. Export full JSON backups in Settings; import and recovery preserve a copy before replacing local data. Credentials stay outside backups, sync payloads, and diagnostics. Cloud data carries Notes and any nonempty legacy record content; settings remain on each device.
+Movies and Notes save in browser storage under a Top Shelf namespace. Export full JSON backups in Settings; import and recovery preserve a copy before replacing local data. Credentials stay outside backups, sync payloads, and diagnostics. Cloud data carries movies (including deletion markers), Notes, and any nonempty legacy record content; settings remain on each device.
 
 GitHub Sync is enabled and fixed to `themadat/app-data/main/data/top-shelf.json`. The external file and token still need user setup:
 
@@ -20,6 +33,8 @@ GitHub Sync is enabled and fixed to `themadat/app-data/main/data/top-shelf.json`
 4. Use **Sync Now**, configure another browser, and confirm a Notes upload/download round trip. Configure credentials separately on each device.
 
 The target is configured locally; file existence, token permissions, and a real round trip remain unverified until this checklist is completed. See [reset/setup checklist](docs/RESET.md).
+
+Update all app copies to **0.0.1.3** before syncing movies. Local state/backups now use schema v5, cloud content uses format v2/schema v6, and prior local/cloud content remains readable. Older builds reject the new format. A merge combines disjoint movies but requires a choice for differing edits or deletion conflicts. Full replacement/import saves recovery first.
 
 ## Artwork and hosting
 

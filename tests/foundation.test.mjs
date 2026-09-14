@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
 const context = vm.createContext({ window: {}, URL, TextEncoder, TextDecoder, Uint8Array, structuredClone });
-for (const path of ['config.js', 'icons.js', 'core/utils.js']) {
+for (const path of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js']) {
   vm.runInContext(read('assets/js/' + path), context);
 }
 const App = context.window.LocalApp;
@@ -20,7 +20,7 @@ test('foundation identity, release, deployment, and storage surfaces agree', () 
   assert.equal(config.releases[0].version, config.identity.version);
   assert.match(read('.github/workflows/deploy-pages.yml').split('\n')[0], new RegExp('v' + config.identity.version.replaceAll('.', '\\.') + '$'));
   assert.equal(config.roadmap.length, 0);
-  assert.equal(config.storage.legacyKeys.length, 0);
+  assert.deepEqual(Array.from(config.storage.legacyKeys), ['topShelf.state.v4']);
   for (const [key, value] of Object.entries(config.storage)) {
     if (key !== 'legacyKeys') assert.ok(value.startsWith('topShelf.'), key);
   }
@@ -32,7 +32,7 @@ test('foundation identity, release, deployment, and storage surfaces agree', () 
 test('HTML, manifests, configuration, CSS, and offline shell references exist', () => {
   const check = path => assert.ok(existsSync(new URL(path.split('?')[0], root)), path);
   for (const match of read('index.html').matchAll(/(?:src|href)="([^"]+)"/g)) {
-    if (!match[1].startsWith('#')) check(match[1]);
+    if (!/^(#|https?:)/.test(match[1])) check(match[1]);
   }
   for (const path of ['manifest.webmanifest', 'manifest-dark.webmanifest']) {
     const manifest = JSON.parse(read(path));
@@ -77,7 +77,7 @@ test('fresh content is empty, fixed sync target survives imports, and unknown mo
   assert.equal(normalized.modules.unrelatedProduct, undefined);
   assert.equal(normalized.modules.cloudSync.path, 'data/top-shelf.json');
   assert.equal(model.exportEnvelope(normalized).exportFormat, 'top-shelf-backup');
-  assert.throws(() => model.prepareSync({ syncFormat: 'another-app', syncVersion: 1, schemaVersion: 5, data: {} }), /not supported/);
+  assert.throws(() => model.prepareSync({ syncFormat: 'another-app', syncVersion: 2, schemaVersion: 6, data: {} }), /not supported/);
 });
 
 

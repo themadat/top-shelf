@@ -12,22 +12,25 @@
   <meta name="apple-mobile-web-app-title" content="Top Shelf">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Top Shelf</title>
-  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.2">
-  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/icons/favicon.svg?v=0.0.1.2">
-  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.2">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.2" media="(prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.2" media="(prefers-color-scheme: dark)">
-  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.2">
-  <script defer src="assets/js/config.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/icons.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/core/utils.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/core/state.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/core/storage.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/core/components.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/core/portability.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/core/sync.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/core/pwa.js?v=0.0.1.2"></script>
-  <script defer src="assets/js/app.js?v=0.0.1.2"></script>
+  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.3">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/icons/favicon.svg?v=0.0.1.3">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.3">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.3" media="(prefers-color-scheme: light)">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.3" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.3">
+  <script defer src="assets/js/config.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/icons.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/utils.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/movies.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/tmdb.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/state.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/storage.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/components.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/portability.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/sync.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/core/pwa.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/movies-ui.js?v=0.0.1.3"></script>
+  <script defer src="assets/js/app.js?v=0.0.1.3"></script>
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Skip to main content</a>
@@ -35,12 +38,12 @@
   <header class="app-header">
     <div class="title-cluster">
       <button id="appIconButton" class="app-icon-button" type="button" aria-label="Switch color theme. Press and hold to toggle Developer Mode" title="Switch color theme · Press and hold for Developer Mode" aria-keyshortcuts="T Control+Alt+Shift+T" data-shortcut="T">
-        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.2" alt="">
+        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.3" alt="">
       </button>
       <div class="identity-copy">
         <span id="appName" class="app-name">Top Shelf</span>
         <div class="identity-pill-row">
-          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V Control+Alt+Shift+V" data-shortcut="V">v0.0.1.2</button>
+          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V Control+Alt+Shift+V" data-shortcut="V">v0.0.1.3</button>
           <span id="betaPill" class="environment-pill beta-pill" title="This is the beta application" hidden>BETA</span>
         </div>
       </div>
@@ -50,8 +53,8 @@
     <nav id="shelfNavigation" class="shelf-nav" aria-label="Rating lists"></nav>
     <div class="global-search-wrap" data-shortcut="/">
       <span class="search-icon" aria-hidden="true" data-symbol="search"></span>
-      <label class="visually-hidden" for="globalSearch">Search Notes and application support</label>
-      <input id="globalSearch" type="search" autocomplete="off" placeholder="Search Notes and Help" aria-haspopup="listbox" aria-controls="globalSearchResults" aria-keyshortcuts="/ Control+Alt+Shift+/">
+      <label class="visually-hidden" for="globalSearch">Search movies, Notes, and application support</label>
+      <input id="globalSearch" type="search" autocomplete="off" placeholder="Search movies, Notes, and Help" aria-haspopup="listbox" aria-controls="globalSearchResults" aria-keyshortcuts="/ Control+Alt+Shift+/">
       <kbd aria-hidden="true">/</kbd>
       <div id="globalSearchResults" class="global-search-results" role="listbox" aria-label="Search results" hidden></div>
     </div>
@@ -85,11 +88,20 @@
 
   <aside id="contextHint" class="context-hint" data-hint-key="shell-basics" hidden>
     <span class="context-hint-icon" aria-hidden="true" data-symbol="info"></span>
-    <p>Press <kbd>/</kbd> to search Notes and Help, or <kbd>N</kbd> to open Notes.</p>
+    <p>Press <kbd>/</kbd> to search movies, Notes, and Help, or <kbd>N</kbd> to open Notes.</p>
     <button type="button" class="icon-button" data-dismiss-hint="shell-basics" aria-label="Dismiss hint"><span aria-hidden="true" data-symbol="close"></span></button>
   </aside>
 
   <main id="mainContent" tabindex="-1" aria-label="Top Shelf workspace">
+    <section id="moviesWorkspace" class="movies-workspace" aria-labelledby="moviesTitle">
+      <header class="movies-heading"><div><span class="eyebrow">Your screening room</span><h1 id="moviesTitle" tabindex="-1">Movies <small id="movieTotal">0 movies</small></h1></div><button type="button" class="button primary" data-add-movie>Add movie</button></header>
+      <div class="movies-controls">
+        <div class="segmented movie-state-filters" aria-label="Movie state"><button type="button" data-movie-filter="all" aria-pressed="true">All <small>0</small></button><button type="button" data-movie-filter="wishlist" aria-pressed="false">Wishlist <small>0</small></button><button type="button" data-movie-filter="watched" aria-pressed="false">Watched <small>0</small></button></div>
+        <label class="movie-search"><span class="visually-hidden">Search saved movies</span><input id="movieSearch" type="search" placeholder="Search movies, people, genres…"></label>
+        <label><span class="visually-hidden">Sort movies</span><select id="movieSort"><option value="title">Title A–Z</option><option value="rating">Highest rated</option><option value="priority">Priority 1 first</option><option value="release">Newest release</option><option value="watched">Recently watched</option></select></label>
+      </div>
+      <p id="movieResultsCount" class="movie-muted" role="status"></p><div id="movieList" class="movie-list"></div>
+    </section>
     <section class="shelf-starter" aria-labelledby="shelfTitle">
       <span id="shelfSymbol" class="shelf-starter-icon" aria-hidden="true"></span>
       <h1 id="shelfTitle" tabindex="-1">Movies</h1>
@@ -103,6 +115,22 @@
       <span class="floating-status-copy"><strong data-floating-local-label>Saved locally</strong><small data-floating-sync-label>GitHub setup required</small></span>
     </button>
   </div>
+
+  <dialog id="movieDialog" class="app-dialog movie-dialog" aria-labelledby="movieDialogTitle">
+    <form id="movieForm" class="dialog-shell">
+      <header class="dialog-header"><h2 id="movieDialogTitle">Add movie</h2><button type="button" class="icon-button" data-close-dialog="movieDialog" aria-label="Close movie editor"><span data-symbol="close" aria-hidden="true"></span></button></header>
+      <div class="dialog-body movie-editor">
+        <section class="movie-lookup" aria-labelledby="movieLookupTitle"><h3 id="movieLookupTitle">Find a movie</h3><div class="movie-lookup-row"><label class="grow-control"><span>Title or TMDB ID</span><input id="movieLookupQuery" type="search" placeholder="Movie title or numeric ID" autocomplete="off"></label><button type="button" id="movieLookupButton" class="button">Look up</button></div><div id="movieLookupResults" class="movie-lookup-results" aria-live="polite"></div>
+        <details id="tmdbSettings"><summary>Movie lookup settings</summary><label><span>TMDB API Read Access Token</span><input id="tmdbToken" type="password" autocomplete="off" spellcheck="false"></label><label class="movie-remember"><input id="rememberTmdbToken" type="checkbox" checked>Remember on this device</label><div class="button-row"><button id="saveTmdbToken" type="button" class="button">Save token</button><button id="forgetTmdbToken" type="button" class="button">Forget token</button><a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer">TMDB API settings</a></div><p id="tmdbCredentialStatus" role="status"></p><p class="movie-muted">Credentials stay outside movie data, backups, and sync.</p></details></section>
+        <p id="movieError" class="inline-status warning" role="alert"></p>
+        <div class="movie-fields"><label><span>Title</span><input id="movieTitle" name="title" required maxlength="200"></label><label><span>State</span><select id="movieStatus" name="status"><option value="wishlist">Wishlist</option><option value="watched">Watched</option></select></label><label><span>How</span><input name="how" maxlength="300" placeholder="Cinema, streaming service, disc…"></label><label><span>Other</span><textarea name="other" rows="2" maxlength="4000"></textarea></label></div>
+        <fieldset id="wishlistFields" class="movie-fields"><legend>Wishlist</legend><label><span>Available date <small>optional</small></span><input type="date" name="availableDate"></label><label><span>Priority <small>optional · 1 is highest</small></span><span id="moviePriorityPreview" class="movie-input-preview"><input name="priority" type="number" min="1" max="5" step="1" placeholder="1–5"></span></label><label class="movie-full"><span>Notes <small>optional</small></span><textarea name="notes" rows="3" maxlength="20000"></textarea></label></fieldset>
+        <fieldset id="watchedFields" class="movie-fields" hidden><legend>Watched</legend><label><span>Watched date</span><input type="date" name="watchedDate"></label><label><span>Rating <small>1–5</small></span><span id="movieRatingPreview" class="movie-input-preview"><input name="rating" type="number" min="1" max="5" step="any" placeholder="4.5"></span></label><label class="movie-full"><span>Review</span><textarea name="review" rows="4" maxlength="20000"></textarea></label></fieldset>
+        <section><div class="movie-metadata-heading"><h3>TMDB details</h3><button id="movieRefreshButton" type="button" class="button" hidden>Refresh details</button></div><dl id="movieMetadata" class="movie-details" hidden></dl><p class="movie-muted">TMDB may not have every detail, especially for unreleased movies.</p></section>
+        <p class="tmdb-credit"><img class="tmdb-logo" src="assets/icons/tmdb.svg" alt="TMDB">This product uses the TMDB API but is not endorsed or certified by TMDB. <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer">The Movie Database</a></p>
+      </div><footer class="dialog-footer"><button id="movieDeleteButton" class="button danger-text" type="button" hidden>Delete movie</button><button id="movieSaveButton" class="button primary" type="submit" disabled>Save movie</button></footer>
+    </form>
+  </dialog>
 
   <dialog id="notesDialog" class="app-dialog notes-dialog" aria-labelledby="notesDialogTitle">
     <div class="dialog-shell">
@@ -140,9 +168,9 @@
 
             <div class="settings-section">
               <div class="section-heading"><div><span class="eyebrow">Data safety</span><h3>Backup, restore & reset</h3></div></div>
-              <p class="section-intro">JSON backups include notes, preferences, and module settings. Tokens are excluded.</p>
+              <p class="section-intro">JSON backups include movies, notes, preferences, and module settings. Tokens are excluded.</p>
               <div class="button-row"><button id="exportButton" class="button primary" type="button">Export JSON</button><button id="importButton" class="button" type="button">Import JSON</button><input id="importFileInput" type="file" accept="application/json,.json" hidden></div>
-              <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep notes, but restore appearance, filters, and hints.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset preferences</button></div>
+              <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep movies and notes, but restore appearance, filters, and hints.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset preferences</button></div>
               <div class="danger-zone"><div><strong>Erase all application data</strong><small>Permanently remove content, preferences, sync settings, token, and recovery data from this browser.</small></div><button id="eraseAllButton" class="button danger" type="button">Erase all data</button></div>
             </div>
           </section>
@@ -179,7 +207,7 @@
           </section>
 
           <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden>
-            <div class="support-section-title"><span aria-hidden="true" data-symbol="releaseNotes"></span><div><span class="eyebrow">Current version <strong id="releaseCurrentVersion">v0.0.1.2</strong></span><h3>Release Notes</h3></div></div>
+            <div class="support-section-title"><span aria-hidden="true" data-symbol="releaseNotes"></span><div><span class="eyebrow">Current version <strong id="releaseCurrentVersion">v0.0.1.3</strong></span><h3>Release Notes</h3></div></div>
             <div id="releaseContent" class="release-list"></div>
           </section>
 
@@ -215,7 +243,7 @@
       <header class="dialog-header"><div><span class="eyebrow">Validated backup</span><h2 id="importPreviewTitle">Review import</h2></div><button type="button" class="icon-button" data-close-dialog="importPreviewDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header>
       <div class="dialog-body">
         <p><strong data-import-file></strong> passed parsing, migration, sanitization, normalization, and validation.</p>
-        <dl class="preview-grid"><div><dt>Workspace</dt><dd data-import-workspace></dd></div><div><dt>Notes</dt><dd data-import-documents></dd></div><div><dt>Versions</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div><div data-import-migrations-row><dt>Migrations</dt><dd data-import-migrations></dd></div></dl>
+        <dl class="preview-grid"><div><dt>Workspace</dt><dd data-import-workspace></dd></div><div><dt>Notes</dt><dd data-import-documents></dd></div><div><dt>Movies</dt><dd data-import-movies></dd></div><div><dt>Versions</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div><div data-import-migrations-row><dt>Migrations</dt><dd data-import-migrations></dd></div></dl>
         <p class="inline-status warning" data-import-warning hidden></p>
         <p class="inline-status"><span aria-hidden="true" data-symbol="restore"></span><span>The current data will be saved as a local recovery copy before replacement.</span></p>
       </div>
