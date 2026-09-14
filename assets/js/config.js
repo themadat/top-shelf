@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.6",
-      "buildId": "0.0.1.6",
+      "version": "0.0.1.7",
+      "buildId": "0.0.1.7",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.7", "date": "2026-09-14T12:00:00.000Z", "title": "Movie database info", "summary": "Movie database background has a dedicated Info section below Data Sync.", "features": ["Info tab with the supplied square information icon"], "improvements": ["Background, preferences, historical ratings, and reference links grouped in Info"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.6", "date": "2026-09-14T12:00:00.000Z", "title": "Top-bar sync and updates", "summary": "Keep sync and app updates in the top bar, with a shorter configurable What\u2019s New banner.", "features": ["Cloud sync status and actions in the top bar", "Update button checks, installs, and force refreshes; ready updates show a red icon", "What\u2019s New dismissal setting: 1\u2013300 seconds, default 20"], "improvements": ["Update availability no longer opens a pop-up notification"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.5", "date": "2026-09-13T23:30:00.000Z", "title": "Movie pivots", "summary": "Explore every watched movie with counts and average ratings.", "features": ["Pivots for genres, ratings, years, collections, actors, directors, and production companies", "Independent sorting and minimum movie counts for each table", "Switch between release year and watched year"], "improvements": ["Includes historical ratings and groups missing metadata or dates", "Dashboard updates from saved movies and works offline"], "fixes": [], "knownIssues": ["Actor pivots use the saved cast, currently up to ten actors per movie."]},
       {"version": "0.0.1.4", "date": "2026-09-13T23:00:00.000Z", "title": "Movie history and preferences", "summary": "Keep historical ratings and movies with unknown watch dates, with spreadsheet reference information organized in Settings.", "features": ["Historical ratings: 100!, YES, MEH, NO, RUN map to 5\u20131", "Unknown watched dates", "Movie preferences, reference links, backlog, and legacy spreadsheet history in Settings"], "improvements": ["Historical rating labels survive backups and sync"], "fixes": [], "knownIssues": ["Update all copies to 0.0.1.4 before syncing."]},

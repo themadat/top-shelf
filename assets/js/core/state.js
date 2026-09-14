@@ -458,7 +458,7 @@
         },
         dismissedHints: Array.from(new Set((Array.isArray(sourceUi.dismissedHints) ? sourceUi.dismissedHints : []).map(function (id) { return u.cleanLine(id, 80); }).filter(Boolean))).slice(0, 200),
         seenReleaseVersion: u.cleanLine(sourceUi.seenReleaseVersion, 32),
-        supportTab: ["settings", "dataSync", "help", "releases", "shortcuts", "roadmap", "developer"].includes(sourceUi.supportTab) ? sourceUi.supportTab : "settings"
+        supportTab: ["settings", "dataSync", "info", "help", "releases", "shortcuts", "roadmap", "developer"].includes(sourceUi.supportTab) ? sourceUi.supportTab : "settings"
       },
       modules: {
         records: Object.assign({}, base.modules.records, u.plainObject(sourceModules.records)),
