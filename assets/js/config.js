@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.5",
-      "buildId": "0.0.1.5",
+      "version": "0.0.1.6",
+      "buildId": "0.0.1.6",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -110,7 +110,7 @@
       "shortcutHintModifier": "ShiftControlOption",
       "autosaveDelayMs": 180,
       "syncCheckIntervalMs": 300000,
-      "whatsNewAutoDismissMs": 30000,
+      "whatsNewAutoDismissMs": 20000,
       "maxImportBytes": 5242880,
       "maxRecords": 5000,
       "maxMovies": 5000,
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.6", "date": "2026-09-14T12:00:00.000Z", "title": "Top-bar sync and updates", "summary": "Keep sync and app updates in the top bar, with a shorter configurable What\u2019s New banner.", "features": ["Cloud sync status and actions in the top bar", "Update button checks, installs, and force refreshes; ready updates show a red icon", "What\u2019s New dismissal setting: 1\u2013300 seconds, default 20"], "improvements": ["Update availability no longer opens a pop-up notification"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.5", "date": "2026-09-13T23:30:00.000Z", "title": "Movie pivots", "summary": "Explore every watched movie with counts and average ratings.", "features": ["Pivots for genres, ratings, years, collections, actors, directors, and production companies", "Independent sorting and minimum movie counts for each table", "Switch between release year and watched year"], "improvements": ["Includes historical ratings and groups missing metadata or dates", "Dashboard updates from saved movies and works offline"], "fixes": [], "knownIssues": ["Actor pivots use the saved cast, currently up to ten actors per movie."]},
       {"version": "0.0.1.4", "date": "2026-09-13T23:00:00.000Z", "title": "Movie history and preferences", "summary": "Keep historical ratings and movies with unknown watch dates, with spreadsheet reference information organized in Settings.", "features": ["Historical ratings: 100!, YES, MEH, NO, RUN map to 5\u20131", "Unknown watched dates", "Movie preferences, reference links, backlog, and legacy spreadsheet history in Settings"], "improvements": ["Historical rating labels survive backups and sync"], "fixes": [], "knownIssues": ["Update all copies to 0.0.1.4 before syncing."]},
       {"version": "0.0.1.3", "date": "2026-09-13T20:00:00.000Z", "title": "Your movie lists", "summary": "Keep a wishlist, rate watched movies, and fill movie details from TMDB.", "features": ["Wishlist and Watched lists with editing, filtering, and sorting", "TMDB title search and ID lookup with movie metadata", "Teal and coral accents, dark rating colors, and light priority colors"], "improvements": ["Movies included in backups, recovery, and GitHub Sync", "TMDB credentials stored separately on each browser"], "fixes": [], "knownIssues": ["TMDB lookup needs an internet connection and an API Read Access Token.", "Update all copies to 0.0.1.3 before syncing movie data."]},
@@ -231,7 +232,7 @@
         "title": "Keyboard access",
         "section": "Accessibility",
         "keywords": "keyboard shortcuts slash escape alt option shift control hints hover version update refresh developer countdown",
-        "html": "<p>Press <kbd>/</kbd> for search, <kbd>N</kbd> for Notes, <kbd>V</kbd> for What’s New, <kbd>T</kbd> for theme, <kbd>|</kbd> or <kbd>D</kbd> for Developer Mode, <kbd>,</kbd> for Settings, <kbd>1</kbd>–<kbd>8</kbd> for shelves, <kbd>S</kbd> for sync, <kbd>E</kbd> for backup export, and <kbd>H</kbd> or <kbd>?</kbd> for Help. What’s New closes after 30 seconds or with <kbd>X</kbd>. When an update is ready, use <kbd>R</kbd> to Force Refresh or <kbd>X</kbd> to close its notice. Hold Shift–Control–Option to reveal available shortcut badges. Escape closes dialogs.</p>"
+        "html": "<p>Press <kbd>/</kbd> for search, <kbd>N</kbd> for Notes, <kbd>V</kbd> for What’s New, <kbd>T</kbd> for theme, <kbd>|</kbd> or <kbd>D</kbd> for Developer Mode, <kbd>,</kbd> for Settings, <kbd>1</kbd>–<kbd>8</kbd> for shelves, <kbd>S</kbd> for sync, <kbd>E</kbd> for backup export, and <kbd>H</kbd> or <kbd>?</kbd> for Help. What’s New closes after 20 seconds by default or with <kbd>X</kbd>; change its duration in Settings → Notifications. Use Update in the top bar to check and force refresh. Its icon turns red when a new version is ready. Hold Shift–Control–Option to reveal available shortcut badges. Escape closes dialogs.</p>"
       }
     ]
   };

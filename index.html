@@ -12,27 +12,27 @@
   <meta name="apple-mobile-web-app-title" content="Top Shelf">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Top Shelf</title>
-  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.5">
-  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/icons/favicon.svg?v=0.0.1.5">
-  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.5">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.5" media="(prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.5" media="(prefers-color-scheme: dark)">
-  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.5">
-  <script defer src="assets/js/config.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/icons.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/utils.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/movies.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/pivots.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/tmdb.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/state.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/storage.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/components.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/portability.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/sync.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/core/pwa.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/movies-ui.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/pivots-ui.js?v=0.0.1.5"></script>
-  <script defer src="assets/js/app.js?v=0.0.1.5"></script>
+  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.6">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/icons/favicon.svg?v=0.0.1.6">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.6">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.6" media="(prefers-color-scheme: light)">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.6" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.6">
+  <script defer src="assets/js/config.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/icons.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/utils.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/movies.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/pivots.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/tmdb.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/state.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/storage.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/components.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/portability.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/sync.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/core/pwa.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/movies-ui.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/pivots-ui.js?v=0.0.1.6"></script>
+  <script defer src="assets/js/app.js?v=0.0.1.6"></script>
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Skip to main content</a>
@@ -40,12 +40,12 @@
   <header class="app-header">
     <div class="title-cluster">
       <button id="appIconButton" class="app-icon-button" type="button" aria-label="Switch color theme. Press and hold to toggle Developer Mode" title="Switch color theme · Press and hold for Developer Mode" aria-keyshortcuts="T Control+Alt+Shift+T" data-shortcut="T">
-        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.5" alt="">
+        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.6" alt="">
       </button>
       <div class="identity-copy">
         <span id="appName" class="app-name">Top Shelf</span>
         <div class="identity-pill-row">
-          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V Control+Alt+Shift+V" data-shortcut="V">v0.0.1.5</button>
+          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V Control+Alt+Shift+V" data-shortcut="V">v0.0.1.6</button>
           <span id="betaPill" class="environment-pill beta-pill" title="This is the beta application" hidden>BETA</span>
         </div>
       </div>
@@ -64,6 +64,11 @@
     </div>
 
     <div class="top-toolbar" aria-label="Application actions">
+    <button id="floatingStatusButton" class="floating-button status-button" type="button" aria-label="Cloud Sync. Open Sync Settings." title="Cloud Sync. Open Sync Settings." aria-keyshortcuts="S Control+Alt+Shift+S" data-cloud-sync data-shortcut="S">
+      <span class="floating-status-icon" data-sync-icon data-symbol="icloud" aria-hidden="true"></span>
+      <span class="floating-status-copy"><strong data-floating-local-label>Saved locally</strong><small data-floating-sync-label>GitHub setup required</small></span>
+    </button>
+      <button id="updateAppButton" class="button action-button" type="button" title="Check for updates and force refresh"><span class="button-icon" aria-hidden="true" data-symbol="updateApp"></span><span class="button-label">Update</span></button>
       <button id="notesButton" class="button action-button" type="button" aria-haspopup="dialog" aria-controls="notesDialog" aria-keyshortcuts="N Control+Alt+Shift+N" data-shortcut="N">
         <span class="button-icon" aria-hidden="true" data-symbol="notes"></span><span class="button-label">Notes</span>
       </button>
@@ -121,12 +126,7 @@
     </section>
   </main>
 
-  <div class="floating-actions" aria-label="Storage and synchronization status">
-    <button id="floatingStatusButton" class="floating-button status-button" type="button" aria-label="Cloud Sync. Open Sync Settings." title="Cloud Sync. Open Sync Settings." aria-keyshortcuts="S Control+Alt+Shift+S" data-cloud-sync data-shortcut="S">
-      <span class="floating-status-icon" data-sync-icon data-symbol="icloud" aria-hidden="true"></span>
-      <span class="floating-status-copy"><strong data-floating-local-label>Saved locally</strong><small data-floating-sync-label>GitHub setup required</small></span>
-    </button>
-  </div>
+
 
   <dialog id="movieDialog" class="app-dialog movie-dialog" aria-labelledby="movieDialogTitle">
     <form id="movieForm" class="dialog-shell">
@@ -192,6 +192,7 @@
                 <li><a href="https://www.primevideo.com/region/na/settings/watch-history" target="_blank" rel="noopener noreferrer">Prime Video watch history</a></li>
               </ul>
             </div>
+            <div class="settings-section"><h3>Notifications</h3><div class="setting-row"><label for="whatsNewDismissSeconds">What’s New dismissal (seconds)</label><input id="whatsNewDismissSeconds" type="number" min="1" max="300" step="1" required value="20" aria-describedby="whatsNewDismissHelp"></div><p id="whatsNewDismissHelp" class="setting-note">Automatically dismiss after 1–300 seconds. Default: 20 seconds.</p></div>
             <div class="settings-section appearance-settings">
               <div class="section-heading compact-section-heading"><h3>Appearance</h3></div>
               <div class="setting-row"><span class="setting-label">Text Size</span><div class="text-size-control" aria-label="Text size"><span class="size-letter small" aria-hidden="true">A</span><span class="text-size-slider-wrap"><input id="textSizeSlider" class="ios-range" type="range" min="85" max="130" step="5" value="100" aria-label="Text size"><output id="textSizeValue" class="text-size-value" for="textSizeSlider">100%</output></span><span class="size-letter large" aria-hidden="true">A</span></div></div>
@@ -242,7 +243,7 @@
           </section>
 
           <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden>
-            <div class="support-section-title"><span aria-hidden="true" data-symbol="releaseNotes"></span><div><span class="eyebrow">Current version <strong id="releaseCurrentVersion">v0.0.1.5</strong></span><h3>Release Notes</h3></div></div>
+            <div class="support-section-title"><span aria-hidden="true" data-symbol="releaseNotes"></span><div><span class="eyebrow">Current version <strong id="releaseCurrentVersion">v0.0.1.6</strong></span><h3>Release Notes</h3></div></div>
             <div id="releaseContent" class="release-list"></div><details class="settings-section"><summary>Stripes Movie Database — spreadsheet history</summary><p>Legacy spreadsheet versions, separate from Top Shelf releases. All entries by Adam Lauer.</p><h4>1.5.0 · 2024-09-18</h4><ul><li>Updated Watch column format for better sorting.</li><li>Improved scripts: variable handling/scoping, success logic in movie updates, and a fix for the optional date-update column.</li></ul><h4>1.4.0 · 2024-06-19</h4><ul><li>Added a validation check in column A of Movies to ensure each row has its formulas.</li><li>Added Loop and Time Travel manual pivots.</li></ul><h4>1.3.0 · 2023-11-13</h4><ul><li>Pivots: added Actors and Directors groupings, thresholds and counts, and better formatting.</li><li>UpdatePivots: added a threshold on gets, refactored to be more generic, and added sortPivots after updating.</li></ul><h4>1.2.0 · 2023-11-12</h4><ul><li>Movies: added duplicate detection and resolved existing issues; changed 💯 rating to 100!; improved How column formula.</li></ul><h4>1.1.0 · 2023-11-11</h4><ul><li>Added a Notes tab with a programming-esque information format.</li><li>Movies: better formatting. Pivots: column groupings and better formatting.</li><li>UpdateUtilities: combined Constants and Utilities, refactored and cleaned up syntax, added SheetNames, Columns, and ColorHex.</li><li>UpdateMovies and UpdatePivots: refactored and cleaned up syntax.</li></ul><h4>1.0.0 · 2023-11-10</h4><ul><li>Initial creation with Movies and Pivots tabs.</li></ul></details>
           </section>
 

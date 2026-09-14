@@ -93,3 +93,17 @@ test('shelf selection is normalized and local-only', () => {
   assert.equal(model.normalize(state).ui.selectedShelf, 'movies');
   assert.equal(new Set(App.config.shelves.map(shelf => shelf.shortcut)).size, 8);
 });
+
+test('banner timing defaults, bounds, backups, and sync isolation', () => {
+  const model = App.stateModel;
+  const base = model.normalize({});
+  assert.equal(base.preferences.controls.whatsNewDismissSeconds, 20);
+  const hash = model.syncHash(base);
+  for (const [input, expected] of [[0, 1], [400, 300], [2.6, 3], ['bad', 20]]) {
+    base.preferences.controls.whatsNewDismissSeconds = input;
+    const normalized = model.normalize(base);
+    assert.equal(normalized.preferences.controls.whatsNewDismissSeconds, expected);
+    assert.equal(model.syncHash(normalized), hash);
+    assert.equal(model.prepare(model.exportEnvelope(normalized)).state.preferences.controls.whatsNewDismissSeconds, expected);
+  }
+});

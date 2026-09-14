@@ -181,7 +181,7 @@
     if (whatsNewDismissTimer && whatsNewTimerVersion === version) return;
     stopWhatsNewTimer();
     const banner = $("#whatsNewBanner");
-    const duration = Math.max(1000, Number(config.controls.whatsNewAutoDismissMs) || 30000);
+    const duration = state().preferences.controls.whatsNewDismissSeconds * 1000;
     banner.style.setProperty("--whats-new-duration", duration + "ms");
     banner.classList.add("is-counting-down");
     whatsNewTimerVersion = version;
@@ -390,6 +390,7 @@
   }
 
   function renderSettings() {
+    $("#whatsNewDismissSeconds").value = state().preferences.controls.whatsNewDismissSeconds;
     const preferences = state().preferences;
     const appearance = preferences.appearance;
     $$('[data-theme-mode]').forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.themeMode === appearance.mode)); });
@@ -866,15 +867,11 @@
     const mainPageActive = !$("dialog[open]");
     const shelf = config.shelves.find(function (item) { return item.shortcut === event.key; });
     if (mainPageActive && shelf && !event.ctrlKey && !event.altKey && !event.shiftKey) { runShortcut(event, function () { selectShelf(shelf.id, true); }); return; }
-    const updateToast = $("#appToast");
-    const updateToastVisible = updateToast?.dataset.context === "pwa-update" && updateToast.classList.contains("visible");
     if ((event.code === "Backslash" && event.shiftKey) || event.key === "|") runShortcut(event, function () { toggleDeveloperMode(undefined, { openPanel: true }); });
     else if (event.code === "KeyH") runShortcut(event, function () { openSupport("help", event.target); });
     else if (event.code === "Comma") runShortcut(event, function () { openSupport("settings", event.target); });
     else if (event.code === "KeyN") runShortcut(event, function () { openNotes(event.target); });
     else if (event.code === "KeyV") runShortcut(event, function () { openSupport("releases", event.target); });
-    else if (event.code === "KeyR" && mainPageActive && updateToastVisible && shortcutModifiersAllowed(event)) runShortcut(event, function () { $("#appToast [data-toast-action]").click(); });
-    else if (event.code === "KeyX" && mainPageActive && updateToastVisible && shortcutModifiersAllowed(event)) runShortcut(event, function () { $("#appToast [data-toast-close]").click(); });
     else if (event.code === "KeyX" && !$("dialog[open]") && !$("#whatsNewBanner").hidden && shortcutModifiersAllowed(event)) runShortcut(event, dismissWhatsNew);
     else if (event.code === "KeyS") runShortcut(event, function () { sync.syncNow(event.target); });
     else if (event.code === "KeyE") runShortcut(event, portability.exportJson);
@@ -893,6 +890,14 @@
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
     $("#notesTextarea").addEventListener("input", function (event) { saveNotes(event.target.value); });
+    $("#whatsNewDismissSeconds").addEventListener("change", function () {
+      if (!this.checkValidity()) { this.reportValidity(); return; }
+      const seconds = Number(this.value);
+      stopWhatsNewTimer();
+      storage.mutate(function (next) { next.preferences.controls.whatsNewDismissSeconds = seconds; }, { reason: "banner-duration" });
+      storage.saveNow();
+      renderHeader();
+    });
     $("#floatingStatusButton").addEventListener("click", function (event) {
       sync.syncNow(event.currentTarget);
     });

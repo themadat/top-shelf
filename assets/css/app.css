@@ -826,3 +826,15 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
   .pivot-summary span { font-size: .7rem; }
   .pivot-card { padding: .75rem; }
 }
+
+/* Shared shell behavior from My Stuff: sync and update controls in the toolbar. */
+.top-toolbar #floatingStatusButton { position: relative; inset: auto; align-self: center; max-width: 155px; min-height: 40px; padding: .25rem .4rem; box-shadow: none; }
+.top-toolbar .floating-status-copy { min-width: 0; }
+#updateAppButton[data-update-available="true"] .button-icon { color: #d52c20; }
+[data-theme="dark"] #updateAppButton[data-update-available="true"] .button-icon { color: #ff7367; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #updateAppButton[data-update-available="true"] .button-icon { color: #ff7367; } }
+@media (max-width: 700px) {
+  .top-toolbar #floatingStatusButton { max-width: 40px; width: 40px; justify-content: center; }
+  .top-toolbar #floatingStatusButton .floating-status-copy { display: none; }
+  .top-toolbar .action-button { width: 40px; min-width: 40px; }
+}

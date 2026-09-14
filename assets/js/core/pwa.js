@@ -60,18 +60,49 @@
     refreshFallbackTimer = window.setTimeout(function () { location.replace(forceRefreshUrl()); }, waitingWorker ? 1200 : 0);
   }
 
+  let checkingUpdate = false;
+  async function checkForUpdates(button) {
+    if (checkingUpdate || refreshing) return;
+    checkingUpdate = true;
+    if (button) { button.disabled=true; button.setAttribute('aria-busy','true'); }
+    try {
+      if (navigator.onLine === false) throw new Error('Connect to the internet to check for an update.');
+      if (!storage.saveNow()) throw new Error('Your changes could not be saved. Update was paused to keep them safe.');
+      if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+        registration = registration || await navigator.serviceWorker.getRegistration();
+        if (!registration) { await registerServiceWorker(); }
+        if (registration) {
+          await registration.update();
+          const worker=registration.installing;
+          if (worker && worker.state!=='installed' && worker.state!=='activated') await new Promise(function (resolve,reject) {
+            const timer=window.setTimeout(function () { finish(new Error('The update is taking longer than expected. Please try Update again.')); },30000);
+            function finish(error) { window.clearTimeout(timer); worker.removeEventListener('statechange',changed); error ? reject(error) : resolve(); }
+            function changed() { if (worker.state==='installed' || worker.state==='activated') finish(); else if (worker.state==='redundant') finish(new Error('The update could not be installed. Please try again.')); }
+            worker.addEventListener('statechange',changed); changed();
+          });
+        }
+      }
+      forceRefresh(registration && registration.waiting);
+    } catch (error) {
+      App.components.toast(error.message || 'Could not check for updates. Please try again.',{title:'Update',kind:'warning'});
+    } finally {
+      checkingUpdate=false;
+      if (button) { button.disabled=false; button.removeAttribute('aria-busy'); }
+    }
+  }
+
+  function renderUpdateReady(ready) {
+    const button=document.querySelector('#updateAppButton');
+    if (!button) return;
+    button.dataset.updateAvailable=String(ready);
+    button.title=ready ? 'Update available — install and refresh' : 'Check for updates and force refresh';
+    button.setAttribute('aria-label',ready ? 'Update — new version available' : 'Update — check for updates and force refresh');
+    App.icons.set(button.querySelector('.button-icon'),ready ? 'updateReady' : 'updateApp');
+  }
+
   function updateAvailable(worker) {
-    App.components.toast("A newer app version is ready. Force refresh to install it now.", {
-      title: "New version available",
-      kind: "info",
-      duration: 0,
-      context: "pwa-update",
-      actionLabel: "Force refresh",
-      actionSymbol: "arrowClockwise",
-      actionShortcut: "R",
-      closeShortcut: "X",
-      onAction: function () { forceRefresh(worker); }
-    });
+    renderUpdateReady(true);
+
   }
 
   async function registerServiceWorker() {
@@ -87,6 +118,7 @@
         });
       });
       navigator.serviceWorker.addEventListener("controllerchange", function () {
+        renderUpdateReady(false);
         if (refreshing) {
           window.clearTimeout(refreshFallbackTimer);
           location.replace(forceRefreshUrl());
@@ -103,6 +135,8 @@
 
   function init() {
     applyAppearanceAssets();
+    renderUpdateReady(false);
+    document.querySelector("#updateAppButton").addEventListener("click", function () { checkForUpdates(this); });
     registerServiceWorker();
     window.addEventListener("appinstalled", function () {
       App.components.toast("The application was added to this device.", { title: "Installed", kind: "success" });
@@ -123,6 +157,7 @@
     networkStatus: networkStatus,
     applyAppearanceAssets: applyAppearanceAssets,
     forceRefresh: forceRefresh,
+    checkForUpdates: checkForUpdates,
     getRegistration: function () { return registration; }
   };
 })();

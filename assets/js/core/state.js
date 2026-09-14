@@ -64,6 +64,7 @@
         controls: {
           buttonStyle: "both",
           shortcutHints: true,
+          whatsNewDismissSeconds: config.controls.whatsNewAutoDismissMs / 1000,
           shortcutHintModifier: config.controls.shortcutHintModifier,
           developerMode: false
         },
@@ -413,6 +414,7 @@
         controls: {
           buttonStyle: ["icons", "text", "both"].includes(sourceControls.buttonStyle) ? sourceControls.buttonStyle : "both",
           shortcutHints: sourceControls.shortcutHints !== false,
+          whatsNewDismissSeconds: Math.round(u.clamp(sourceControls.whatsNewDismissSeconds, 1, 300, config.controls.whatsNewAutoDismissMs / 1000)),
           shortcutHintModifier: sourceControls.shortcutHintModifier === "ShiftControlOption" ? sourceControls.shortcutHintModifier : config.controls.shortcutHintModifier,
           developerMode: sourceControls.developerMode === true
         },
