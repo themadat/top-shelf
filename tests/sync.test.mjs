@@ -399,8 +399,8 @@ test('movie fields validate state-specific requirements and preserve decimal rat
   assert.equal(wishlist.priority, null);
   assert.equal(wishlist.availableDate, '');
   for (const priority of [0, 6, 2.5]) assert.throws(() => movieFixture(h.App, { priority }), /whole number/);
-  for (const rating of [0, 5.1, 'invalid']) assert.throws(() => movieFixture(h.App, { rating }), /Rating/);
-  assert.throws(() => movieFixture(h.App, { status: 'watched' }), /rating and review/);
+  for (const rating of [-0.1, 5.1, 'invalid']) assert.throws(() => movieFixture(h.App, { rating }), /Rating/);
+  assert.throws(() => movieFixture(h.App, { status: 'watched' }), /need a rating/);
   assert.throws(() => movieFixture(h.App, { status: 'invalid' }), /Wishlist or Watched/);
   assert.throws(() => movieFixture(h.App, { availableDate: '2026-02-30' }), /Invalid movie date/);
   const watched = movieFixture(h.App, { status: 'watched', rating: 4.75, watchedDate: '2026-09-13', review: 'A <literal> review' });
@@ -509,4 +509,18 @@ test('previous movie sync format remains readable', () => {
   assert.equal(result.legacy, true);
   assert.equal(result.state.workspace.movies[0].historicalRating, '');
   assert.equal(result.state.workspace.movies[0].rating, 4);
+});
+
+test('zero and half-point ratings with blank reviews survive save, backup, and sync', () => {
+  const h = harness(), model = h.App.stateModel;
+  for (const rating of [0, 0.5, 5]) {
+    const movie = movieFixture(h.App, { status: 'watched', rating, review: '', watchedDate: '' });
+    h.state.workspace.movies = [movie];
+    for (const restored of [model.prepare(model.exportEnvelope(h.state)).state, model.prepareSync(model.syncPayload(h.state)).state]) {
+      assert.equal(restored.workspace.movies[0].rating, rating);
+      assert.equal(restored.workspace.movies[0].review, '');
+      assert.equal(restored.workspace.movies[0].watchedDate, '');
+    }
+  }
+  assert.throws(() => movieFixture(h.App, { status: 'watched', rating: null }), /need a rating/);
 });

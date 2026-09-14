@@ -2,16 +2,16 @@
 
 Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the first planned areas.
 
-Version **0.0.1.6** includes the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
+Version **0.0.1.9** includes the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
 
 ## Movies
 
 Choose **Add movie**, search by title and select the correct match, or enter a numeric TMDB ID. Lookup fills release date, TMDB ID, genres, production companies, directors, the top ten cast members, and collection. Title can be edited; How and Other are free text. TMDB sometimes has no release date or collection, which is shown explicitly.
 
 - **Wishlist:** optional available date, whole-number priority 1–5, and Notes.
-- **Watched:** optional watched date (blank means unknown), required decimal rating 1–5 or mapped historical rating, and review.
+- **Watched:** optional watched date (blank means unknown), required decimal rating 0–5 or mapped historical rating, and optional review.
 - Add in either state, edit existing movies, or use Mark watched. One active entry per TMDB movie is allowed. Original Wishlist extras remain stored when you change state.
-- Ratings use dark colors from red at 0 to green at 5; entry accepts 1–5. Priorities use light colors from green at 1 to red at 5. Labels and numbers keep the meaning available without color.
+- Ratings use dark colors from red at 0 to green at 5; entry accepts 0–5. Priorities use light colors from green at 1 to red at 5. Labels and numbers keep the meaning available without color.
 
 In **Add movie → Movie lookup settings**, enter your **TMDB API Read Access Token** once per browser and choose device or tab storage. Tokens never appear in source, backups, diagnostics, or cloud content. Lookup needs internet; existing movies can be read and edited offline. The provided read token was verified in a temporary test browser; configure it in your own app browser before lookup.
 

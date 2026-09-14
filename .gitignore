@@ -1,1 +1,5 @@
 .DS_Store
+
+# Personal movie import source and prepared backups
+/Movies - Movies.csv
+/import-preparation/

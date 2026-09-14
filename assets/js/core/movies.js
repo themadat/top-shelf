@@ -35,8 +35,8 @@
     const errors = [];
     if (!movie.id || !movie.title || !Number.isSafeInteger(movie.tmdbId) || movie.tmdbId < 1) errors.push("Choose a movie from TMDB and enter its title.");
     if (movie.priority !== null && (!Number.isInteger(movie.priority) || movie.priority < 1 || movie.priority > 5)) errors.push("Priority must be a whole number from 1 to 5.");
-    if (movie.rating !== null && (!Number.isFinite(movie.rating) || movie.rating < 1 || movie.rating > 5)) errors.push("Rating must be between 1 and 5.");
-    if (movie.status === "watched" && (movie.rating === null || !movie.review.trim())) errors.push("Watched movies need a rating and review. The watch date may be unknown.");
+    if (movie.rating !== null && (!Number.isFinite(movie.rating) || movie.rating < 0 || movie.rating > 5)) errors.push("Rating must be between 0 and 5.");
+    if (movie.status === "watched" && movie.rating === null) errors.push("Watched movies need a rating. Review and watch date are optional.");
     return errors;
   }
   function normalizeList(value) {

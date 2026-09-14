@@ -27,3 +27,5 @@ Check empty/ambiguous/error responses, 401/429, abort on close or query changes,
 Historical movie checks: save each of 100!, YES, MEH, NO, RUN with an unknown watch date; verify mapped score, label, backup/sync round trip, and offline reload. Switch to a numeric rating and later supply a known date. Check movie preferences, reference links, and the separate spreadsheet history in Settings.
 
 Pivot checks: validate watched-only scope despite list filters; multi-value membership counts, decimal/historical averages, missing metadata and dates, release/watched years, sorting and thresholds. Verify empty and populated views, live updates after movie changes, safe names containing HTML, 320/390px layouts, and offline reload.
+
+0.0.1.9: verify watched movies save with blank reviews and numeric ratings 0, 0.5, and 5; reject out-of-range ratings and missing watched ratings. Backup/sync must preserve zero scores and blank reviews. Bulk import verification uses the ignored personal preparation files and an isolated browser profile.
