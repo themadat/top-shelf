@@ -856,23 +856,29 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .movie-toolbar.showing-pivots { grid-template-columns: 1fr auto; }
 .movie-list { display: block; }
 .movie-table-scroll { width: 100%; overflow: auto; max-height: max(240px, calc(100dvh - var(--app-header-height,80px) - var(--movie-toolbar-height,60px) - 24px)); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
-.movie-table { width: 100%; min-width: 2200px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: .76rem; }
-.movie-table th, .movie-table td { padding: .3rem .45rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); vertical-align: middle; text-align: left; }
-.movie-table thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-2); font-weight: 750; height: 34px; white-space: nowrap; }
-.movie-table th:first-child { width: 240px; position: sticky; left: 0; z-index: 1; background: var(--surface); }
-.movie-table thead th:first-child { z-index: 3; background: var(--surface-2); }
-.movie-table th:nth-child(2) { width: 85px; }
-.movie-table th:nth-child(3) { width: 125px; }
-.movie-table th:nth-child(6), .movie-table th:nth-child(14) { width: 260px; }
-.movie-table th:last-child { width: 240px; }
-.movie-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface-2) 40%, var(--surface)); }
-.movie-table tbody tr:hover, .movie-table tbody tr:focus-within { background: var(--accent-soft); }
-.movie-title-link { padding: 0; min-height: 28px; width: 100%; border: 0; border-radius: 3px; background: transparent; color: var(--accent-strong); text-align: left; font-size: inherit; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.movie-table { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; table-layout: auto; font-size: .76rem; }
+.movie-table th, .movie-table td { padding: .12rem .35rem; height: 26px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); vertical-align: middle; text-align: left; }
+.movie-table thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-2); font-weight: 750; height: 28px; white-space: nowrap; }
+.movie-table .movie-col-score { width: 1%; white-space: nowrap; padding-inline: .25rem; }
+.movie-table .movie-col-title { width: 240px; min-width: 240px; max-width: 240px; }
+.movie-table tbody th { font-weight: 650; }
+.movie-table tbody tr { --movie-row-background: var(--surface); background: var(--movie-row-background); }
+.movie-table tbody tr:nth-child(even) { --movie-row-background: color-mix(in srgb, var(--surface-2) 40%, var(--surface)); }
+.movie-table tbody .movie-wishlist-row { --movie-row-background: color-mix(in srgb, var(--accent-2) 9%, var(--surface)); }
+.movie-table tbody .movie-wishlist-row:nth-child(even) { --movie-row-background: color-mix(in srgb, var(--accent-2) 13%, var(--surface)); }
+.movie-table tbody tr:hover, .movie-table tbody tr:focus-within { --movie-row-background: var(--accent-soft); }
+.movie-table .movie-col-title { position: sticky; left: 0; z-index: 1; }
+.movie-table tbody .movie-col-title { background: var(--movie-row-background); }
+.movie-table thead .movie-col-title { z-index: 3; }
+.movie-title-link { padding: 0; min-height: 22px; height: 22px; width: 100%; border: 0; border-radius: 3px; background: transparent; color: var(--accent-strong); text-align: left; font-size: inherit; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .movie-cell { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.movie-row-actions { display: flex; align-items: center; gap: .4rem; white-space: nowrap; }
-.movie-row-actions .button { min-height: 28px; padding: .2rem .35rem; font-size: .7rem; }
-.movie-row-actions a { font-size: .7rem; }
-.movie-table .movie-score, .movie-table .movie-priority { font-size: .7rem; padding: .2rem .35rem; white-space: nowrap; }
+.movie-col-review .movie-cell { width: clamp(480px, 38vw, 760px); }
+.movie-col-how .movie-cell { width: 130px; }
+.movie-col-date .movie-cell, .movie-col-release .movie-cell { width: 85px; }
+.movie-col-other .movie-cell, .movie-col-collections .movie-cell { width: max-content; min-width: 55px; overflow: visible; }
+.movie-col-genres .movie-cell, .movie-col-directors .movie-cell { width: 180px; }
+.movie-col-actors .movie-cell, .movie-col-companies .movie-cell { width: 260px; }
+.movie-table .movie-score, .movie-table .movie-priority { font-size: .7rem; padding: .08rem .2rem; white-space: nowrap; }
 #moviePivotsView { padding-top: .5rem; }
 @media (max-width: 1150px) {
  .movie-toolbar { grid-template-columns: 1fr 1fr auto; }
@@ -895,8 +901,8 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
  .movie-toolbar .movie-search input, .movie-sort select { font-size: .78rem; }
  .movie-toolbar .movie-search { gap: .15rem; padding-left: .3rem; }
  #movieResultsCount { font-size: .64rem; }
- .movie-table th:first-child { width: 170px; }
- .movie-title-link, .movie-row-actions .button { min-height: 36px; }
+ .movie-table .movie-col-title { width: 170px; min-width: 170px; max-width: 170px; }
+ .movie-title-link { min-height: 26px; height: 26px; }
 }
 
 /* Dense pivot columns with one-line sorting controls. */

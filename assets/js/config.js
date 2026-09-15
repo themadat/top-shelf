@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.11",
-      "buildId": "0.0.1.11",
+      "version": "0.0.1.12",
+      "buildId": "0.0.1.12",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.12", "date": "2026-09-15T12:00:00.000Z", "title": "Compact Movie Columns", "summary": "Reordered movie columns with wider reviews, combined dates, and shorter rows.", "features": [], "improvements": ["Compact score-first column and subtle Wishlist row highlighting", "Review/Notes follows Title; Date combines watched and available dates", "Other and Collections expand to fit their content"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.11", "date": "2026-09-14T12:00:00.000Z", "title": "Compact Pivot Controls", "summary": "More pivot tables across the screen with compact rows and one-line controls.", "features": ["Count and Average buttons toggle sort direction", "Other Pivots groups tags from the Other field", "Underlined L/P movie view shortcuts and visible 1\u20138 shelf shortcuts"], "improvements": ["Ratings, Years, Genres, Other Pivots, Collections, Actors, Directors, Companies ordering", "Taller pivot tables with denser rows"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.10", "date": "2026-09-14T12:00:00.000Z", "title": "Compact Movie Spreadsheet", "summary": "A full-width movie table with one sticky control bar.", "features": ["Dense movie rows with all saved fields and quick editing", "Combined sticky Movie List/Pivots, filters, search, sort, and Add Movie controls", "Shift\u2013Control\u2013Option\u2013R activates Update"], "improvements": ["Title Case for interface headings and labels"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.9", "date": "2026-09-14T12:00:00.000Z", "title": "Preserve Spreadsheet Movie Ratings", "summary": "Watched movies support 0\u20135 ratings and optional reviews for spreadsheet imports.", "features": ["Numeric ratings from 0 to 5, including half-point scores below 1", "Optional reviews for watched movies"], "improvements": ["Blank reviews and original scores remain intact in backups, sync, and pivots"], "fixes": [], "knownIssues": ["Update all copies to 0.0.1.9 before importing or syncing movies with ratings below 1 or blank reviews."]},
