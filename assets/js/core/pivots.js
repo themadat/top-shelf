@@ -8,7 +8,7 @@
     { id: "collections", title: "Collections", missing: "No collection listed" },
     { id: "actors", title: "Actors", missing: "No actors listed" },
     { id: "directors", title: "Directors", missing: "No director listed" },
-    { id: "productionCompanies", title: "Production companies", missing: "No company listed" }
+    { id: "productionCompanies", title: "Production Companies", missing: "No company listed" }
   ];
   function build(movies, yearBasis) {
     const watched = movies.filter(function (movie) { return !movie.deleted && movie.status === "watched"; });

@@ -8,7 +8,7 @@
   function render() {
     if (!active) return;
     const result = model.build(App.storage.getState().workspace.movies, $("#pivotYearBasis").value);
-    $("#pivotSummary").innerHTML = '<div><strong>' + result.count + '</strong><span>Watched movies</span></div><div><strong>' + average(result.average) + '</strong><span>Average rating / 5</span></div><div><strong>' + result.unknownDates + '</strong><span>Unknown watch dates</span></div>';
+    $("#pivotSummary").innerHTML = '<div><strong>' + result.count + '</strong><span>Watched Movies</span></div><div><strong>' + average(result.average) + '</strong><span>Average Rating / 5</span></div><div><strong>' + result.unknownDates + '</strong><span>Unknown Watch Dates</span></div>';
     $("#pivotEmpty").hidden = result.count > 0;
     $("#pivotGrid").hidden = result.count === 0;
     model.dimensions.forEach(function (dimension) {
@@ -24,12 +24,14 @@
   function init() {
     $("#pivotGrid").innerHTML = model.dimensions.map(function (dimension) {
       preferences[dimension.id] = { minimum: 1, sort: "count" };
-      return '<section class="pivot-card" id="pivot-' + dimension.id + '" aria-labelledby="pivot-title-' + dimension.id + '"><header><h3 id="pivot-title-' + dimension.id + '">' + dimension.title + '</h3><small data-pivot-count role="status"></small></header><div class="pivot-controls"><label>Minimum movies<input data-pivot-min="' + dimension.id + '" type="number" min="1" max="5000" step="1" value="1" aria-label="Minimum movies for ' + dimension.title + '"></label><label>Sort by<select data-pivot-sort="' + dimension.id + '" aria-label="Sort ' + dimension.title + '"><option value="count">Most movies</option><option value="average">Highest average</option><option value="name">' + (['ratings', 'years'].includes(dimension.id) ? 'Lowest first' : 'Name A–Z') + '</option><option value="name-desc">' + (['ratings', 'years'].includes(dimension.id) ? 'Highest first' : 'Name Z–A') + '</option></select></label></div><div class="pivot-table-scroll" tabindex="0" role="region" aria-label="' + dimension.title + ' pivot table"><table><caption class="visually-hidden">' + dimension.title + ' — watched movie counts and average ratings</caption><thead><tr><th scope="col">' + (dimension.id === 'years' ? 'Year' : dimension.id === 'ratings' ? 'Rating' : 'Name') + '</th><th scope="col">Movies</th><th scope="col">Average</th></tr></thead><tbody></tbody></table></div></section>';
+      return '<section class="pivot-card" id="pivot-' + dimension.id + '" aria-labelledby="pivot-title-' + dimension.id + '"><header><h3 id="pivot-title-' + dimension.id + '">' + dimension.title + '</h3><small data-pivot-count role="status"></small></header><div class="pivot-controls"><label>Minimum Movies<input data-pivot-min="' + dimension.id + '" type="number" min="1" max="5000" step="1" value="1" aria-label="Minimum Movies for ' + dimension.title + '"></label><label>Sort By<select data-pivot-sort="' + dimension.id + '" aria-label="Sort ' + dimension.title + '"><option value="count">Most Movies</option><option value="average">Highest Average</option><option value="name">' + (['ratings', 'years'].includes(dimension.id) ? 'Lowest First' : 'Name A–Z') + '</option><option value="name-desc">' + (['ratings', 'years'].includes(dimension.id) ? 'Highest First' : 'Name Z–A') + '</option></select></label></div><div class="pivot-table-scroll" tabindex="0" role="region" aria-label="' + dimension.title + ' pivot table"><table><caption class="visually-hidden">' + dimension.title + ' — watched movie counts and average ratings</caption><thead><tr><th scope="col">' + (dimension.id === 'years' ? 'Year' : dimension.id === 'ratings' ? 'Rating' : 'Name') + '</th><th scope="col">Movies</th><th scope="col">Average</th></tr></thead><tbody></tbody></table></div></section>';
     }).join('');
     document.querySelectorAll('[data-movie-view]').forEach(function (button) {
       button.addEventListener('click', function () {
         active = button.dataset.movieView === 'pivots';
         $('#movieListView').hidden = active; $('#moviePivotsView').hidden = !active;
+        $('#movieToolbar').classList.toggle('showing-pivots', active);
+        document.querySelectorAll('[data-list-control]').forEach(function (control) { control.hidden = active; });
         document.querySelectorAll('[data-movie-view]').forEach(function (control) { control.setAttribute('aria-pressed', String(control === button)); });
         render();
       });

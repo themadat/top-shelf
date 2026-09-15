@@ -2,7 +2,7 @@
 
 Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the first planned areas.
 
-Version **0.0.1.9** includes the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
+Version **0.0.1.10** includes the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
 
 ## Movies
 
@@ -51,3 +51,5 @@ Historical ratings preserve their labels and map to numeric scores: 100! = 5, YE
 Choose **Movies → Pivots** for counts and average ratings across genres, ratings, years, collections, actors, directors, and production companies. All watched movies are included, regardless of list filters. Each table has a minimum movie count and sorting by count, average, or name/value. Switch years between release year and watched year. Unknown dates and missing metadata get their own groups. Historical scores are included; averages display two decimal places. A movie can count in several groups, once per group. Actor pivots use the saved cast (up to ten actors per movie). Dashboard controls last for the current session; results update automatically and work offline.
 
 The top bar includes combined storage/cloud-sync status and an Update button. Update checks for a new worker, saves current data, and force-refreshes; ready updates change its icon to red without an availability pop-up. Settings → Notifications controls What’s New dismissal from 1–300 seconds (default 20), stored in local preferences and full backups, excluded from content sync.
+
+Movies uses a compact spreadsheet-style table across the full workspace width. The sticky toolbar combines Movie List/Pivots, state filters, search with shown count, sorting, and Add Movie. Click a title to edit; scroll horizontally for additional metadata. Shift–Control–Option–R activates the top-bar Update button.

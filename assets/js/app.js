@@ -28,8 +28,8 @@
     { keys: ",", hintKey: ",", chordKey: ",", label: "Open Settings", group: "Global" },
     { keys: "N", hintKey: "N", chordKey: "N", label: "Open Notes", group: "Actions" },
     { keys: "V", hintKey: "V", chordKey: "V", label: "Open What’s New", group: "Actions" },
-    { keys: "R", hintKey: "R", chordKey: "R", label: "Force refresh an available app update", group: "Updates" },
-    { keys: "X", hintKey: "X", chordKey: "X", label: "Dismiss the active update notice or What’s New banner", group: "Updates" },
+    { keys: "⇧⌃⌥ R", hintKey: "R", chord: false, label: "Check For Updates And Force Reload", group: "Updates" },
+    { keys: "X", hintKey: "X", chordKey: "X", label: "Dismiss The What’s New Banner", group: "Updates" },
     { keys: "S", hintKey: "S", chordKey: "S", label: "Run the primary sync action", group: "Actions" },
     { keys: "E", hintKey: "E", chordKey: "E", label: "Export a JSON backup", group: "Actions" },
     { keys: "T", hintKey: "T", chordKey: "T", label: "Switch color theme", group: "Actions" },
@@ -508,7 +508,7 @@
   function renderShortcuts() {
     const groups = {};
     SHORTCUTS.forEach(function (shortcut) { (groups[shortcut.group] = groups[shortcut.group] || []).push(shortcut); });
-    $("#shortcutContent").innerHTML = '<p class="section-intro">Use a listed key directly or with Shift–Control–Option. Hold the full chord to reveal badges on currently available controls; hover those controls to see the command. Command-key combinations remain available to the browser.</p>' + Object.keys(groups).map(function (group) {
+    $("#shortcutContent").innerHTML = '<p class="section-intro">Use the listed shortcuts; alternate Shift–Control–Option combinations are shown where available. Hold the full chord to reveal badges on currently available controls; hover those controls to see the command. Command-key combinations remain available to the browser.</p>' + Object.keys(groups).map(function (group) {
       return '<section><h3>' + group + "</h3>" + groups[group].map(function (shortcut) {
         const chord = shortcut.chord === false ? "" : '<span class="shortcut-alternative">or</span><kbd>⇧⌃⌥ ' + u.escapeHtml(shortcut.chordKey) + "</kbd>";
         return '<div class="shortcut-row"><span class="shortcut-key-pair"><kbd>' + u.escapeHtml(shortcut.keys) + "</kbd>" + chord + '</span><span>' + u.escapeHtml(shortcut.label) + "</span></div>";
@@ -855,6 +855,9 @@
     if (event.target === $("#globalSearch") && event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey) {
       runShortcut(event, focusGlobalSearch);
       return;
+    }
+    if (event.code === "KeyR" && shortcutChordHeld(event) && !event.metaKey && !event.repeat && !$("dialog[open]")) {
+      runShortcut(event, function () { $("#updateAppButton").click(); }); return;
     }
     if (u.isEditableTarget(event.target)) return;
     if (event.metaKey) return;

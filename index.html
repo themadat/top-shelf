@@ -12,27 +12,27 @@
   <meta name="apple-mobile-web-app-title" content="Top Shelf">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Top Shelf</title>
-  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.9">
-  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/icons/favicon.svg?v=0.0.1.9">
-  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.9">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.9" media="(prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.9" media="(prefers-color-scheme: dark)">
-  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.9">
-  <script defer src="assets/js/config.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/icons.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/utils.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/movies.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/pivots.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/tmdb.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/state.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/storage.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/components.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/portability.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/sync.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/core/pwa.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/movies-ui.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/pivots-ui.js?v=0.0.1.9"></script>
-  <script defer src="assets/js/app.js?v=0.0.1.9"></script>
+  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.10">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/icons/favicon.svg?v=0.0.1.10">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.10">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.10" media="(prefers-color-scheme: light)">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.10" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.10">
+  <script defer src="assets/js/config.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/icons.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/utils.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/movies.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/pivots.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/tmdb.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/state.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/storage.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/components.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/portability.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/sync.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/core/pwa.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/movies-ui.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/pivots-ui.js?v=0.0.1.10"></script>
+  <script defer src="assets/js/app.js?v=0.0.1.10"></script>
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Skip to main content</a>
@@ -40,12 +40,12 @@
   <header class="app-header">
     <div class="title-cluster">
       <button id="appIconButton" class="app-icon-button" type="button" aria-label="Switch color theme. Press and hold to toggle Developer Mode" title="Switch color theme · Press and hold for Developer Mode" aria-keyshortcuts="T Control+Alt+Shift+T" data-shortcut="T">
-        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.9" alt="">
+        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.10" alt="">
       </button>
       <div class="identity-copy">
         <span id="appName" class="app-name">Top Shelf</span>
         <div class="identity-pill-row">
-          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V Control+Alt+Shift+V" data-shortcut="V">v0.0.1.9</button>
+          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V Control+Alt+Shift+V" data-shortcut="V">V0.0.1.10</button>
           <span id="betaPill" class="environment-pill beta-pill" title="This is the beta application" hidden>BETA</span>
         </div>
       </div>
@@ -68,7 +68,7 @@
       <span class="floating-status-icon" data-sync-icon data-symbol="icloud" aria-hidden="true"></span>
       <span class="floating-status-copy"><strong data-floating-local-label>Saved locally</strong><small data-floating-sync-label>GitHub setup required</small></span>
     </button>
-      <button id="updateAppButton" class="button action-button" type="button" title="Check for updates and force refresh"><span class="button-icon" aria-hidden="true" data-symbol="updateApp"></span><span class="button-label">Update</span></button>
+      <button id="updateAppButton" aria-keyshortcuts="Control+Alt+Shift+R" data-shortcut="R" class="button action-button" type="button" title="Check for updates and force refresh"><span class="button-icon" aria-hidden="true" data-symbol="updateApp"></span><span class="button-label">Update</span></button>
       <button id="notesButton" class="button action-button" type="button" aria-haspopup="dialog" aria-controls="notesDialog" aria-keyshortcuts="N Control+Alt+Shift+N" data-shortcut="N">
         <span class="button-icon" aria-hidden="true" data-symbol="notes"></span><span class="button-label">Notes</span>
       </button>
@@ -101,21 +101,20 @@
 
   <main id="mainContent" tabindex="-1" aria-label="Top Shelf workspace">
     <section id="moviesWorkspace" class="movies-workspace" aria-labelledby="moviesTitle">
-      <header class="movies-heading"><div><span class="eyebrow">Your screening room</span><h1 id="moviesTitle" tabindex="-1">Movies <small id="movieTotal">0 movies</small></h1></div><button type="button" class="button primary" data-add-movie>Add movie</button></header>
-      <div class="segmented movie-view-switch" aria-label="Movie view"><button type="button" data-movie-view="list" aria-pressed="true" aria-controls="movieListView">Movie list</button><button type="button" data-movie-view="pivots" aria-pressed="false" aria-controls="moviePivotsView">Pivots</button></div>
-      <div id="movieListView">
-      <div class="movies-controls">
-        <div class="segmented movie-state-filters" aria-label="Movie state"><button type="button" data-movie-filter="all" aria-pressed="true">All <small>0</small></button><button type="button" data-movie-filter="wishlist" aria-pressed="false">Wishlist <small>0</small></button><button type="button" data-movie-filter="watched" aria-pressed="false">Watched <small>0</small></button></div>
-        <label class="movie-search"><span class="visually-hidden">Search saved movies</span><input id="movieSearch" type="search" placeholder="Search movies, people, genres…"></label>
-        <label><span class="visually-hidden">Sort movies</span><select id="movieSort"><option value="title">Title A–Z</option><option value="rating">Highest rated</option><option value="priority">Priority 1 first</option><option value="release">Newest release</option><option value="watched">Recently watched</option></select></label>
+      <h1 id="moviesTitle" class="visually-hidden" tabindex="-1">Movies</h1>
+      <div id="movieToolbar" class="movie-toolbar" aria-label="Movie Controls">
+        <div class="segmented movie-view-switch" aria-label="Movie View"><button type="button" data-movie-view="list" aria-pressed="true" aria-controls="movieListView">Movie List</button><button type="button" data-movie-view="pivots" aria-pressed="false" aria-controls="moviePivotsView">Pivots</button></div>
+        <div class="segmented movie-state-filters" data-list-control aria-label="Movie State"><button type="button" data-movie-filter="all" aria-pressed="true">All <small>0</small></button><button type="button" data-movie-filter="wishlist" aria-pressed="false">Wishlist <small>0</small></button><button type="button" data-movie-filter="watched" aria-pressed="false">Watched <small>0</small></button></div>
+        <label class="movie-search" data-list-control><span class="visually-hidden">Search Movies</span><span id="movieResultsCount" role="status"></span><input id="movieSearch" type="search" placeholder="Search Movies…"></label>
+        <label class="movie-sort" data-list-control><span class="visually-hidden">Sort Movies</span><select id="movieSort"><option value="title">Title A–Z</option><option value="rating">Highest Rated</option><option value="priority">Priority 1 First</option><option value="release">Newest Release</option><option value="watched">Recently Watched</option></select></label>
+        <button type="button" class="button primary movie-add" data-add-movie><span aria-hidden="true" data-symbol="add"></span><span>Add Movie</span></button>
       </div>
-      <p id="movieResultsCount" class="movie-muted" role="status"></p><div id="movieList" class="movie-list"></div>
-      </div>
+      <div id="movieListView"><div id="movieList" class="movie-list"></div></div>
       <section id="moviePivotsView" aria-labelledby="pivotsTitle" hidden>
-        <header class="pivot-heading"><div><h2 id="pivotsTitle">Your watched movies, in perspective</h2><p class="movie-muted">All watched movies, independent of movie-list searches and filters. Historical ratings use their mapped numeric scores.</p></div><label>Group years by<select id="pivotYearBasis"><option value="release">Release year</option><option value="watched">Watched year</option></select></label></header>
+        <header class="pivot-heading"><div><h2 id="pivotsTitle">Watched Movie Pivots</h2><p class="movie-muted">All watched movies, independent of movie-list searches and filters. Historical ratings use their mapped numeric scores.</p></div><label>Group Years By<select id="pivotYearBasis"><option value="release">Release Year</option><option value="watched">Watched Year</option></select></label></header>
         <div id="pivotSummary" class="pivot-summary" aria-live="polite"></div>
         <p class="movie-muted">Each movie counts once per group. Movies with multiple genres, people, or companies count in each matching group, so group counts can exceed the watched total. Missing details and dates have their own groups. Actor pivots use saved cast (up to ten actors per movie). Averages are shown to two decimals.</p>
-        <div id="pivotEmpty" class="movie-empty"><h3>No watched movies yet</h3><p>Add a watched movie or mark a wishlist movie as watched to see your pivots.</p><button type="button" class="button primary" data-add-movie data-add-status="watched">Add watched movie</button></div>
+        <div id="pivotEmpty" class="movie-empty"><h3>No Watched Movies Yet</h3><p>Add a watched movie or mark a wishlist movie as watched to see your pivots.</p><button type="button" class="button primary" data-add-movie data-add-status="watched">Add Watched Movie</button></div>
         <div id="pivotGrid" class="pivot-grid"></div>
       </section>
     </section>
@@ -130,17 +129,17 @@
 
   <dialog id="movieDialog" class="app-dialog movie-dialog" aria-labelledby="movieDialogTitle">
     <form id="movieForm" class="dialog-shell">
-      <header class="dialog-header"><h2 id="movieDialogTitle">Add movie</h2><button type="button" class="icon-button" data-close-dialog="movieDialog" aria-label="Close movie editor"><span data-symbol="close" aria-hidden="true"></span></button></header>
+      <header class="dialog-header"><h2 id="movieDialogTitle">Add Movie</h2><button type="button" class="icon-button" data-close-dialog="movieDialog" aria-label="Close movie editor"><span data-symbol="close" aria-hidden="true"></span></button></header>
       <div class="dialog-body movie-editor">
-        <section class="movie-lookup" aria-labelledby="movieLookupTitle"><h3 id="movieLookupTitle">Find a movie</h3><div class="movie-lookup-row"><label class="grow-control"><span>Title or TMDB ID</span><input id="movieLookupQuery" type="search" placeholder="Movie title or numeric ID" autocomplete="off"></label><button type="button" id="movieLookupButton" class="button">Look up</button></div><div id="movieLookupResults" class="movie-lookup-results" aria-live="polite"></div>
-        <details id="tmdbSettings"><summary>Movie lookup settings</summary><label><span>TMDB API Read Access Token</span><input id="tmdbToken" type="password" autocomplete="off" spellcheck="false"></label><label class="movie-remember"><input id="rememberTmdbToken" type="checkbox" checked>Remember on this device</label><div class="button-row"><button id="saveTmdbToken" type="button" class="button">Save token</button><button id="forgetTmdbToken" type="button" class="button">Forget token</button><a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer">TMDB API settings</a></div><p id="tmdbCredentialStatus" role="status"></p><p class="movie-muted">Credentials stay outside movie data, backups, and sync.</p></details></section>
+        <section class="movie-lookup" aria-labelledby="movieLookupTitle"><h3 id="movieLookupTitle">Find A Movie</h3><div class="movie-lookup-row"><label class="grow-control"><span>Title Or TMDB ID</span><input id="movieLookupQuery" type="search" placeholder="Movie title or numeric ID" autocomplete="off"></label><button type="button" id="movieLookupButton" class="button">Look Up</button></div><div id="movieLookupResults" class="movie-lookup-results" aria-live="polite"></div>
+        <details id="tmdbSettings"><summary>Movie Lookup Settings</summary><label><span>TMDB API Read Access Token</span><input id="tmdbToken" type="password" autocomplete="off" spellcheck="false"></label><label class="movie-remember"><input id="rememberTmdbToken" type="checkbox" checked>Remember on this device</label><div class="button-row"><button id="saveTmdbToken" type="button" class="button">Save Token</button><button id="forgetTmdbToken" type="button" class="button">Forget Token</button><a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer">TMDB API settings</a></div><p id="tmdbCredentialStatus" role="status"></p><p class="movie-muted">Credentials stay outside movie data, backups, and sync.</p></details></section>
         <p id="movieError" class="inline-status warning" role="alert"></p>
         <div class="movie-fields"><label><span>Title</span><input id="movieTitle" name="title" required maxlength="200"></label><label><span>State</span><select id="movieStatus" name="status"><option value="wishlist">Wishlist</option><option value="watched">Watched</option></select></label><label><span>How</span><input name="how" maxlength="300" placeholder="Cinema, streaming service, disc…"></label><label><span>Other</span><textarea name="other" rows="2" maxlength="4000"></textarea></label></div>
-        <fieldset id="wishlistFields" class="movie-fields"><legend>Wishlist</legend><label><span>Available date <small>optional</small></span><input type="date" name="availableDate"></label><label><span>Priority <small>optional · 1 is highest</small></span><span id="moviePriorityPreview" class="movie-input-preview"><input name="priority" type="number" min="1" max="5" step="1" placeholder="1–5"></span></label><label class="movie-full"><span>Notes <small>optional</small></span><textarea name="notes" rows="3" maxlength="20000"></textarea></label></fieldset>
-        <fieldset id="watchedFields" class="movie-fields" hidden><legend>Watched</legend><label><span>Watched date <small>optional</small></span><input type="date" name="watchedDate"><small>Leave blank if the watch date is unknown.</small></label><label><span>Historical rating</span><select name="historicalRating"><option value="">None — use numeric rating</option><option value="100!">100! — 5</option><option value="YES">YES — 4</option><option value="MEH">MEH — 3</option><option value="NO">NO — 2</option><option value="RUN">RUN — 1</option></select></label><label><span>Rating <small>0–5</small></span><span id="movieRatingPreview" class="movie-input-preview"><input name="rating" type="number" min="0" max="5" step="any" placeholder="4.5"></span></label><label class="movie-full"><span>Review <small>optional</small></span><textarea name="review" rows="4" maxlength="20000"></textarea></label></fieldset>
-        <section><div class="movie-metadata-heading"><h3>TMDB details</h3><button id="movieRefreshButton" type="button" class="button" hidden>Refresh details</button></div><dl id="movieMetadata" class="movie-details" hidden></dl><p class="movie-muted">TMDB may not have every detail, especially for unreleased movies.</p></section>
+        <fieldset id="wishlistFields" class="movie-fields"><legend>Wishlist</legend><label><span>Available Date <small>optional</small></span><input type="date" name="availableDate"></label><label><span>Priority <small>optional · 1 is highest</small></span><span id="moviePriorityPreview" class="movie-input-preview"><input name="priority" type="number" min="1" max="5" step="1" placeholder="1–5"></span></label><label class="movie-full"><span>Notes <small>optional</small></span><textarea name="notes" rows="3" maxlength="20000"></textarea></label></fieldset>
+        <fieldset id="watchedFields" class="movie-fields" hidden><legend>Watched</legend><label><span>Watched Date <small>optional</small></span><input type="date" name="watchedDate"><small>Leave blank if the watch date is unknown.</small></label><label><span>Historical Rating</span><select name="historicalRating"><option value="">None — Use Numeric Rating</option><option value="100!">100! — 5</option><option value="YES">YES — 4</option><option value="MEH">MEH — 3</option><option value="NO">NO — 2</option><option value="RUN">RUN — 1</option></select></label><label><span>Rating <small>0–5</small></span><span id="movieRatingPreview" class="movie-input-preview"><input name="rating" type="number" min="0" max="5" step="any" placeholder="4.5"></span></label><label class="movie-full"><span>Review <small>optional</small></span><textarea name="review" rows="4" maxlength="20000"></textarea></label></fieldset>
+        <section><div class="movie-metadata-heading"><h3>TMDB Details</h3><button id="movieRefreshButton" type="button" class="button" hidden>Refresh Details</button></div><dl id="movieMetadata" class="movie-details" hidden></dl><p class="movie-muted">TMDB may not have every detail, especially for unreleased movies.</p></section>
         <p class="tmdb-credit"><img class="tmdb-logo" src="assets/icons/tmdb.svg" alt="TMDB">This product uses the TMDB API but is not endorsed or certified by TMDB. <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer">The Movie Database</a></p>
-      </div><footer class="dialog-footer"><button id="movieDeleteButton" class="button danger-text" type="button" hidden>Delete movie</button><button id="movieSaveButton" class="button primary" type="submit" disabled>Save movie</button></footer>
+      </div><footer class="dialog-footer"><button id="movieDeleteButton" class="button danger-text" type="button" hidden>Delete Movie</button><button id="movieSaveButton" class="button primary" type="submit" disabled>Save Movie</button></footer>
     </form>
   </dialog>
 
@@ -181,11 +180,11 @@
             </div>
 
             <div class="settings-section">
-              <div class="section-heading"><div><span class="eyebrow">Data safety</span><h3>Backup, restore & reset</h3></div></div>
+              <div class="section-heading"><div><span class="eyebrow">Data safety</span><h3>Backup, Restore & Reset</h3></div></div>
               <p class="section-intro">JSON backups include movies, notes, preferences, and module settings. Tokens are excluded.</p>
               <div class="button-row"><button id="exportButton" class="button primary" type="button">Export JSON</button><button id="importButton" class="button" type="button">Import JSON</button><input id="importFileInput" type="file" accept="application/json,.json" hidden></div>
-              <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep movies and notes, but restore appearance, filters, and hints.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset preferences</button></div>
-              <div class="danger-zone"><div><strong>Erase all application data</strong><small>Permanently remove content, preferences, sync settings, token, and recovery data from this browser.</small></div><button id="eraseAllButton" class="button danger" type="button">Erase all data</button></div>
+              <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep movies and notes, but restore appearance, filters, and hints.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset Preferences</button></div>
+              <div class="danger-zone"><div><strong>Erase all application data</strong><small>Permanently remove content, preferences, sync settings, token, and recovery data from this browser.</small></div><button id="eraseAllButton" class="button danger" type="button">Erase All Data</button></div>
             </div>
           </section>
 
@@ -203,7 +202,7 @@
                 <div class="sync-target-item"><dt>Branch</dt><dd id="syncBranch">Not set</dd></div>
                 <div class="sync-target-item"><dt>Path</dt><dd><a id="syncPath">Not set</a></dd></div>
               </dl>
-              <label class="field sync-token-field"><span>Fine-grained access token <small id="storedTokenLabel" class="sync-token-state">Required</small></span><input id="syncToken" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Enter token"></label>
+              <label class="field sync-token-field"><span>Fine-grained Access Token <small id="storedTokenLabel" class="sync-token-state">Required</small></span><input id="syncToken" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Enter token"></label>
               <label class="sync-remember"><input id="syncRememberToken" type="checkbox" checked><span>Remember token on this device</span><small>Otherwise it lasts only for this browser tab.</small></label>
               <div class="button-row compact-sync-actions"><button id="forgetSyncButton" class="button danger-text" type="button"><span class="setting-button-icon" aria-hidden="true" data-symbol="forgetConnection"></span><span>Forget</span></button><button id="testSyncButton" class="button" type="button"><span class="setting-button-icon" aria-hidden="true" data-symbol="testConnection"></span><span>Test</span></button><button id="saveSyncButton" class="button primary" type="button"><span class="setting-button-icon" aria-hidden="true" data-symbol="saveConnection"></span><span>Save</span></button></div>
               </div>
@@ -217,10 +216,10 @@
 
           <section id="infoPanel" class="support-panel" role="tabpanel" aria-labelledby="infoTab" data-support-panel="info" hidden>
             <div class="settings-section">
-              <h3>Movie database background</h3>
+              <h3>Movie Database Background</h3>
               <dl class="movie-details"><div><dt>Original name</dt><dd>Stripes Movie Database</dd></div><div><dt>Original description</dt><dd>A spreadsheet of watched and wishlist movies with ratings and details to pivot on (backed by formulas, Google Script Apps, ChatGPT, and TMDB)</dd></div></dl>
               <p class="setting-note">Preserved from the original spreadsheet. Top Shelf is the current app.</p>
-              <h3>Movie preferences</h3>
+              <h3>Movie Preferences</h3>
               <dl class="movie-details">
                 <div><dt>Favorite movies</dt><dd>Interstellar; Miracle (Sports); National Treasure (Joke); The Hunt (Comedy); Deadpool (Superhero); How to Train Your Dragon (Animated)</dd></div>
                 <div><dt>Movies that make me cry</dt><dd>McFarland; How to Train Your Dragon</dd></div>
@@ -228,9 +227,9 @@
                 <div><dt>Favorite actors</dt><dd>Jason Statham; Ryan Reynolds; Nicolas Cage</dd></div>
                 <div><dt>Favorite genres</dt><dd>Sherlock Holmes (House); Grounded Space Sci-fi (Interstellar, Gravity, The Martian, Project: Hail Mary)</dd></div>
               </dl>
-              <h3>Historical movie ratings</h3>
+              <h3>Historical Movie Ratings</h3>
               <p>100! = 5 · YES = 4 · MEH = 3 · NO = 2 · RUN = 1. Select a historical rating in the movie editor to preserve its label and use the mapped score. Watched dates can be left blank when unknown.</p>
-              <h3>Movie reference links</h3>
+              <h3>Movie Reference Links</h3>
               <ul>
                 <li><a href="https://www.themoviedb.org/search?query=" target="_blank" rel="noopener noreferrer">Search TMDB</a></li>
                 <li><a href="https://developer.themoviedb.org/reference/search-movie" target="_blank" rel="noopener noreferrer">TMDB movie search API</a></li>
@@ -246,12 +245,12 @@
           </section>
 
           <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden>
-            <div class="support-section-title"><span aria-hidden="true" data-symbol="releaseNotes"></span><div><span class="eyebrow">Current version <strong id="releaseCurrentVersion">v0.0.1.9</strong></span><h3>Release Notes</h3></div></div>
-            <div id="releaseContent" class="release-list"></div><details class="settings-section"><summary>Stripes Movie Database — spreadsheet history</summary><p>Legacy spreadsheet versions, separate from Top Shelf releases. All entries by Adam Lauer.</p><h4>1.5.0 · 2024-09-18</h4><ul><li>Updated Watch column format for better sorting.</li><li>Improved scripts: variable handling/scoping, success logic in movie updates, and a fix for the optional date-update column.</li></ul><h4>1.4.0 · 2024-06-19</h4><ul><li>Added a validation check in column A of Movies to ensure each row has its formulas.</li><li>Added Loop and Time Travel manual pivots.</li></ul><h4>1.3.0 · 2023-11-13</h4><ul><li>Pivots: added Actors and Directors groupings, thresholds and counts, and better formatting.</li><li>UpdatePivots: added a threshold on gets, refactored to be more generic, and added sortPivots after updating.</li></ul><h4>1.2.0 · 2023-11-12</h4><ul><li>Movies: added duplicate detection and resolved existing issues; changed 💯 rating to 100!; improved How column formula.</li></ul><h4>1.1.0 · 2023-11-11</h4><ul><li>Added a Notes tab with a programming-esque information format.</li><li>Movies: better formatting. Pivots: column groupings and better formatting.</li><li>UpdateUtilities: combined Constants and Utilities, refactored and cleaned up syntax, added SheetNames, Columns, and ColorHex.</li><li>UpdateMovies and UpdatePivots: refactored and cleaned up syntax.</li></ul><h4>1.0.0 · 2023-11-10</h4><ul><li>Initial creation with Movies and Pivots tabs.</li></ul></details>
+            <div class="support-section-title"><span aria-hidden="true" data-symbol="releaseNotes"></span><div><span class="eyebrow">Current version <strong id="releaseCurrentVersion">v0.0.1.10</strong></span><h3>Release Notes</h3></div></div>
+            <div id="releaseContent" class="release-list"></div><details class="settings-section"><summary>Stripes Movie Database — Spreadsheet History</summary><p>Legacy spreadsheet versions, separate from Top Shelf releases. All entries by Adam Lauer.</p><h4>1.5.0 · 2024-09-18</h4><ul><li>Updated Watch column format for better sorting.</li><li>Improved scripts: variable handling/scoping, success logic in movie updates, and a fix for the optional date-update column.</li></ul><h4>1.4.0 · 2024-06-19</h4><ul><li>Added a validation check in column A of Movies to ensure each row has its formulas.</li><li>Added Loop and Time Travel manual pivots.</li></ul><h4>1.3.0 · 2023-11-13</h4><ul><li>Pivots: added Actors and Directors groupings, thresholds and counts, and better formatting.</li><li>UpdatePivots: added a threshold on gets, refactored to be more generic, and added sortPivots after updating.</li></ul><h4>1.2.0 · 2023-11-12</h4><ul><li>Movies: added duplicate detection and resolved existing issues; changed 💯 rating to 100!; improved How column formula.</li></ul><h4>1.1.0 · 2023-11-11</h4><ul><li>Added a Notes tab with a programming-esque information format.</li><li>Movies: better formatting. Pivots: column groupings and better formatting.</li><li>UpdateUtilities: combined Constants and Utilities, refactored and cleaned up syntax, added SheetNames, Columns, and ColorHex.</li><li>UpdateMovies and UpdatePivots: refactored and cleaned up syntax.</li></ul><h4>1.0.0 · 2023-11-10</h4><ul><li>Initial creation with Movies and Pivots tabs.</li></ul></details>
           </section>
 
           <section id="shortcutsPanel" class="support-panel" role="tabpanel" aria-labelledby="shortcutsTab" data-support-panel="shortcuts" hidden>
-            <div class="release-summary"><div><span class="eyebrow">Keyboard</span><h3>Shortcut reference</h3></div><p>Use commands directly or with Shift–Control–Option. Hold the chord to reveal available controls.</p></div>
+            <div class="release-summary"><div><span class="eyebrow">Keyboard</span><h3>Shortcut Reference</h3></div><p>Use commands directly or with Shift–Control–Option. Hold the chord to reveal available controls.</p></div>
             <div id="shortcutContent" class="shortcut-content"></div>
           </section>
 
@@ -259,17 +258,17 @@
             <div class="support-section-title"><span aria-hidden="true" data-symbol="roadmap"></span><div><span class="eyebrow">Plans and ideas</span><h3>Roadmap</h3></div></div>
             <div class="roadmap-sticky-controls">
               <div class="roadmap-search-row"><label class="grow-control"><span class="visually-hidden">Search roadmap</span><input id="supportRoadmapSearch" type="search" placeholder="Search roadmap items"></label><span id="supportRoadmapCount" class="roadmap-count-pill">0 items</span></div>
-              <div class="roadmap-filters"><select id="supportRoadmapState" aria-label="Roadmap state"><option value="all">All states</option><option value="released">Released</option><option value="planned">Planned</option><option value="wishlist">Wishlist</option></select><select id="supportRoadmapPriority" aria-label="Roadmap priority"><option value="all">All priorities</option><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option></select><select id="supportRoadmapTarget" aria-label="Roadmap target"><option value="all">All targets</option></select><select id="supportRoadmapEffort" aria-label="Roadmap effort"><option value="all">All effort</option><option value="1">Effort 1</option><option value="2">Effort 2</option><option value="3">Effort 3</option><option value="4">Effort 4</option></select></div>
-              <div class="roadmap-sort-row"><select id="supportRoadmapSort" aria-label="Sort roadmap"><option value="priority">Priority</option><option value="target">Target release</option><option value="effort">Effort</option><option value="age">Age</option><option value="title">Title</option></select><button id="resetSupportRoadmapFilters" class="button" type="button">Reset Filters</button></div>
+              <div class="roadmap-filters"><select id="supportRoadmapState" aria-label="Roadmap state"><option value="all">All States</option><option value="released">Released</option><option value="planned">Planned</option><option value="wishlist">Wishlist</option></select><select id="supportRoadmapPriority" aria-label="Roadmap priority"><option value="all">All Priorities</option><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option></select><select id="supportRoadmapTarget" aria-label="Roadmap target"><option value="all">All Targets</option></select><select id="supportRoadmapEffort" aria-label="Roadmap effort"><option value="all">All Effort</option><option value="1">Effort 1</option><option value="2">Effort 2</option><option value="3">Effort 3</option><option value="4">Effort 4</option></select></div>
+              <div class="roadmap-sort-row"><select id="supportRoadmapSort" aria-label="Sort roadmap"><option value="priority">Priority</option><option value="target">Target Release</option><option value="effort">Effort</option><option value="age">Age</option><option value="title">Title</option></select><button id="resetSupportRoadmapFilters" class="button" type="button">Reset Filters</button></div>
             </div>
             <div id="supportRoadmapList" class="roadmap-list compact-roadmap"></div>
           </section>
 
           <section id="developerPanel" class="support-panel" role="tabpanel" aria-labelledby="developerTab" data-support-panel="developer" hidden>
-            <div class="release-summary"><div><span class="eyebrow">Hidden tools</span><h3>Developer mode</h3></div><p>Diagnostics are read-only and never expose the GitHub token.</p></div>
+            <div class="release-summary"><div><span class="eyebrow">Hidden tools</span><h3>Developer Mode</h3></div><p>Diagnostics are read-only and never expose the GitHub token.</p></div>
             <dl id="developerDiagnostics" class="diagnostic-grid"></dl>
-            <div class="button-row developer-actions"><button id="restoreRecoveryButton" class="button" type="button">Restore recovery copy</button><button id="saveRecoveryButton" class="button" type="button">Save recovery copy</button><button id="disableDeveloperButton" class="button" type="button">Hide developer mode</button></div>
-            <h4>Normalized state</h4>
+            <div class="button-row developer-actions"><button id="restoreRecoveryButton" class="button" type="button">Restore Recovery Copy</button><button id="saveRecoveryButton" class="button" type="button">Save Recovery Copy</button><button id="disableDeveloperButton" class="button" type="button">Hide Developer Mode</button></div>
+            <h4>Normalized State</h4>
             <pre id="developerState" class="developer-json" tabindex="0" aria-label="Normalized application state"></pre>
           </section>
         </div>
@@ -279,20 +278,20 @@
 
   <dialog id="importPreviewDialog" class="app-dialog import-dialog" aria-labelledby="importPreviewTitle" data-backdrop-close="false">
     <div class="dialog-shell">
-      <header class="dialog-header"><div><span class="eyebrow">Validated backup</span><h2 id="importPreviewTitle">Review import</h2></div><button type="button" class="icon-button" data-close-dialog="importPreviewDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header>
+      <header class="dialog-header"><div><span class="eyebrow">Validated backup</span><h2 id="importPreviewTitle">Review Import</h2></div><button type="button" class="icon-button" data-close-dialog="importPreviewDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header>
       <div class="dialog-body">
         <p><strong data-import-file></strong> passed parsing, migration, sanitization, normalization, and validation.</p>
         <dl class="preview-grid"><div><dt>Workspace</dt><dd data-import-workspace></dd></div><div><dt>Notes</dt><dd data-import-documents></dd></div><div><dt>Movies</dt><dd data-import-movies></dd></div><div><dt>Versions</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div><div data-import-migrations-row><dt>Migrations</dt><dd data-import-migrations></dd></div></dl>
         <p class="inline-status warning" data-import-warning hidden></p>
         <p class="inline-status"><span aria-hidden="true" data-symbol="restore"></span><span>The current data will be saved as a local recovery copy before replacement.</span></p>
       </div>
-      <footer class="dialog-footer"><button type="button" class="button" data-close-dialog="importPreviewDialog">Keep current data</button><button type="button" class="button primary" data-import-confirm>Continue</button></footer>
+      <footer class="dialog-footer"><button type="button" class="button" data-close-dialog="importPreviewDialog">Keep Current Data</button><button type="button" class="button primary" data-import-confirm>Continue</button></footer>
     </div>
   </dialog>
 
   <dialog id="confirmDialog" class="app-dialog small-dialog" aria-labelledby="confirmTitle" data-backdrop-close="false">
     <div class="dialog-shell">
-      <header class="dialog-header"><h2 id="confirmTitle" data-confirm-title>Confirm action</h2></header>
+      <header class="dialog-header"><h2 id="confirmTitle" data-confirm-title>Confirm Action</h2></header>
       <div class="dialog-body"><p data-confirm-message></p></div>
       <footer class="dialog-footer"><button type="button" class="button" data-confirm-cancel>Cancel</button><button type="button" class="button primary" data-confirm-action>Confirm</button></footer>
     </div>
@@ -300,7 +299,7 @@
 
   <dialog id="choiceDialog" class="app-dialog choice-dialog" aria-labelledby="choiceTitle" data-backdrop-close="false">
     <div class="dialog-shell">
-      <header class="dialog-header"><h2 id="choiceTitle" data-choice-title>Choose an action</h2></header>
+      <header class="dialog-header"><h2 id="choiceTitle" data-choice-title>Choose An Action</h2></header>
       <div class="dialog-body"><p data-choice-message></p><div class="choice-actions" data-choice-actions></div></div>
       <footer class="dialog-footer"><button type="button" class="button" data-choice-cancel>Cancel</button></footer>
     </div>

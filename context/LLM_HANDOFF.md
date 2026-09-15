@@ -2,7 +2,7 @@
 
 Read AGENTS.md, this handoff, and context/WISHES.md before working. Preserve existing/manual edits. Run git status --short at session start. If work is in flight, inspect recent commits, the current diff, and its plan’s Resume block.
 
-Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the initial direction. Version 0.0.1.9 implements Movies with Wishlist/Watched state, TMDB lookup, editing, deletion, search, filters, sorting, and real movie counts. Other shelves are starter views. Supplied artwork, numeric navigation (1–8), and remembered ui.selectedShelf remain. The app accents are teal #008080 and coral #ff7f50; old default colors migrate while custom colors survive.
+Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the initial direction. Version 0.0.1.10 implements Movies with Wishlist/Watched state, TMDB lookup, editing, deletion, search, filters, sorting, and real movie counts. Other shelves are starter views. Supplied artwork, numeric navigation (1–8), and remembered ui.selectedShelf remain. The app accents are teal #008080 and coral #ff7f50; old default colors migrate while custom colors survive.
 
 Movie fields: id (local), tmdbId, title, releaseDate, how, other, genres, productionCompanies, directors, actors (top ten), collections, status, availableDate, priority, notes, watchedDate, historicalRating, rating, review. Wishlist extras are optional; Watched requires a rating; review is optional; an empty watchedDate means unknown. Optional historicalRating stores 100!, YES, MEH, NO, or RUN and determines the numeric score 5, 4, 3, 2, or 1. Ratings accept decimals 0–5 with a dark red(0)→green(5) scale; priorities are integers 1–5 with a light green(1)→red(5) scale. Preserve optional prior-state fields when switching. One active movie per TMDB ID; deletion stores {id, deleted:true} after recovery. No inferred timestamp winner for conflicts.
 
@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.10.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.11.
 
 ## Workflows
 
@@ -85,3 +85,5 @@ Movies → Pivots computes seven tables from every non-deleted watched movie, in
 The top bar includes combined storage/cloud-sync status and an Update button. Update checks for a new worker, saves current data, and force-refreshes; ready updates change its icon to red without an availability pop-up. Settings → Notifications controls What’s New dismissal from 1–300 seconds (default 20), stored in local preferences and full backups, excluded from content sync.
 
 Spreadsheet import preparation: original `Movies - Movies.csv` and `import-preparation/` are personal files ignored by Git. The generated 0.0.1.9 backup contains 739 movies (638 watched, 101 wishlist); one invalid-ID Community row is held separately. It uses the existing full replacement import, with blank Notes/default preferences; do not imply it merges current browser data. Reviews are optional and numeric ratings accept 0–5; update all clients before syncing such data.
+
+0.0.1.10: Movies uses a full-width compact table with sticky column headers/title and a combined sticky toolbar (view, state, shown-count search, equal-width sort, Add Movie). Header/toolbar sizes are observed to adapt sticky positions. Shift–Control–Option–R clicks the top-bar Update control outside dialogs, including from main-page inputs. Interface headings/labels use Title Case; saved movie text is preserved.
