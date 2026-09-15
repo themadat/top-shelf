@@ -31,3 +31,5 @@ Pivot checks: validate watched-only scope despite list filters; multi-value memb
 0.0.1.9: verify watched movies save with blank reviews and numeric ratings 0, 0.5, and 5; reject out-of-range ratings and missing watched ratings. Backup/sync must preserve zero scores and blank reviews. Bulk import verification uses the ignored personal preparation files and an isolated browser profile.
 
 0.0.1.10: verify the full-width table with 739 rows, equal search/sort widths at 320–1800px, sticky toolbar/header/title column, title-to-editor action, filters/sort, Pivots switching, and Shift–Control–Option–R from the main view and its search input. Plain R and the update chord inside an open dialog must not refresh.
+
+0.0.1.11: verify eight pivot groups in the specified order, Count/Average descending on selection and reverse on repeat click, directional icons and aria-sort, inline Min with no wrapping at 320px, dense rows/multiple desktop columns, case-insensitive Other tag deduplication, and L/P view shortcuts suppressed in editors.

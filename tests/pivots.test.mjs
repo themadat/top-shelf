@@ -65,3 +65,23 @@ test('rating value sorting compares decimals numerically', () => {
   assert.equal(App.pivots.rows(values, 1, 'name')[0].name, '4.11');
   assert.equal(App.pivots.rows(values, 1, 'name-desc')[0].name, '4.2');
 });
+
+test('Other Pivots split tags, deduplicate case variants, and exclude availability notes', () => {
+  const result = App.pivots.build([movie(1, { other: 'MCU,Loop,loop\nOriginal availability note: DVD 2/7', rating: 5 }), movie(2, { other: 'Loop,Pixar', rating: 1 }), movie(3, { status: 'wishlist', other: 'Wishlist Only' })], 'release');
+  assert.equal(result.groups.other.length, 3);
+  assert.equal(result.groups.other.find(row => row.name === 'Loop').count, 2);
+  assert.equal(result.groups.other.find(row => row.name === 'Loop').average, 3);
+  assert.deepEqual(Array.from(App.pivots.dimensions, d => d.title), ['Ratings', 'Years', 'Genres', 'Other Pivots', 'Collections', 'Actors', 'Directors', 'Companies']);
+});
+
+test('Count and Average support both sort directions without modifying the groups', () => {
+  const groups = App.pivots.build(data, 'release').groups.genres;
+  const before = JSON.stringify(groups);
+  for (const sort of ['count', 'average']) {
+    for (const direction of ['asc', 'desc']) {
+      const rows = App.pivots.rows(groups, 1, sort, direction);
+      for (let i = 1; i < rows.length; i++) assert(direction === 'asc' ? rows[i-1][sort] <= rows[i][sort] : rows[i-1][sort] >= rows[i][sort]);
+    }
+  }
+  assert.equal(JSON.stringify(groups), before);
+});

@@ -22,6 +22,8 @@
   const versionedAsset = function (path) { return path + "?v=" + encodeURIComponent(config.identity.buildId); };
 
   const SHORTCUTS = [
+    { keys: "L", label: "Movie List", group: "Movies", chord: false },
+    { keys: "P", label: "Pivots", group: "Movies", chord: false },
     { keys: "/", hintKey: "/", chordKey: "/", label: "Search Notes and application support", group: "Global" },
     { keys: "Esc", hintKey: "Esc", chordKey: "Esc", label: "Close a dialog or menu", group: "Global" },
     { keys: "H or ?", hintKey: "H", chordKey: "H", label: "Open Help Center", group: "Global" },
@@ -128,7 +130,7 @@
   function bindShelfNavigation() {
     const nav = $("#shelfNavigation");
     nav.innerHTML = config.shelves.map(function (shelf) {
-      return '<button type="button" class="shelf-tab" data-shelf="' + shelf.id + '" aria-controls="mainContent" aria-keyshortcuts="' + shelf.shortcut + '" title="' + shelf.label + ' (' + shelf.shortcut + ')" aria-label="' + shelf.label + ', 0 ratings"><span class="shelf-tab-icon" aria-hidden="true">' + icons.markup(shelf.symbol) + '</span><span class="shelf-tab-label">' + shelf.label + '</span><small class="shelf-tab-count" aria-hidden="true">0</small></button>';
+      return '<button type="button" class="shelf-tab" data-shelf="' + shelf.id + '" aria-controls="mainContent" aria-keyshortcuts="' + shelf.shortcut + '" title="' + shelf.label + ' (' + shelf.shortcut + ')" aria-label="' + shelf.label + ', 0 ratings"><span class="shelf-tab-icon" aria-hidden="true">' + icons.markup(shelf.symbol) + '</span><span class="shelf-tab-label">' + shelf.label + ' <u class="shelf-key" aria-hidden="true">' + shelf.shortcut + '</u></span><small class="shelf-tab-count" aria-hidden="true">0</small></button>';
     }).join("");
     nav.addEventListener("click", function (event) { const button = event.target.closest("[data-shelf]"); if (button) selectShelf(button.dataset.shelf, true); });
     nav.addEventListener("keydown", function (event) {
@@ -868,6 +870,9 @@
     }
     if (event.repeat) return;
     const mainPageActive = !$("dialog[open]");
+    if (mainPageActive && state().ui.selectedShelf === "movies" && !event.ctrlKey && !event.altKey && !event.shiftKey && ["KeyL", "KeyP"].includes(event.code)) {
+      runShortcut(event, function () { $('[data-movie-view="' + (event.code === "KeyL" ? 'list' : 'pivots') + '"]').click(); }); return;
+    }
     const shelf = config.shelves.find(function (item) { return item.shortcut === event.key; });
     if (mainPageActive && shelf && !event.ctrlKey && !event.altKey && !event.shiftKey) { runShortcut(event, function () { selectShelf(shelf.id, true); }); return; }
     if ((event.code === "Backslash" && event.shiftKey) || event.key === "|") runShortcut(event, function () { toggleDeveloperMode(undefined, { openPanel: true }); });
