@@ -4,6 +4,7 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const esc = u.escapeHtml;
   let draft = null, lookupController = null, generation = 0;
+  let inlineEdit = null;
   let filter = "all", query = "", sort = "title";
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
@@ -79,11 +80,53 @@
     }
     return movie.priority == null ? '<span aria-label="No Priority">—</span>' : '<span class="movie-priority" aria-label="Priority ' + movie.priority + '" title="Priority ' + movie.priority + '" style="background:' + model.color(movie.priority, true) + '">' + movie.priority + '</span>';
   }
+  function editable(movie, field, content, className) {
+    return '<td class="' + className + '"><button type="button" class="movie-cell movie-inline-button" data-inline-id="' + esc(movie.id) + '" data-inline-field="' + field + '" aria-label="Edit ' + field + ' for ' + esc(movie.title) + '">' + content + '</button></td>';
+  }
+  function editCell(button) {
+    if (inlineEdit) return;
+    const movie = saved().find(function (item) { return item.id === button.dataset.inlineId; });
+    if (!movie) return;
+    const field = button.dataset.inlineField, score = field === 'rating' || field === 'priority';
+    inlineEdit = { id: movie.id, field: field, button: button };
+    const form = document.createElement('form');
+    form.className = 'movie-inline-form';
+    const multiline = ['review', 'notes', 'other'].includes(field);
+    form.innerHTML = (multiline ? '<textarea name="value" rows="3"></textarea>' : '<input name="value" type="' + (field.endsWith('Date') ? 'date' : 'text') + '">') + '<div><button type="submit" class="button">Save</button><button type="button" class="button" data-inline-cancel>Cancel</button></div><small role="alert"></small>';
+    const input = form.elements.value;
+    input.setAttribute('aria-label', button.getAttribute('aria-label'));
+    input.value = score && field === 'rating' && movie.historicalRating ? movie.historicalRating : movie[field] ?? '';
+    if (score) { input.placeholder = field === 'rating' ? '0–5 or 100!, YES, MEH, NO, RUN' : '1–5'; }
+    else input.maxLength = field === 'other' ? 4000 : field === 'how' ? 300 : 20000;
+    function close() { inlineEdit = null; form.replaceWith(button); button.focus(); }
+    form.querySelector('[data-inline-cancel]').addEventListener('click', close);
+    form.addEventListener('keydown', function (event) { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); } });
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      try {
+        const current = saved().find(function (item) { return item.id === movie.id; });
+        if (!current) throw new Error('This movie has been removed. Cancel to refresh.');
+        const patch = { [field]: input.value };
+        if (field === 'rating') { const historical = input.value.trim().toUpperCase(); patch.historicalRating = Object.hasOwn(model.historicalRatings, historical) ? historical : ''; }
+        const updated = model.normalize(Object.assign({}, current, patch));
+        inlineEdit = null;
+        App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (item) { return item.id === updated.id ? updated : item; }); }, { reason: 'movie-inline-save' });
+        const persisted = App.storage.saveNow();
+        render();
+        const target = Array.from(document.querySelectorAll('[data-inline-id]')).find(function (item) { return item.dataset.inlineId === movie.id && item.dataset.inlineField === field; });
+        if (target) target.focus();
+        App.components.toast(persisted ? 'Movie saved.' : 'Movie kept for this session. Export a backup before closing.', { title: persisted ? 'Saved' : 'Storage unavailable', kind: persisted ? 'success' : 'warning' });
+      } catch (error) { form.querySelector('[role="alert"]').textContent = error.message; }
+    });
+    button.replaceWith(form); input.focus();
+  }
   function render() {
+    if (inlineEdit) return;
     const items = saved(), wishlist = items.filter(function (movie) { return movie.status === "wishlist"; }).length;
     document.querySelectorAll("[data-movie-filter]").forEach(function (button) { const value = button.dataset.movieFilter; button.setAttribute("aria-pressed", String(filter === value)); button.querySelector("small").textContent = value === "all" ? items.length : value === "wishlist" ? wishlist : items.length - wishlist; });
     const visible = items.filter(function (movie) { return (filter === "all" || movie.status === filter) && model.searchable(movie).includes(query.toLowerCase().trim()); });
     visible.sort(function (a, b) {
+      if (sort === "other") return (a.other || "").localeCompare(b.other || "", undefined, { sensitivity: "base", numeric: true }) || a.title.localeCompare(b.title);
       if (sort === "rating") return (b.rating ?? -1) - (a.rating ?? -1) || a.title.localeCompare(b.title);
       if (sort === "priority") return (a.priority ?? 6) - (b.priority ?? 6) || a.title.localeCompare(b.title);
       if (sort === "release") return (b.releaseDate || "").localeCompare(a.releaseDate || "") || a.title.localeCompare(b.title);
@@ -92,10 +135,10 @@
     });
     $("#movieResultsCount").textContent = visible.length + " Shown";
     const cell = function (value, className) { return '<td class="' + (className || '') + '"><span class="movie-cell" title="' + esc(String(value || '')) + '">' + esc(String(value || '—')) + '</span></td>'; };
-    const headers = [['#', 'score'], ['Title', 'title'], ['Review/Notes', 'review'], ['How', 'how'], ['Date', 'date'], ['Release', 'release'], ['Other', 'other'], ['Collections', 'collections'], ['Genres', 'genres'], ['Actors', 'actors'], ['Directors', 'directors'], ['Companies', 'companies']];
+    const headers = [['#', 'score'], ['Title', 'title'], ['Review/Notes', 'review'], ['How', 'how'], ['Date', 'date'], ['Release', 'release'], ['Other Pivots', 'other'], ['Collections', 'collections'], ['Genres', 'genres'], ['Actors', 'actors'], ['Directors', 'directors'], ['Companies', 'companies']];
     $("#movieList").innerHTML = visible.length ? '<div class="movie-table-scroll" tabindex="0" role="region" aria-label="Movie Spreadsheet"><table class="movie-table"><caption class="visually-hidden">Saved Movies. Wishlist rows are highlighted. Date is the watched date for watched movies and available date for wishlist movies.</caption><thead><tr>' + headers.map(function (column) { return '<th scope="col" class="movie-col-' + column[1] + '">' + column[0] + '</th>'; }).join('') + '</tr></thead><tbody>' + visible.map(function (movie) {
       const id = esc(movie.id), watched = movie.status === "watched";
-      return '<tr class="' + (watched ? 'movie-watched-row' : 'movie-wishlist-row') + '"><td class="movie-col-score">' + badge(movie) + '</td><th scope="row" class="movie-col-title"><button type="button" class="movie-title-link" data-edit-movie="' + id + '" title="Edit ' + esc(movie.title) + '">' + esc(movie.title) + '</button><span class="visually-hidden">' + (watched ? 'Watched' : 'Wishlist') + '</span></th>' + cell(watched ? movie.review : movie.notes, 'movie-col-review') + cell(movie.how, 'movie-col-how') + '<td class="movie-col-date"><span class="movie-cell" title="' + (watched ? 'Watched Date' : 'Available Date') + '">' + esc(watched ? movie.watchedDate || 'Unknown' : movie.availableDate || '—') + '</span></td>' + cell(movie.releaseDate, 'movie-col-release') + cell(movie.other, 'movie-col-other') + cell(movie.collections.join(', '), 'movie-col-collections') + cell(movie.genres.join(', '), 'movie-col-genres') + cell(movie.actors.join(', '), 'movie-col-actors') + cell(movie.directors.join(', '), 'movie-col-directors') + cell(movie.productionCompanies.join(', '), 'movie-col-companies') + '</tr>';
+      return '<tr class="' + (watched ? 'movie-watched-row' : 'movie-wishlist-row') + '">' + editable(movie, watched ? 'rating' : 'priority', badge(movie), 'movie-col-score') + '<th scope="row" class="movie-col-title"><button type="button" class="movie-title-link" data-edit-movie="' + id + '" title="Edit ' + esc(movie.title) + '">' + esc(movie.title) + '</button><span class="visually-hidden">' + (watched ? 'Watched' : 'Wishlist') + '</span></th>' + editable(movie, watched ? 'review' : 'notes', esc((watched ? movie.review : movie.notes) || '—'), 'movie-col-review') + editable(movie, 'how', esc(movie.how || '—'), 'movie-col-how') + editable(movie, watched ? 'watchedDate' : 'availableDate', esc((watched ? movie.watchedDate : movie.availableDate) || '—'), 'movie-col-date') + cell(movie.releaseDate, 'movie-col-release') + editable(movie, 'other', esc(movie.other || '—'), 'movie-col-other') + cell(movie.collections.join(', '), 'movie-col-collections') + cell(movie.genres.join(', '), 'movie-col-genres') + cell(movie.actors.join(', '), 'movie-col-actors') + cell(movie.directors.join(', '), 'movie-col-directors') + cell(movie.productionCompanies.join(', '), 'movie-col-companies') + '</tr>';
     }).join('') + '</tbody></table></div>' : '<div class="movie-empty"><h2>' + (items.length ? 'No Movies Match' : 'No Movies Yet') + '</h2><p>' + (items.length ? 'Try another search or movie state.' : 'Build your wishlist or add something you’ve watched.') + '</p></div>';
     const tab = $('[data-shelf="movies"]');
     tab.querySelector("small").textContent = items.length;
@@ -129,6 +172,7 @@
       const button = event.target.closest("button"); if (!button) return;
       if (button.hasAttribute("data-movie-filter")) { filter = button.dataset.movieFilter; render(); }
       if (button.hasAttribute("data-add-movie")) open(null, button, button.dataset.addStatus);
+      if (button.dataset.inlineId) editCell(button);
       if (button.dataset.editMovie) open(button.dataset.editMovie, button);
       if (button.dataset.watchMovie) { open(button.dataset.watchMovie, button); $("#movieStatus").value = "watched"; statusFields(); $("#movieForm").elements.watchedDate.focus(); }
     });

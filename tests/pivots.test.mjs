@@ -85,3 +85,9 @@ test('Count and Average support both sort directions without modifying the group
   }
   assert.equal(JSON.stringify(groups), before);
 });
+
+test('Category sorts numeric values both ways and keeps unknown years last', () => {
+  const groups = App.pivots.build([movie(1, { watchedDate: '2025-01-01' }), movie(2, { watchedDate: '1999-01-01' }), movie(3)]).groups.years;
+  assert.deepEqual(Array.from(App.pivots.rows(groups, 1, 'category', 'desc'), r => r.name), ['2025', '1999', '????']);
+  assert.deepEqual(Array.from(App.pivots.rows(groups, 1, 'category', 'asc'), r => r.name), ['1999', '2025', '????']);
+});

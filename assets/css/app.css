@@ -939,3 +939,32 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .pivot-summary strong { font-size: 1.3rem; }
 .pivot-summary span { font-size: .72rem; }
 @media (max-width: 700px) { .pivot-summary > div { display: grid; gap: .15rem; padding: .4rem; } }
+
+/* Click-to-edit movie cells and content-sized pivot cards. */
+.movie-inline-button { appearance: none; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; padding: .15rem 0; cursor: text; min-height: 24px; }
+.movie-inline-button:hover { background: var(--accent-soft); }
+.movie-inline-form { display: grid; gap: .3rem; min-width: 180px; white-space: normal; }
+.movie-inline-form input, .movie-inline-form textarea { width: 100%; min-width: 0; }
+.movie-inline-form > div { display: flex; gap: .25rem; }
+.movie-inline-form .button { padding: .25rem .5rem; min-height: 30px; }
+.movie-inline-form small { color: var(--danger); }
+.pivot-grid { display: flex; flex-wrap: wrap; align-items: stretch; gap: .25rem; }
+.pivot-card { flex: 0 1 auto; width: max-content; min-width: 175px; max-width: min(300px, 100%); padding: .35rem; }
+.pivot-card header { justify-content: flex-start; align-items: center; gap: .3rem; }
+.pivot-card header small { flex-basis: 100%; }
+.pivot-card header label { display: flex; align-items: center; gap: .15rem; font-size: .65rem; }
+.pivot-card header input { width: 36px; padding: .15rem; min-height: 28px; font-size: .7rem; }
+.pivot-card header select { width: 76px; padding: .15rem; min-height: 28px; font-size: .65rem; }
+.pivot-card .pivot-year-basis { flex-wrap: wrap; }
+.pivot-controls { gap: .15rem; }
+.pivot-controls .pivot-sort { flex-direction: column; gap: .1rem; min-height: 42px; height: auto; padding: .2rem; }
+.pivot-sort-top { display: flex; justify-content: center; align-items: center; gap: .15rem; }
+.pivot-sort[data-pivot-sort="category"] .pivot-sort-icon .sf-symbol { width: 21px; }
+.pivot-card table { table-layout: auto; width: 100%; }
+.pivot-card th:first-child { width: auto; max-width: 170px; }
+.pivot-card th, .pivot-card td { padding: .15rem; }
+.pivot-card td { width: 1%; white-space: nowrap; }
+@media (max-width: 500px) {
+  .pivot-card { width: 100%; max-width: 100%; }
+  .pivot-card header input, .pivot-card header select { min-height: 36px; }
+}

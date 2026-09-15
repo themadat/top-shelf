@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.13.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.14.
 
 ## Workflows
 
@@ -91,3 +91,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.11: Pivot order is Ratings, Years, Genres, Other Pivots, Collections, Actors, Directors, Companies. Count/Average buttons select descending initially and reverse direction on repeat clicks, with inline Min. Other Pivots splits Other on commas/newlines, deduplicates case-insensitively, and excludes generated Original availability note lines. Dense tall tables auto-fit across full width. L/P switch Movie List/Pivots outside editors while on Movies; underlined numeric 1–8 shelf shortcuts remain.
 
 0.0.1.12: Movie table columns are #, Title, Review/Notes, How, Date, Release, Other, Collections, Genres, Actors, Directors, Companies. Date displays watchedDate for Watched and availableDate for Wishlist. No State or Actions columns; title opens the full editor. Scores retain accessible Rating/Priority labels but omit those words visually. Wishlist rows are subtly tinted; review is wide and Other/Collections use intrinsic content width.
+
+0.0.1.13: Click score, Review/Notes, How, Date, or Other Pivots cells to edit with Save/Cancel (Escape cancels). Score accepts numeric or historical ratings, or Wishlist priority. Other Pivots has A–Z list sorting. Pivot cards use content widths and stacked icon/arrow controls, Category sorting, header Min, and Years Group By. Ratings/Years default Category descending; Years defaults Watched with ???? for missing years.
