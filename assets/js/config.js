@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.13",
-      "buildId": "0.0.1.13",
+      "version": "0.0.1.14",
+      "buildId": "0.0.1.14",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.14", "date": "2026-09-20T12:00:00.000Z", "title": "Compact Groups and Collection Stars", "summary": "Narrower pivots, starred collections, and faster table editing.", "features": ["Star collections to include them in Other Pivots", "Period focuses the current view; Enter saves inline edits and Escape cancels"], "improvements": ["Compact Group sorting controls and inline group counts", "Missing values sort last A\u2013Z; shown count moves right of Search Movies"], "fixes": ["Cancel refreshes pending list changes and restores focus"], "knownIssues": []},
       {"version": "0.0.1.13", "date": "2026-09-15T12:00:00.000Z", "title": "Inline Movie Editing and Compact Pivots", "summary": "Edit movie cells directly and fit more pivot cards across the dashboard.", "features": ["Inline score, review/notes, how, date, and Other Pivots editing", "Other Pivots list sorting and Category pivot sorting"], "improvements": ["Content-sized pivot cards with stacked sort icons and compact header controls", "Ratings and Years default to descending Category; Years uses watched dates and ???? for unknown years"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.12", "date": "2026-09-15T12:00:00.000Z", "title": "Compact Movie Columns", "summary": "Reordered movie columns with wider reviews, combined dates, and shorter rows.", "features": [], "improvements": ["Compact score-first column and subtle Wishlist row highlighting", "Review/Notes follows Title; Date combines watched and available dates", "Other and Collections expand to fit their content"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.11", "date": "2026-09-14T12:00:00.000Z", "title": "Compact Pivot Controls", "summary": "More pivot tables across the screen with compact rows and one-line controls.", "features": ["Count and Average buttons toggle sort direction", "Other Pivots groups tags from the Other field", "Underlined L/P movie view shortcuts and visible 1\u20138 shelf shortcuts"], "improvements": ["Ratings, Years, Genres, Other Pivots, Collections, Actors, Directors, Companies ordering", "Taller pivot tables with denser rows"], "fixes": [], "knownIssues": []},

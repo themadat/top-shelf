@@ -98,14 +98,19 @@
     input.value = score && field === 'rating' && movie.historicalRating ? movie.historicalRating : movie[field] ?? '';
     if (score) { input.placeholder = field === 'rating' ? '0–5 or 100!, YES, MEH, NO, RUN' : '1–5'; }
     else input.maxLength = field === 'other' ? 4000 : field === 'how' ? 300 : 20000;
-    function close() { inlineEdit = null; form.replaceWith(button); button.focus(); }
+    function restoreFocus() {
+      const target = Array.from(document.querySelectorAll('[data-inline-id]')).find(function (item) { return item.dataset.inlineId === movie.id && item.dataset.inlineField === field; });
+      (target || $('#movieSearch')).focus();
+    }
+    function close() { inlineEdit = null; render(); restoreFocus(); }
     form.querySelector('[data-inline-cancel]').addEventListener('click', close);
-    form.addEventListener('keydown', function (event) { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); } });
+    form.addEventListener('keydown', function (event) { if (event.isComposing) return; if (event.key === 'Enter' && event.target === input && !event.shiftKey) { event.preventDefault(); event.stopPropagation(); form.requestSubmit(); } if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); } });
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       try {
         const current = saved().find(function (item) { return item.id === movie.id; });
         if (!current) throw new Error('This movie has been removed. Cancel to refresh.');
+        if (current.status !== movie.status) throw new Error('This movie has changed state. Cancel and reopen the cell.');
         const patch = { [field]: input.value };
         if (field === 'rating') { const historical = input.value.trim().toUpperCase(); patch.historicalRating = Object.hasOwn(model.historicalRatings, historical) ? historical : ''; }
         const updated = model.normalize(Object.assign({}, current, patch));
@@ -113,12 +118,15 @@
         App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (item) { return item.id === updated.id ? updated : item; }); }, { reason: 'movie-inline-save' });
         const persisted = App.storage.saveNow();
         render();
-        const target = Array.from(document.querySelectorAll('[data-inline-id]')).find(function (item) { return item.dataset.inlineId === movie.id && item.dataset.inlineField === field; });
-        if (target) target.focus();
+        restoreFocus();
         App.components.toast(persisted ? 'Movie saved.' : 'Movie kept for this session. Export a backup before closing.', { title: persisted ? 'Saved' : 'Storage unavailable', kind: persisted ? 'success' : 'warning' });
       } catch (error) { form.querySelector('[role="alert"]').textContent = error.message; }
     });
     button.replaceWith(form); input.focus();
+  }
+  function compareText(a, b) {
+    const missing = function (value) { return !value || /^(--|—)$/.test(value.trim()); };
+    return Number(missing(a)) - Number(missing(b)) || (a || "").localeCompare(b || "", undefined, { sensitivity: "base", numeric: true });
   }
   function render() {
     if (inlineEdit) return;
@@ -126,12 +134,12 @@
     document.querySelectorAll("[data-movie-filter]").forEach(function (button) { const value = button.dataset.movieFilter; button.setAttribute("aria-pressed", String(filter === value)); button.querySelector("small").textContent = value === "all" ? items.length : value === "wishlist" ? wishlist : items.length - wishlist; });
     const visible = items.filter(function (movie) { return (filter === "all" || movie.status === filter) && model.searchable(movie).includes(query.toLowerCase().trim()); });
     visible.sort(function (a, b) {
-      if (sort === "other") return (a.other || "").localeCompare(b.other || "", undefined, { sensitivity: "base", numeric: true }) || a.title.localeCompare(b.title);
-      if (sort === "rating") return (b.rating ?? -1) - (a.rating ?? -1) || a.title.localeCompare(b.title);
-      if (sort === "priority") return (a.priority ?? 6) - (b.priority ?? 6) || a.title.localeCompare(b.title);
-      if (sort === "release") return (b.releaseDate || "").localeCompare(a.releaseDate || "") || a.title.localeCompare(b.title);
-      if (sort === "watched") return (b.watchedDate || "").localeCompare(a.watchedDate || "") || a.title.localeCompare(b.title);
-      return a.title.localeCompare(b.title);
+      if (sort === "other") return compareText(a.other, b.other) || compareText(a.title, b.title);
+      if (sort === "rating") return (b.rating ?? -1) - (a.rating ?? -1) || compareText(a.title, b.title);
+      if (sort === "priority") return (a.priority ?? 6) - (b.priority ?? 6) || compareText(a.title, b.title);
+      if (sort === "release") return (b.releaseDate || "").localeCompare(a.releaseDate || "") || compareText(a.title, b.title);
+      if (sort === "watched") return (b.watchedDate || "").localeCompare(a.watchedDate || "") || compareText(a.title, b.title);
+      return compareText(a.title, b.title);
     });
     $("#movieResultsCount").textContent = visible.length + " Shown";
     const cell = function (value, className) { return '<td class="' + (className || '') + '"><span class="movie-cell" title="' + esc(String(value || '')) + '">' + esc(String(value || '—')) + '</span></td>'; };

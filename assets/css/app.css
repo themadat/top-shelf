@@ -968,3 +968,25 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
   .pivot-card { width: 100%; max-width: 100%; }
   .pivot-card header input, .pivot-card header select { min-height: 36px; }
 }
+
+/* Compact pivot groups and persistent in-view search hint. */
+.pivot-card { min-width: 140px; padding: .25rem; }
+.pivot-card header { display: grid; grid-template-columns: max-content max-content max-content; gap: .2rem; }
+.pivot-card h3 { font-size: .75rem; }
+.pivot-card header small { flex: 0 0 auto; margin-left: auto; white-space: nowrap; font-size: .6rem; }
+.pivot-card header input { width: 30px; font-size: .65rem; }
+.pivot-card .pivot-year-basis { grid-column: 1 / -1; }
+.pivot-controls .pivot-sort { font-size: .58rem; min-height: 32px; padding: .1rem; }
+.pivot-sort-icon .sf-symbol { width: 10px; height: 10px; }
+.pivot-sort[data-pivot-sort="category"] .pivot-sort-icon .sf-symbol,
+.pivot-sort[data-pivot-sort="average"] .pivot-sort-icon .sf-symbol { width: 15px; height: 10px; }
+.pivot-direction, .pivot-direction .sf-symbol { width: 9px; height: 10px; }
+#pivot-ratings, #pivot-years { width: min-content; }
+#pivot-ratings th:first-child, #pivot-years th:first-child { width: 1%; }
+.collection-star { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 3px; border: 0; background: transparent; color: var(--muted); vertical-align: middle; cursor: pointer; }
+.collection-star .sf-symbol { width: 14px; height: 14px; }
+.collection-star[aria-pressed="true"] { color: var(--accent); }
+.collection-star[aria-pressed="true"] path { fill: currentColor; }
+.movie-toolbar .movie-search { padding: 0 .55rem 0 0; }
+[data-shortcut-always]::after { opacity: 1; transform: none; }
+@media (max-width: 500px) { #pivot-ratings, #pivot-years { width: min-content; } }

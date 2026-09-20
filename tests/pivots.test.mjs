@@ -91,3 +91,15 @@ test('Category sorts numeric values both ways and keeps unknown years last', () 
   assert.deepEqual(Array.from(App.pivots.rows(groups, 1, 'category', 'desc'), r => r.name), ['2025', '1999', '????']);
   assert.deepEqual(Array.from(App.pivots.rows(groups, 1, 'category', 'asc'), r => r.name), ['1999', '2025', '????']);
 });
+
+test('starred collections keep whole names and deduplicate manual Other tags', () => {
+  const item = movie(1, { collections: ['One, Two', 'Drama'], starredCollections: ['One, Two', 'Drama', 'Not a member'], other: 'drama' });
+  const groups = App.pivots.build([item]).groups.other;
+  assert.deepEqual(Array.from(groups, row => row.name).sort(), ['One, Two', 'drama']);
+  assert.equal(groups.find(row => row.name === 'drama').count, 1);
+});
+
+test('alphabetical group sorting puts dash markers last', () => {
+  const groups = App.pivots.build([movie(1, { other: '--, Zebra, Apple' })]).groups.other;
+  for (const sort of ['name', 'category']) assert.deepEqual(Array.from(App.pivots.rows(groups, 1, sort, 'asc'), row => row.name), ['Apple', 'Zebra', '--']);
+});

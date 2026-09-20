@@ -524,3 +524,12 @@ test('zero and half-point ratings with blank reviews survive save, backup, and s
   }
   assert.throws(() => movieFixture(h.App, { status: 'watched', rating: null }), /need a rating/);
 });
+
+test('collection stars survive backup and content sync separately from manual tags', () => {
+  const h = harness(), model = h.App.stateModel;
+  h.state.workspace.movies = [movieFixture(h.App, { collections: ['One, Two'], starredCollections: ['One, Two'], other: 'Manual' })];
+  for (const restored of [model.prepare(model.exportEnvelope(h.state)).state, model.prepareSync(model.syncPayload(h.state)).state]) {
+    assert.deepEqual(Array.from(restored.workspace.movies[0].starredCollections), ['One, Two']);
+    assert.equal(restored.workspace.movies[0].other, 'Manual');
+  }
+});

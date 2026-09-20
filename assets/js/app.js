@@ -22,6 +22,7 @@
   const versionedAsset = function (path) { return path + "?v=" + encodeURIComponent(config.identity.buildId); };
 
   const SHORTCUTS = [
+    { keys: ".", label: "Focus the current view’s main control", group: "Navigation", chord: false },
     { keys: "L", label: "Movie List", group: "Movies", chord: false },
     { keys: "P", label: "Pivots", group: "Movies", chord: false },
     { keys: "/", hintKey: "/", chordKey: "/", label: "Search Notes and application support", group: "Global" },
@@ -860,6 +861,13 @@
     }
     if (event.code === "KeyR" && shortcutChordHeld(event) && !event.metaKey && !event.repeat && !$("dialog[open]")) {
       runShortcut(event, function () { $("#updateAppButton").click(); }); return;
+    }
+    if (event.key === "." && !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey && !$("dialog[open]") && (!u.isEditableTarget(event.target) || event.target === $("#globalSearch"))) {
+      runShortcut(event, function () {
+        const target = state().ui.selectedShelf === "movies" ? ($("#moviePivotsView").hidden ? $("#movieSearch") : $('[data-pivot-min="ratings"]')) : $('#mainContent');
+        if (!target.hasAttribute('tabindex') && !target.matches('input,select,button')) target.tabIndex = -1;
+        target.focus();
+      }); return;
     }
     if (u.isEditableTarget(event.target)) return;
     if (event.metaKey) return;
