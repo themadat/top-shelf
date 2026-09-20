@@ -4,11 +4,9 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const preferences = {};
   let active = false;
-  function average(value) { return value === null ? "—" : value.toFixed(2); }
   function render() {
     if (!active) return;
     const result = model.build(App.storage.getState().workspace.movies, $("#pivotYearBasis").value);
-    $("#pivotSummary").innerHTML = '<div><strong>' + result.count + '</strong><span>Watched Movies</span></div><div><strong>' + average(result.average) + '</strong><span>Average Rating / 5</span></div><div><strong>' + result.unknownDates + '</strong><span>Unknown Watch Dates</span></div>';
     $("#pivotEmpty").hidden = result.count > 0;
     $("#pivotGrid").hidden = result.count === 0;
     model.dimensions.forEach(function (dimension) {
