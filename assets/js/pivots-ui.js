@@ -4,6 +4,7 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const preferences = {};
   let active = false;
+  function average(value) { return value === null ? "—" : value.toFixed(2); }
   function render() {
     if (!active) return;
     const result = model.build(App.storage.getState().workspace.movies, $("#pivotYearBasis").value);

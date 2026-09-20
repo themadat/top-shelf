@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.16.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.17.
 
 ## Workflows
 
@@ -97,3 +97,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.14: Narrow Ratings/Years, compact Group/Count/Average controls and first-line counts. Collection stars are stored per movie as starredCollections and included as whole, deduplicated names in Other Pivots, separately from manual Other text. Stars apply to current saved members (new movies must be starred separately). Refresh all clients before syncing starred collections. Period focuses Search Movies or the Ratings Min control; its search hint is always visible. Inline Enter saves (Shift+Enter inserts a newline); Escape cancels. Missing markers sort last A–Z. Shown count sits right of Search Movies.
 
 0.0.1.15: Removed the visible pivot heading, summary cards, and explanatory paragraphs. Pivot tables start directly below the toolbar; the section retains an accessible name and the empty state.
+
+0.0.1.16: Restored the average formatter still required by pivot rows after the summary removal. Populated pivot UI rendering has regression coverage.
