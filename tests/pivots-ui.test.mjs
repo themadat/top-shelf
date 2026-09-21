@@ -6,7 +6,7 @@ import vm from 'node:vm';
 test('opening populated pivots renders all eight tables without summary cards', () => {
   const element = () => ({ innerHTML: '', dataset: {}, listeners: {}, classList: { toggle() {} }, setAttribute() {}, addEventListener(type, callback) { this.listeners[type] = callback; } });
   const nodes = new Map();
-  for (const id of ['pivotGrid', 'pivotEmpty', 'pivotYearBasis', 'movieListView', 'moviePivotsView', 'movieToolbar']) nodes.set('#' + id, element());
+  for (const id of ['pivotScoring', 'pivotBaseline', 'pivotWeight', 'pivotGrid', 'pivotEmpty', 'pivotYearBasis', 'movieListView', 'moviePivotsView', 'movieToolbar']) nodes.set('#' + id, element());
   nodes.get('#pivotYearBasis').value = 'watched';
   const button = element(); button.dataset.movieView = 'pivots';
   const document = {

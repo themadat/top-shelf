@@ -604,3 +604,16 @@ test('bulk pivots append without overwriting and reject unresolved or oversized 
   const restored = h.App.stateModel.prepareSync(h.App.stateModel.syncPayload(h.state)).state;
   assert.equal(restored.workspace.movies.find(movie => movie.id === 'one').other, result.changes[0].after);
 });
+
+test('score parameters and sorting survive sync and reject invalid values', () => {
+  const h = harness(), model = h.App.stateModel;
+  h.state.workspace.pivotSettings = { scoring: { baseline: 2.5, weight: 0 }, collections: { minimum: 1, sort: 'score', direction: 'desc' } };
+  const payload = model.syncPayload(h.state);
+  assert.equal(JSON.stringify(model.prepareSync(payload).state.workspace.pivotSettings), JSON.stringify(h.state.workspace.pivotSettings));
+  const backup = model.prepare(model.exportEnvelope(h.state)).state;
+  assert.equal(backup.workspace.pivotSettings.scoring.baseline, 2.5);
+  for (const scoring of [{ baseline: -1, weight: 5 }, { baseline: 3, weight: -1 }, { baseline: 6, weight: 5 }]) {
+    const invalid = structuredClone(payload); invalid.data.pivotSettings.scoring = scoring;
+    assert.throws(() => model.prepareSync(invalid), /invalid pivot settings/);
+  }
+});

@@ -119,3 +119,14 @@ test('subgenre prefixes add marked Genres and Other sections sort independently'
     assert.deepEqual(Array.from(App.pivots.rows(result.groups.other, 1, sort, direction), row => row.section), ['Others', 'Others', 'Subgenres', 'Subgenres', 'Collections']);
   }
 });
+
+test('adjusted score rewards supported high averages without rewarding volume alone', () => {
+  assert.equal(App.pivots.score(5, 4), 3.5);
+  assert.ok(App.pivots.score(5, 4) > App.pivots.score(2, 4.5));
+  assert.ok(App.pivots.score(12, 2) < App.pivots.score(2, 4.5));
+  assert.equal(App.pivots.score(2, 4.5, { baseline: 0, weight: 0 }), 4.5);
+  assert.equal(App.pivots.score(0, null), null);
+  const groups = App.pivots.build([movie(1, { rating: 4 }), movie(2, { rating: 2 })]).groups.ratings;
+  assert.deepEqual(Array.from(App.pivots.rows(groups, 1, 'score', 'desc'), row => row.name), ['4', '2']);
+  assert.deepEqual(Array.from(App.pivots.rows(groups, 1, 'score', 'asc'), row => row.name), ['2', '4']);
+});

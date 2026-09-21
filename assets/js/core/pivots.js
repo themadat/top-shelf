@@ -18,7 +18,12 @@
       return { name: match ? match[1].trim() : tag, section: match ? 'Subgenres' : 'Others' };
     }).filter(function (tag) { return tag.name; });
   }
-  function build(movies, yearBasis) {
+  function score(count, average, settings) {
+    if (average === null || !Number.isFinite(average) || count <= 0) return null;
+    const baseline = settings?.baseline ?? 3, weight = settings?.weight ?? 5;
+    return (count * average + weight * baseline) / (count + weight);
+  }
+  function build(movies, yearBasis, scoring) {
     const watched = movies.filter(function (movie) { return !movie.deleted && movie.status === "watched"; });
     const ratings = watched.map(function (movie) { return movie.rating; }).filter(Number.isFinite);
     const groups = {};
@@ -50,7 +55,7 @@
           if (Number.isFinite(movie.rating)) { row.rated += 1; row.sum += movie.rating; }
         });
       });
-      groups[dimension.id] = Array.from(buckets.values(), function (row) { return { name: row.name, section: row.section, missing: row.missing, value: !row.missing && ["ratings", "years"].includes(dimension.id) ? Number(row.name) : null, count: row.count, average: row.rated ? row.sum / row.rated : null }; });
+      groups[dimension.id] = Array.from(buckets.values(), function (row) { return { name: row.name, section: row.section, missing: row.missing, value: !row.missing && ["ratings", "years"].includes(dimension.id) ? Number(row.name) : null, count: row.count, average: row.rated ? row.sum / row.rated : null, score: score(row.count, row.rated ? row.sum / row.rated : null, scoring) }; });
     });
     return { count: watched.length, average: ratings.length ? ratings.reduce(function (sum, value) { return sum + value; }, 0) / ratings.length : null, unknownDates: watched.filter(function (movie) { return !movie.watchedDate; }).length, groups: groups };
   }
@@ -64,9 +69,10 @@
       if (sort === "category") return Number(a.missing || /^(--|—)$/.test(a.name.trim())) - Number(b.missing || /^(--|—)$/.test(b.name.trim())) || (a.value !== null && b.value !== null ? b.value - a.value : b.name.localeCompare(a.name, undefined, { numeric: true })) * order;
       if (sort === "name") return byName();
       if (sort === "name-desc") return Number(a.missing || /^(--|—)$/.test(a.name.trim())) - Number(b.missing || /^(--|—)$/.test(b.name.trim())) || (a.value !== null && b.value !== null ? b.value - a.value : b.name.localeCompare(a.name, undefined, { numeric: true }));
+      if (sort === "score") return (a.score === null && b.score === null ? 0 : a.score === null ? 1 : b.score === null ? -1 : (b.score - a.score) * order) || b.count - a.count || byName();
       if (sort === "average") return (a.average === null && b.average === null ? 0 : a.average === null ? 1 : b.average === null ? -1 : ((b.average - a.average) * order)) || b.count - a.count || byName();
       return (b.count - a.count) * order || (b.average ?? -1) - (a.average ?? -1) || byName();
     });
   }
-  App.pivots = { dimensions: dimensions, build: build, rows: rows };
+  App.pivots = { score: score, dimensions: dimensions, build: build, rows: rows };
 })();

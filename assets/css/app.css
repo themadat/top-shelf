@@ -1001,3 +1001,15 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 #bulkPivotPreview li { margin-bottom: .4rem; overflow-wrap: anywhere; }
 #bulkPivotError { color: var(--danger); }
 @media (max-width: 700px) { .movie-toolbar .movie-add { display: grid; gap: .2rem; } .movie-add > .button { justify-content: center; padding: .35rem .45rem; } }
+
+.movie-toolbar.showing-pivots { grid-template-columns: minmax(0, 1fr) auto auto; }
+.pivot-scoring { display: flex; align-items: center; gap: .6rem; }
+.pivot-scoring label { display: flex; align-items: center; gap: .3rem; font-size: .75rem; }
+.pivot-scoring input { width: 65px; min-height: 32px; padding: .3rem; }
+.pivot-card th[data-sort-column="score"] { width: 1%; white-space: nowrap; }
+@media (max-width: 1000px) { .movie-toolbar.showing-pivots .movie-add { grid-column: 3; grid-row: 1; } }
+@media (max-width: 700px) {
+  .movie-toolbar.showing-pivots { grid-template-columns: minmax(0, 1fr) auto; }
+  .movie-toolbar.showing-pivots .movie-add { grid-column: 2; grid-row: 1; }
+  .pivot-scoring { grid-column: 1 / -1; grid-row: 2; justify-content: center; }
+}

@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.21.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.22.
 
 ## Workflows
 
@@ -107,3 +107,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.19: Movie sort key/direction persist per All/Wishlist/Watched in local ui.movieSorts and full backups, excluded from cloud content. Defaults are Rating desc, Priority asc, watched date desc. Every column header sorts displayed values and reverses on repeat click; missing values stay last. A/I/W switch movie states outside text editing/dialogs. Cell text selection and editor focus use stronger contrast.
 
 0.0.1.20: Bulk Pivots in the movie toolbar opens a review/apply dialog. Tags are comma/newline separated; targets are exact case-insensitive titles or TMDB IDs, one per line, across saved states. Unmatched/ambiguous/oversize entries block applying. Existing Other text is retained with new unique tags appended on a new line; duplicate targets/tags are skipped. Revalidate current data before atomic mutation and save recovery first. Existing movie persistence and cloud sync carry the additions.
+
+0.0.1.21: Every pivot has a ∑ score column and Score sort using (count × average + weight × baseline) / (count + weight). Defaults baseline 3, weight 5; toolbar controls allow baseline 0–5 and weight 0–1000 (zero uses the raw average). Shared settings live in workspace.pivotSettings.scoring and sync with existing preference conflict handling. Older clients reject these new preference values; update clients before syncing. Scores sort at full precision; display is two decimals.

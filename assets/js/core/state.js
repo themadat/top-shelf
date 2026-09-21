@@ -28,12 +28,19 @@
 
   function normalizePivotSettings(value) {
     const source = u.plainObject(value), result = {};
+    if (Object.hasOwn(source, 'scoring')) {
+      const scoring = u.plainObject(source.scoring);
+      result.scoring = {
+        baseline: Number.isFinite(scoring.baseline) && scoring.baseline >= 0 && scoring.baseline <= 5 ? scoring.baseline : 3,
+        weight: Number.isFinite(scoring.weight) && scoring.weight >= 0 && scoring.weight <= 1000 ? scoring.weight : 5
+      };
+    }
     ["ratings", "years", "genres", "other", "collections", "actors", "directors", "productionCompanies"].forEach(function (id) {
       if (!Object.hasOwn(source, id)) return;
       const pref = u.plainObject(source[id]);
       result[id] = {
         minimum: Number.isInteger(pref.minimum) && pref.minimum >= 1 && pref.minimum <= 5000 ? pref.minimum : 1,
-        sort: ["category", "count", "average"].includes(pref.sort) ? pref.sort : (["ratings", "years"].includes(id) ? "category" : "count"),
+        sort: ["category", "count", "average", "score"].includes(pref.sort) ? pref.sort : (["ratings", "years"].includes(id) ? "category" : "count"),
         direction: pref.direction === "asc" ? "asc" : "desc"
       };
     });
