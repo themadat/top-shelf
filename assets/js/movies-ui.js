@@ -12,6 +12,7 @@
   function fields() { const form = $("#movieForm"); return Object.fromEntries(new FormData(form).entries()); }
   function statusFields() {
     const watched = $("#movieStatus").value === "watched";
+    document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.editorState === (watched ? 'watched' : 'wishlist'))); });
     $("#wishlistFields").hidden = watched; $("#watchedFields").hidden = !watched;
     ["rating"].forEach(function (name) { $("#movieForm").elements[name].required = watched; });
     const form = $("#movieForm"), historical = form.elements.historicalRating.value;
@@ -23,6 +24,8 @@
   function metadata() {
     const v = draft || {};
     $("#movieMetadata").innerHTML = [["TMDB ID", v.tmdbId], ["Release Date", v.releaseDate || "Not announced"], ["Genres", (v.genres || []).join(", ")], ["Production Companies", (v.productionCompanies || []).join(", ")], ["Director", (v.directors || []).join(", ")], ["Actors", (v.actors || []).join(", ")], ["Collections", (v.collections || []).join(", ")]].map(function (entry) { return '<div><dt>' + entry[0] + '</dt><dd>' + esc(String(entry[1] || "—")) + '</dd></div>'; }).join("");
+    const id = Number(v.tmdbId);
+    $('#movieDataLinks').innerHTML = Number.isSafeInteger(id) && id > 0 ? [['Movie Page', 'https://www.themoviedb.org/movie/' + id], ['Details + Credits JSON', 'https://api.themoviedb.org/3/movie/' + id + '?language=en-US&append_to_response=credits'], ['US Streaming Data JSON', 'https://api.themoviedb.org/3/movie/' + id + '/watch/providers?language=en-US'], ['Watch Options', 'https://www.themoviedb.org/movie/' + id + '/watch?locale=US']].map(function (entry) { return '<a href="' + esc(entry[1]) + '" target="_blank" rel="noopener noreferrer">' + entry[0] + '</a>'; }).join(' · ') : '';
     $("#movieMetadata").hidden = !v.tmdbId;
     $("#movieRefreshButton").hidden = !v.tmdbId;
     $("#movieSaveButton").disabled = !v.tmdbId;
@@ -38,10 +41,28 @@
     $("#movieLookupResults").innerHTML = ""; $("#movieError").textContent = "";
     $("#movieDeleteButton").hidden = !current;
     $("#tmdbToken").value = "";
-    $("#tmdbSettings").open = !App.tmdb.token();
+    $('#movieDetails').open = false;
+    $('#movieStreamingStatus').textContent = '';
     $("#tmdbCredentialStatus").textContent = App.tmdb.token() ? "TMDB token is configured in this browser." : "A TMDB API Read Access Token is required for lookup.";
     metadata(); statusFields();
+    if (current && !current.how) fillEditorStreaming(current.tmdbId, generation);
     App.components.openDialog("#movieDialog", { trigger: trigger, focus: current ? "#movieTitle" : "#movieLookupQuery" });
+  }
+  function lookupSettings(trigger) {
+    App.application.openSupport('settings', trigger);
+    $('#tmdbSettings').open = true;
+    $('#tmdbCredentialStatus').textContent = App.tmdb.token() ? 'TMDB token is configured in this browser.' : 'Add your TMDB API Read Access Token to enable lookups.';
+    requestAnimationFrame(function () { $('#tmdbToken').focus(); $('#tmdbSettings').scrollIntoView({ block: 'center' }); });
+  }
+  async function fillEditorStreaming(id, sequence) {
+    if (!App.tmdb.token() || $('#movieForm').elements.how.value.trim()) return;
+    $('#movieStreamingStatus').textContent = 'Checking US streaming availability…';
+    try {
+      const how = await App.tmdb.streaming(id, lookupController?.signal);
+      if (sequence !== generation || draft?.tmdbId !== id) return;
+      if (!$('#movieForm').elements.how.value.trim()) $('#movieForm').elements.how.value = how;
+      $('#movieStreamingStatus').textContent = how ? 'US streaming from JustWatch via TMDB. Edit How as needed.' : 'No US subscription, free, or ad-supported streaming listed.';
+    } catch (error) { if (sequence === generation) $('#movieStreamingStatus').textContent = error.message; }
   }
   async function lookup(id) {
     cancelLookup();
@@ -63,6 +84,7 @@
         if (!keepTitle) $("#movieForm").elements.title.value = data.title;
         $("#movieLookupResults").innerHTML = '<p class="inline-status">Movie details loaded from TMDB.</p>';
         metadata();
+        await fillEditorStreaming(data.tmdbId, sequence);
       } else {
         const results = await App.tmdb.search(queryValue, lookupController.signal);
         if (sequence !== generation) return;
@@ -175,7 +197,7 @@
   async function fillStreaming(manual) {
     if (streamingBusy) return;
     if (!App.tmdb.token()) {
-      if (manual) { open(null, $('#wishlistStreamingButton'), 'wishlist'); $('#tmdbSettings').open = true; $('#tmdbToken').focus(); }
+      if (manual) lookupSettings($('#wishlistStreamingButton'));
       return;
     }
     const targets = saved().filter(function (movie) { return movie.status === 'wishlist' && !movie.how.trim(); });
@@ -253,6 +275,8 @@
   }
   function init() {
     initBulkPivots();
+    $('#movieLookupSettingsButton').addEventListener('click', function (event) { lookupSettings(event.currentTarget); });
+    document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); $('#movieForm').elements[button.dataset.editorState === 'watched' ? 'rating' : 'priority'].focus(); }); });
     $("#wishlistStreamingButton").addEventListener("click", function () { fillStreaming(true); });
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });
     const sorts = [['title', 'Title'], ['rating', 'Rating'], ['priority', 'Priority'], ['watched', 'Watched Date'], ['review', 'Review/Notes'], ['how', 'How'], ['date', 'Date'], ['release', 'Release'], ['other', 'Other Pivots'], ['collections', 'Collections'], ['genres', 'Genres'], ['actors', 'Actors'], ['directors', 'Directors'], ['companies', 'Companies']];

@@ -1027,3 +1027,25 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .shelf-tab-meta .shelf-key { margin: 0; }
 .wishlist-streaming { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem .7rem; padding: .35rem .5rem; font-size: .75rem; }
 .wishlist-streaming small { color: var(--muted); }
+
+#movieDialog { width: min(1100px, calc(100vw - 2rem)); }
+#movieDialog .movie-editor { gap: .55rem; padding: .8rem 1rem; }
+#movieDialog .movie-lookup { padding: .6rem; }
+#movieDialog .movie-lookup h3 { display: none; }
+#movieDialog .movie-fields { gap: .5rem; }
+#movieDialog .movie-identity-row, #movieDialog #watchedFields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#movieDialog fieldset.movie-fields { padding: .5rem .65rem; }
+#movieDialog input:not([type="hidden"]), #movieDialog select { height: 36px; min-height: 36px; padding: .35rem .5rem; }
+#movieDialog textarea { min-height: 36px; padding: .35rem .5rem; }
+#movieDialog .movie-identity-row textarea { height: 36px; }
+#movieDialog p { margin: 0; }
+#movieDialog p:empty { display: none; }
+.movie-state-row { display: flex; align-items: center; gap: .5rem; font-size: .8rem; }
+#movieLookupSettingsButton { margin-left: auto; }
+#movieDetails summary { cursor: pointer; font-weight: 700; font-size: .85rem; }
+.movie-data-links { font-size: .75rem; overflow-wrap: anywhere; margin: .4rem 0; }
+#movieDialog .tmdb-logo { display: inline-block; width: 45px; margin: 0 .4rem 0 0; vertical-align: middle; }
+#movieDialog .movie-lookup-results { max-height: 160px; }
+#tmdbSettings > label { display: grid; gap: .35rem; }
+#tmdbSettings .movie-remember { display: flex; align-items: center; }
+@media (max-width: 700px) { #movieDialog { width: 100vw; } #movieDialog .movie-identity-row { grid-template-columns: 1fr; } #movieDialog #watchedFields { grid-template-columns: repeat(2,minmax(0,1fr)); } #movieDialog #watchedFields > label:nth-of-type(3) { grid-column: 1 / -1; } }

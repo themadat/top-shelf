@@ -6,7 +6,7 @@ Top Shelf is a collection of personal rating lists across movies, TV, books, pod
 
 Movie fields: id (local), tmdbId, title, releaseDate, how, other, genres, productionCompanies, directors, actors (top ten), collections, status, availableDate, priority, notes, watchedDate, historicalRating, rating, review. Wishlist extras are optional; Watched requires a rating; review is optional; an empty watchedDate means unknown. Optional historicalRating stores 100!, YES, MEH, NO, or RUN and determines the numeric score 5, 4, 3, 2, or 1. Ratings accept decimals 0–5 with a dark red(0)→green(5) scale; priorities are integers 1–5 with a light green(1)→red(5) scale. Preserve optional prior-state fields when switching. One active movie per TMDB ID; deletion stores {id, deleted:true} after recovery. No inferred timestamp winner for conflicts.
 
-assets/js/core/movies.js owns validation/normalization and TMDB mapping; core/tmdb.js owns credential separation and abortable timed fetches; movies-ui.js owns the list/editor. TMDB metadata is fetched by chosen search result or ID, with credits appended. Tokens are never in config or state. The supplied credential passed live verification but users must configure their own browser using Add movie → Movie lookup settings. The official logo and attribution are included.
+assets/js/core/movies.js owns validation/normalization and TMDB mapping; core/tmdb.js owns credential separation and abortable timed fetches; movies-ui.js owns the list/editor. TMDB metadata is fetched by chosen search result or ID, with credits appended. Tokens are never in config or state. The supplied credential passed live verification but users must configure their own browser using Settings → Movie Lookup Settings. The official logo and attribution are included.
 
 Retained shell: app icon/theme and hold-for-Developer controls, name/version/Beta badges, centered search across Notes and support, one blank-on-first-run plain-text Notes modal, vertical Settings, appearance/backup/reset, dedicated Data Sync with JSON preview, generic Help, release history, Roadmap with the spreadsheet backlog, Shortcuts, and Developer diagnostics. Local persistence/recovery, JSON portability, optional GitHub Sync, accessible shared components, PWA updates, and offline assets remain.
 
@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.24.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.25.
 
 ## Workflows
 
@@ -113,3 +113,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.22: Bulk Pivot preview leads with a focused error summary and Needs Attention section; NOT FOUND/MULTIPLE MATCHES/CANNOT APPLY labels distinguish unresolved rows. Matched rows collapse while issues exist. Apply stays blocked until resolved.
 
 0.0.1.23: Shelf count and underlined shortcut number share a right-aligned second line. Entering Wishlist starts one session lookup when a browser TMDB token exists; Find US Streaming retries explicitly. Sequential movie/{id}/watch/providers requests use US flatrate/free/ads; rent/buy-only leaves How empty. Recheck movie ID, Wishlist status, and empty How before filling; persist each result and stop with progress on failure. Attribution links to JustWatch/TMDB are visible on Wishlist. No credentials leave the browser except authenticated TMDB requests.
+
+0.0.1.24: Compact movie editor uses a Wishlist/Watched toggle, Title/How/Other Pivots row, Priority-first Wishlist, Rating/Legacy/Date row, and Review/Notes labels. TMDB credentials live in Settings. Empty How is filled after detail lookup (and opening existing entries) from US streaming; user input wins over asynchronous results. Expandable TMDB Details contains movie, detail+credits JSON, availability JSON, and US watch-page links without tokens. Desktop minimizes scrolling; mobile and expanded details retain scrolling for access.

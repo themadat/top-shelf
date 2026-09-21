@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.23",
-      "buildId": "0.0.1.23",
+      "version": "0.0.1.24",
+      "buildId": "0.0.1.24",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.24", "date": "2026-09-21T12:00:00.000Z", "title": "Compact Movie Editor", "summary": "A compact movie editor with state toggles and US streaming suggestions.", "features": ["US streaming fills empty How fields after lookup", "TMDB source links in expandable Details"], "improvements": ["Lookup credentials moved to Settings", "Compact Title/How/Other Pivots and Rating/Legacy/Date rows", "Priority first, Review/Notes labels, and consistent control heights"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.23", "date": "2026-09-21T12:00:00.000Z", "title": "Wishlist Streaming Availability", "summary": "Fill empty Wishlist How fields with US streaming providers.", "features": ["TMDB US availability lookup with JustWatch attribution", "Find US Streaming checks missing How values without overwriting existing entries"], "improvements": ["Section shortcut numbers sit beside counts below the names"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.22", "date": "2026-09-21T12:00:00.000Z", "title": "Clear Bulk Pivot Issues", "summary": "Unmatched movies stand out before bulk pivots are applied.", "features": [], "improvements": ["Prominent issue count and labeled problem rows above matched movies", "Focus and scroll to errors after reviewing an unresolved batch"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.21", "date": "2026-09-20T12:00:00.000Z", "title": "Adjusted Pivot Scores", "summary": "Rank pivot groups by rating with confidence from their movie counts.", "features": ["Baseline and Weight controls in the Pivots toolbar", "Adjusted score column and Score sorting in every pivot"], "improvements": ["Scoring settings persist with synced pivot preferences"], "fixes": [], "knownIssues": []},
