@@ -862,7 +862,7 @@
     if (event.code === "KeyR" && shortcutChordHeld(event) && !event.metaKey && !event.repeat && !$("dialog[open]")) {
       runShortcut(event, function () { $("#updateAppButton").click(); }); return;
     }
-    if (event.key === "." && !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey && !$("dialog[open]") && (!u.isEditableTarget(event.target) || event.target === $("#globalSearch"))) {
+    if (event.key === "." && $("#moviePivotsView").hidden && !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey && !$("dialog[open]") && (!u.isEditableTarget(event.target) || event.target === $("#globalSearch"))) {
       runShortcut(event, function () {
         const target = state().ui.selectedShelf === "movies" ? ($("#moviePivotsView").hidden ? $("#movieSearch") : $('[data-pivot-min="ratings"]')) : $('#mainContent');
         if (!target.hasAttribute('tabindex') && !target.matches('input,select,button')) target.tabIndex = -1;

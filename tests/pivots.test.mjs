@@ -103,3 +103,19 @@ test('alphabetical group sorting puts dash markers last', () => {
   const groups = App.pivots.build([movie(1, { other: '--, Zebra, Apple' })]).groups.other;
   for (const sort of ['name', 'category']) assert.deepEqual(Array.from(App.pivots.rows(groups, 1, sort, 'asc'), row => row.name), ['Apple', 'Zebra', '--']);
 });
+
+test('subgenre prefixes add marked Genres and Other sections sort independently', () => {
+  const result = App.pivots.build([
+    movie(1, { other: 'Zeta, Subgenre Time Travel, Subgenre:Loop, subgenre time travel', genres: ['Drama'], collections: ['Series'], starredCollections: ['Series'] }),
+    movie(2, { other: 'Alpha, Subgenre Loop, Series', collections: ['Series'], starredCollections: ['Series'] })
+  ]);
+  assert.equal(result.groups.genres.find(row => row.name === 'Time Travel *').count, 1);
+  assert.equal(result.groups.genres.find(row => row.name === 'Loop *').count, 2);
+  assert.equal(result.groups.other.find(row => row.name === 'Series').count, 2);
+  const rows = App.pivots.rows(result.groups.other, 1, 'category', 'asc');
+  assert.deepEqual(Array.from(rows, row => row.name), ['Alpha', 'Zeta', 'Loop', 'Time Travel', 'Series']);
+  assert.deepEqual(Array.from(rows, row => row.section), ['Others', 'Others', 'Subgenres', 'Subgenres', 'Collections']);
+  for (const sort of ['count', 'average']) for (const direction of ['asc', 'desc']) {
+    assert.deepEqual(Array.from(App.pivots.rows(result.groups.other, 1, sort, direction), row => row.section), ['Others', 'Others', 'Subgenres', 'Subgenres', 'Collections']);
+  }
+});

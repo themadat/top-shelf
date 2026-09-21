@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.18.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.19.
 
 ## Workflows
 
@@ -101,3 +101,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.16: Restored the average formatter still required by pivot rows after the summary removal. Populated pivot UI rendering has regression coverage.
 
 0.0.1.17: Pivot Min, sort key, and direction persist in workspace.pivotSettings, full backups, and cloud v4/schema v8. Cloud v1–v3 remain readable; update all clients before syncing. Conflicting settings for the same pivot require choosing a copy; disjoint pivot settings merge. Missing Other/Collection groups are hidden. Headers use # and x̄ with accessible names; Min is centered, totals right-aligned, and the Ratings Min period hint is inline.
+
+0.0.1.18: Other tags beginning with Subgenre (optional colon) classify the remaining text up to the comma as a subgenre. Genres includes those names with an asterisk. Other Pivots sorts within fixed Others/Subgenres/Collections sections; starred collection names classify matching manual tags as Collections. Pivot height follows remaining viewport space, with reduced toolbar gap. Period shortcut/hint is removed from Pivots; Movie List uses an in-field key hint matching global search.

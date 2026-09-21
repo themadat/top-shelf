@@ -205,9 +205,17 @@
     const measure = function () {
       document.documentElement.style.setProperty('--app-header-height', $('.app-header').getBoundingClientRect().height + 'px');
       document.documentElement.style.setProperty('--movie-toolbar-height', $('#movieToolbar').getBoundingClientRect().height + 'px');
+      if (!$('#moviePivotsView').hidden) {
+        const top = Math.max($('#pivotGrid').getBoundingClientRect().top, $('#movieToolbar').getBoundingClientRect().bottom + 3);
+        document.documentElement.style.setProperty('--pivot-available-height', Math.max(180, window.innerHeight - top - 8) + 'px');
+      }
     };
     new ResizeObserver(measure).observe($('.app-header'));
     new ResizeObserver(measure).observe($('#movieToolbar'));
+    ['#whatsNewBanner', '#contextHint'].forEach(function (selector) { new ResizeObserver(measure).observe($(selector)); });
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, { passive: true });
+    document.querySelectorAll('[data-movie-view]').forEach(function (button) { button.addEventListener('click', function () { requestAnimationFrame(measure); }); });
     measure();
     render();
   }

@@ -977,7 +977,16 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .pivot-card header { grid-template-columns: minmax(max-content, 1fr) max-content minmax(max-content, 1fr); }
 .pivot-card header > label:not(.pivot-year-basis) { justify-self: center; }
 .pivot-card header small { justify-self: end; }
-.pivot-card header [data-shortcut-always]::after { content: none; }
-.pivot-focus-hint { padding: 0 3px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); color: var(--muted); font: inherit; }
 .pivot-card td, .pivot-card th[data-sort-column="count"], .pivot-card th[data-sort-column="average"] { width: 1%; white-space: nowrap; }
 .pivot-card { min-width: 125px; }
+
+/* Match the global search key hint and fill the remaining pivot viewport. */
+.movie-search > kbd { flex: 0 0 auto; min-width: 22px; padding: 2px 5px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); color: var(--muted); font-size: .68rem; text-align: center; }
+.movie-search[data-shortcut]::after { content: none; }
+.movie-toolbar.showing-pivots { margin-bottom: .15rem; }
+#moviePivotsView .pivot-grid { margin-top: 0; }
+.pivot-card { height: var(--pivot-available-height, calc(100dvh - var(--app-header-height, 80px) - var(--movie-toolbar-height, 60px) - 16px)); min-height: 180px; }
+
+.pivot-card .pivot-section-heading th { text-align: left; font-weight: 700; background: var(--surface-2); padding-top: .35rem; }
+
+#moviePivotsView { padding-top: 0; }
