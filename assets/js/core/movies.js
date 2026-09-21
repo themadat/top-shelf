@@ -61,10 +61,26 @@
       collections: data.belongs_to_collection ? list([data.belongs_to_collection.name]) : []
     };
   }
+  const sortFields = ['rating', 'priority', 'title', 'review', 'how', 'date', 'release', 'other', 'collections', 'genres', 'actors', 'directors', 'companies', 'watched'];
+  function sortPreference(value, tab) {
+    const source = u.plainObject(value);
+    return { key: sortFields.includes(source.key) ? source.key : tab === 'wishlist' ? 'priority' : tab === 'watched' ? 'watched' : 'rating', direction: ['asc', 'desc'].includes(source.direction) ? source.direction : tab === 'wishlist' ? 'asc' : 'desc' };
+  }
+  function compare(a, b, preference) {
+    const value = function (movie, key) {
+      if (key === 'review') return movie.status === 'watched' ? movie.review : movie.notes;
+      if (key === 'date') return movie.status === 'watched' ? movie.watchedDate : movie.availableDate;
+      const field = { release: 'releaseDate', watched: 'watchedDate', companies: 'productionCompanies' }[key] || key;
+      return Array.isArray(movie[field]) ? movie[field].join(', ') : movie[field];
+    };
+    const missing = function (v) { return v == null || v === '' || (typeof v === 'string' && /^(--|—)$/.test(v.trim())); };
+    const av = value(a, preference.key), bv = value(b, preference.key);
+    return Number(missing(av)) - Number(missing(bv)) || (missing(av) && missing(bv) ? 0 : (typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base', numeric: true })) * (preference.direction === 'asc' ? 1 : -1)) || a.title.localeCompare(b.title);
+  }
   function color(value, priority) {
     const fraction = priority ? (5 - Number(value)) / 4 : Number(value) / 5;
     return "hsl(" + Math.round(Math.max(0, Math.min(1, fraction)) * 120) + " 52% " + (priority ? "88%" : "25%") + ")";
   }
   function searchable(movie) { return [movie.title, movie.tmdbId, movie.how, movie.other, movie.notes, movie.review, movie.historicalRating].concat(movie.genres, movie.productionCompanies, movie.directors, movie.actors, movie.collections).join(" ").toLowerCase(); }
-  App.movies = { historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  App.movies = { sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
 })();

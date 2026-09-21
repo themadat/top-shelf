@@ -22,6 +22,7 @@
   const versionedAsset = function (path) { return path + "?v=" + encodeURIComponent(config.identity.buildId); };
 
   const SHORTCUTS = [
+    { keys: 'A / I / W', label: 'All / Wishlist / Watched movies', group: 'Movies', chord: false },
     { keys: ".", label: "Focus the current view’s main control", group: "Navigation", chord: false },
     { keys: "L", label: "Movie List", group: "Movies", chord: false },
     { keys: "P", label: "Pivots", group: "Movies", chord: false },
@@ -880,6 +881,9 @@
     const mainPageActive = !$("dialog[open]");
     if (mainPageActive && state().ui.selectedShelf === "movies" && !event.ctrlKey && !event.altKey && !event.shiftKey && ["KeyL", "KeyP"].includes(event.code)) {
       runShortcut(event, function () { $('[data-movie-view="' + (event.code === "KeyL" ? 'list' : 'pivots') + '"]').click(); }); return;
+    }
+    if (mainPageActive && state().ui.selectedShelf === 'movies' && !event.ctrlKey && !event.altKey && !event.shiftKey && ['KeyA', 'KeyI', 'KeyW'].includes(event.code)) {
+      runShortcut(event, function () { $('[data-movie-view="list"]').click(); $('[data-movie-filter="' + ({ KeyA: 'all', KeyI: 'wishlist', KeyW: 'watched' }[event.code]) + '"]').click(); }); return;
     }
     const shelf = config.shelves.find(function (item) { return item.shortcut === event.key; });
     if (mainPageActive && shelf && !event.ctrlKey && !event.altKey && !event.shiftKey) { runShortcut(event, function () { selectShelf(shelf.id, true); }); return; }

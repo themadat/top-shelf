@@ -96,6 +96,7 @@
         selectedRecordId: records[0] ? records[0].id : "",
         selectedDocumentId: documents[0] ? documents[0].id : "",
         selectedShelf: config.shelves[0].id,
+        movieSorts: {},
         search: "",
         records: {
           statusFilter: "all",
@@ -448,6 +449,7 @@
         selectedDocumentId: documentIds.has(sourceUi.selectedDocumentId) ? sourceUi.selectedDocumentId : (documents[0] ? documents[0].id : ""),
         selectedShelf: config.shelves.some(function (shelf) { return shelf.id === sourceUi.selectedShelf; }) ? sourceUi.selectedShelf : config.shelves[0].id,
         search: u.cleanLine(sourceUi.search, 200),
+        movieSorts: Object.fromEntries(['all', 'wishlist', 'watched'].map(function (tab) { return [tab, App.movies.sortPreference(u.plainObject(sourceUi.movieSorts)[tab], tab)]; })),
         records: {
           statusFilter: sourceRecordUi.statusFilter === "all" || STATUS_IDS.has(sourceRecordUi.statusFilter) ? (sourceRecordUi.statusFilter || "all") : "all",
           categoryFilter: sourceRecordUi.categoryFilter === "all" || categories.has(sourceRecordUi.categoryFilter) ? (sourceRecordUi.categoryFilter || "all") : "all",
@@ -543,6 +545,7 @@
     next.preferences = defaults.preferences;
     next.ui.search = "";
     next.ui.records = defaults.ui.records;
+    next.ui.movieSorts = defaults.ui.movieSorts;
     next.ui.documents = defaults.ui.documents;
     next.ui.panels = defaults.ui.panels;
     next.ui.navigation = defaults.ui.navigation;

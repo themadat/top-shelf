@@ -564,3 +564,24 @@ test('old cloud data defaults pivot settings and invalid cloud settings are reje
     assert.throws(() => model.prepareSync(payload), /invalid pivot settings/);
   }
 });
+
+test('movie tabs have independent saved defaults and sorts stay out of content sync', () => {
+  const h = harness(), model = h.App.stateModel, movies = h.App.movies;
+  const state = model.normalize(h.state);
+  assert.equal(state.ui.movieSorts.all.key, 'rating');
+  assert.equal(state.ui.movieSorts.wishlist.key, 'priority');
+  assert.equal(state.ui.movieSorts.watched.key, 'watched');
+  const hash = model.syncHash(state);
+  state.ui.movieSorts.wishlist = { key: 'title', direction: 'desc' };
+  const restored = model.prepare(model.exportEnvelope(state)).state;
+  assert.equal(restored.ui.movieSorts.wishlist.key, 'title');
+  assert.equal(restored.ui.movieSorts.all.key, 'rating');
+  assert.equal(model.syncHash(state), hash);
+  const a = movieFixture(h.App, { title: 'A', rating: 0, how: '--', notes: 'Z', availableDate: '2025-01-01' });
+  const b = movieFixture(h.App, { title: 'B', rating: 4, how: 'Stream', notes: 'A', availableDate: '2026-01-01' });
+  assert.ok(movies.compare(a, b, { key: 'rating', direction: 'asc' }) < 0);
+  assert.ok(movies.compare(a, b, { key: 'rating', direction: 'desc' }) > 0);
+  for (const direction of ['asc', 'desc']) assert.ok(movies.compare(a, b, { key: 'how', direction }) > 0);
+  assert.ok(movies.compare(a, b, { key: 'review', direction: 'asc' }) > 0);
+  assert.ok(movies.compare(a, b, { key: 'date', direction: 'desc' }) > 0);
+});
