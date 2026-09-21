@@ -5,6 +5,7 @@
   const esc = u.escapeHtml;
   let draft = null, lookupController = null, generation = 0;
   let inlineEdit = null;
+  let streamingBusy = false, streamingAttempted = false;
   let filter = "all", query = "";
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
@@ -132,6 +133,7 @@
   }
   function render() {
     if (inlineEdit) return;
+    $('#wishlistStreaming').hidden = filter !== 'wishlist';
     const items = saved(), wishlist = items.filter(function (movie) { return movie.status === "wishlist"; }).length;
     document.querySelectorAll("[data-movie-filter]").forEach(function (button) { const value = button.dataset.movieFilter; button.setAttribute("aria-pressed", String(filter === value)); button.querySelector("small").textContent = value === "all" ? items.length : value === "wishlist" ? wishlist : items.length - wishlist; });
     const visible = items.filter(function (movie) { return (filter === "all" || movie.status === filter) && model.searchable(movie).includes(query.toLowerCase().trim()); });
@@ -169,6 +171,37 @@
     if (!App.storage.saveRecovery("Before deleting " + title)) { $("#movieError").textContent = "Could not save a recovery copy. The movie was kept."; return; }
     App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (movie) { return movie.id === id ? { id: id, deleted: true } : movie; }); }, { reason: "movie-delete" });
     App.storage.saveNow(); App.components.closeDialog("#movieDialog"); render();
+  }
+  async function fillStreaming(manual) {
+    if (streamingBusy) return;
+    if (!App.tmdb.token()) {
+      if (manual) { open(null, $('#wishlistStreamingButton'), 'wishlist'); $('#tmdbSettings').open = true; $('#tmdbToken').focus(); }
+      return;
+    }
+    const targets = saved().filter(function (movie) { return movie.status === 'wishlist' && !movie.how.trim(); });
+    const status = $('#wishlistStreamingStatus'), button = $('#wishlistStreamingButton');
+    if (!targets.length) { status.textContent = 'No Wishlist movies with an empty How.'; return; }
+    streamingBusy = true; streamingAttempted = true; button.disabled = true;
+    let updated = 0, unavailable = 0, checked = 0, failure = '';
+    try {
+      for (const target of targets) {
+        status.textContent = 'Checking US availability ' + (++checked) + '/' + targets.length + '…';
+        const how = await App.tmdb.streaming(target.tmdbId);
+        if (!how) { unavailable++; continue; }
+        const current = saved().find(function (movie) { return movie.id === target.id; });
+        if (!current || current.status !== 'wishlist' || current.how.trim() || current.tmdbId !== target.tmdbId) continue;
+        App.storage.mutate(function (next) {
+          const movie = next.workspace.movies.find(function (item) { return item.id === current.id; });
+          movie.how = how;
+        }, { reason: 'wishlist-streaming' });
+        updated++;
+        if (!App.storage.saveNow()) { failure = 'Storage unavailable; export a backup before closing.'; break; }
+      }
+    } catch (error) { failure = error.message; }
+    finally {
+      streamingBusy = false; button.disabled = false;
+      status.textContent = updated + ' updated; ' + unavailable + ' without US streaming listed.' + (failure ? ' Stopped: ' + failure : ' Checked ' + checked + ' movies.');
+    }
   }
   function initBulkPivots() {
     let reviewed = null;
@@ -220,6 +253,7 @@
   }
   function init() {
     initBulkPivots();
+    $("#wishlistStreamingButton").addEventListener("click", function () { fillStreaming(true); });
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });
     const sorts = [['title', 'Title'], ['rating', 'Rating'], ['priority', 'Priority'], ['watched', 'Watched Date'], ['review', 'Review/Notes'], ['how', 'How'], ['date', 'Date'], ['release', 'Release'], ['other', 'Other Pivots'], ['collections', 'Collections'], ['genres', 'Genres'], ['actors', 'Actors'], ['directors', 'Directors'], ['companies', 'Companies']];
     $('#movieSort').innerHTML = sorts.map(function (entry) { return ['asc', 'desc'].map(function (direction) { return '<option value="' + entry[0] + ':' + direction + '">' + entry[1] + ' ' + (direction === 'asc' ? 'Ascending' : 'Descending') + '</option>'; }).join(''); }).join('');
@@ -232,7 +266,7 @@
         setSort(key, selected ? (current.direction === 'asc' ? 'desc' : 'asc') : ['rating', 'date', 'release', 'watched'].includes(key) ? 'desc' : 'asc');
         document.querySelector('[data-movie-column-sort="' + key + '"]')?.focus();
       }
-      if (button.hasAttribute("data-movie-filter")) { filter = button.dataset.movieFilter; render(); }
+      if (button.hasAttribute("data-movie-filter")) { filter = button.dataset.movieFilter; render(); if (filter === "wishlist" && !streamingAttempted) fillStreaming(false); }
       if (button.hasAttribute("data-add-movie")) open(null, button, button.dataset.addStatus);
       if (button.dataset.inlineId) editCell(button);
       if (button.dataset.editMovie) open(button.dataset.editMovie, button);

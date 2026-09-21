@@ -132,7 +132,7 @@
   function bindShelfNavigation() {
     const nav = $("#shelfNavigation");
     nav.innerHTML = config.shelves.map(function (shelf) {
-      return '<button type="button" class="shelf-tab" data-shelf="' + shelf.id + '" aria-controls="mainContent" aria-keyshortcuts="' + shelf.shortcut + '" title="' + shelf.label + ' (' + shelf.shortcut + ')" aria-label="' + shelf.label + ', 0 ratings"><span class="shelf-tab-icon" aria-hidden="true">' + icons.markup(shelf.symbol) + '</span><span class="shelf-tab-label">' + shelf.label + ' <u class="shelf-key" aria-hidden="true">' + shelf.shortcut + '</u></span><small class="shelf-tab-count" aria-hidden="true">0</small></button>';
+      return '<button type="button" class="shelf-tab" data-shelf="' + shelf.id + '" aria-controls="mainContent" aria-keyshortcuts="' + shelf.shortcut + '" title="' + shelf.label + ' (' + shelf.shortcut + ')" aria-label="' + shelf.label + ', 0 ratings"><span class="shelf-tab-icon" aria-hidden="true">' + icons.markup(shelf.symbol) + '</span><span class="shelf-tab-label">' + shelf.label + '</span><span class="shelf-tab-meta"><small class="shelf-tab-count" aria-hidden="true">0</small><u class="shelf-key" aria-hidden="true">' + shelf.shortcut + '</u></span></button>';
     }).join("");
     nav.addEventListener("click", function (event) { const button = event.target.closest("[data-shelf]"); if (button) selectShelf(button.dataset.shelf, true); });
     nav.addEventListener("keydown", function (event) {

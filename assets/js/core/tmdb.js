@@ -41,5 +41,27 @@
     if (!/^\d+$/.test(String(id)) || Number(id) < 1) throw new Error("Enter a numeric TMDB movie ID.");
     return App.movies.fromTmdb(await request("movie/" + id, { append_to_response: "credits" }, signal));
   }
-  App.tmdb = { token: token, saveToken: saveToken, forget: forget, search: search, details: details };
+  function streamingNames(data) {
+    if (!data || !data.results || typeof data.results !== 'object' || Array.isArray(data.results)) throw new Error('TMDB returned invalid availability data.');
+    const us = data.results.US;
+    if (!us) return '';
+    const seen = new Set(), names = [];
+    [['flatrate', ''], ['free', ' (free)'], ['ads', ' (ads)']].forEach(function (entry) {
+      if (us[entry[0]] !== undefined && !Array.isArray(us[entry[0]])) throw new Error('TMDB returned invalid availability data.');
+      (us[entry[0]] || []).forEach(function (provider) {
+        const name = App.utils.cleanLine(provider?.provider_name, 160);
+        if (!name) return;
+        const key = name.toLocaleLowerCase();
+        if (!seen.has(key)) { seen.add(key); names.push(name + entry[1]); }
+      });
+    });
+    const value = names.join(', ');
+    if (value.length > 300) throw new Error('Provider list exceeds the How field limit. Enter providers manually.');
+    return value;
+  }
+  async function streaming(id, signal) {
+    if (!/^\d+$/.test(String(id)) || Number(id) < 1) throw new Error('Enter a numeric TMDB movie ID.');
+    return streamingNames(await request('movie/' + id + '/watch/providers', {}, signal));
+  }
+  App.tmdb = { streaming: streaming, streamingNames: streamingNames, token: token, saveToken: saveToken, forget: forget, search: search, details: details };
 })();

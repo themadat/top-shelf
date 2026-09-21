@@ -1021,3 +1021,9 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 #bulkPivotPreview .bulk-pivot-issues li { display: grid; gap: .35rem; padding: .75rem; border-left: 4px solid var(--danger); background: var(--surface); margin-bottom: .6rem; }
 .bulk-pivot-issue-label { width: fit-content; padding: .2rem .45rem; border: 1px solid var(--danger); border-radius: 4px; font-size: .7rem; font-weight: 800; color: var(--text); background: color-mix(in srgb, var(--danger) 18%, var(--surface)); }
 #bulkPivotMovies[aria-invalid="true"] { border: 2px solid var(--danger); }
+
+.shelf-tab-meta { grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: flex-end; gap: .35rem; }
+.shelf-tab-meta .shelf-tab-count { align-self: center; }
+.shelf-tab-meta .shelf-key { margin: 0; }
+.wishlist-streaming { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem .7rem; padding: .35rem .5rem; font-size: .75rem; }
+.wishlist-streaming small { color: var(--muted); }
