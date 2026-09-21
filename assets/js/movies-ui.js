@@ -170,7 +170,45 @@
     App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (movie) { return movie.id === id ? { id: id, deleted: true } : movie; }); }, { reason: "movie-delete" });
     App.storage.saveNow(); App.components.closeDialog("#movieDialog"); render();
   }
+  function initBulkPivots() {
+    let reviewed = null;
+    function invalidate() { reviewed = null; $('#bulkPivotApply').disabled = true; $('#bulkPivotPreview').textContent = ''; $('#bulkPivotError').textContent = ''; }
+    function preview() {
+      invalidate();
+      try {
+        const result = model.bulkPivots(saved(), $('#bulkPivotTags').value, $('#bulkPivotMovies').value);
+        $('#bulkPivotPreview').innerHTML = '<p>' + result.changes.length + ' movies to update.</p><ul>' + result.rows.map(function (row) {
+          return '<li><strong>' + esc(row.title || row.input) + '</strong>: ' + (row.error ? esc(row.error) : row.duplicate ? 'Already included above' : row.additions.length ? 'Append ' + esc(row.additions.join(', ')) : 'No change — pivots already present') + '</li>';
+        }).join('') + '</ul>';
+        if (!result.valid) $('#bulkPivotError').textContent = 'Resolve unmatched or ambiguous movies before applying.';
+        else if (result.changes.length) { reviewed = result; $('#bulkPivotApply').disabled = false; }
+      } catch (error) { $('#bulkPivotError').textContent = error.message; }
+    }
+    $('#bulkPivotsButton').addEventListener('click', function (event) {
+      $('#bulkPivotsForm').reset(); invalidate();
+      App.components.openDialog('#bulkPivotsDialog', { trigger: event.currentTarget, focus: '#bulkPivotTags' });
+    });
+    $('#bulkPivotTags').addEventListener('input', invalidate);
+    $('#bulkPivotMovies').addEventListener('input', invalidate);
+    $('#bulkPivotReview').addEventListener('click', preview);
+    $('#bulkPivotsForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      if (!reviewed) return;
+      try {
+        const current = model.bulkPivots(saved(), $('#bulkPivotTags').value, $('#bulkPivotMovies').value);
+        if (JSON.stringify(current) !== JSON.stringify(reviewed)) { preview(); $('#bulkPivotError').textContent = 'Movie data changed. Review the refreshed matches before applying.'; return; }
+        if (!App.storage.saveRecovery('Before bulk pivot entry')) throw new Error('Could not save a recovery copy. No movies were changed.');
+        const changes = new Map(current.changes.map(function (row) { return [row.id, row.after]; }));
+        App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (movie) { return changes.has(movie.id) ? model.normalize(Object.assign({}, movie, { other: changes.get(movie.id) })) : movie; }); }, { reason: 'bulk-pivots' });
+        const persisted = App.storage.saveNow();
+        reviewed = null;
+        App.components.closeDialog('#bulkPivotsDialog');
+        App.components.toast(persisted ? changes.size + ' movies updated.' : 'Changes kept for this session. Export a backup before closing.', { title: persisted ? 'Pivots appended' : 'Storage unavailable', kind: persisted ? 'success' : 'warning' });
+      } catch (error) { $('#bulkPivotError').textContent = error.message; }
+    });
+  }
   function init() {
+    initBulkPivots();
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });
     const sorts = [['title', 'Title'], ['rating', 'Rating'], ['priority', 'Priority'], ['watched', 'Watched Date'], ['review', 'Review/Notes'], ['how', 'How'], ['date', 'Date'], ['release', 'Release'], ['other', 'Other Pivots'], ['collections', 'Collections'], ['genres', 'Genres'], ['actors', 'Actors'], ['directors', 'Directors'], ['companies', 'Companies']];
     $('#movieSort').innerHTML = sorts.map(function (entry) { return ['asc', 'desc'].map(function (direction) { return '<option value="' + entry[0] + ':' + direction + '">' + entry[1] + ' ' + (direction === 'asc' ? 'Ascending' : 'Descending') + '</option>'; }).join(''); }).join('');

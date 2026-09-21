@@ -61,6 +61,30 @@
       collections: data.belongs_to_collection ? list([data.belongs_to_collection.name]) : []
     };
   }
+  function bulkPivots(movies, pivots, targets) {
+    const unique = function (values) { const seen = new Set(); return values.filter(function (value) { const key = value.toLocaleLowerCase(); if (!value || seen.has(key)) return false; seen.add(key); return true; }); };
+    const tags = unique(String(pivots).split(/[,\n]/).map(function (tag) { return tag.trim(); }));
+    const lines = unique(String(targets).split(/\r?\n/).map(function (line) { return line.trim(); }));
+    if (!tags.length) throw new Error('Enter at least one pivot.');
+    if (!lines.length) throw new Error('Enter at least one movie title or TMDB ID, one per line.');
+    if (lines.length > App.config.controls.maxMovies) throw new Error('Too many movie entries.');
+    const active = movies.filter(function (movie) { return !movie.deleted; }), seen = new Set();
+    const key = function (text) { return text.trim().replace(/\s+/g, ' ').toLocaleLowerCase(); };
+    const rows = lines.map(function (line) {
+      const id = /^(?:tmdb:\s*)?(\d+)$/i.exec(line);
+      const matches = active.filter(function (movie) { return id ? movie.tmdbId === Number(id[1]) : key(movie.title) === key(line); });
+      if (matches.length !== 1) return { input: line, error: matches.length ? 'Multiple matches — use a TMDB ID: ' + matches.map(function (movie) { return movie.tmdbId; }).join(', ') : 'Not found in saved movies' };
+      const movie = matches[0];
+      if (seen.has(movie.id)) return { input: line, title: movie.title, duplicate: true };
+      seen.add(movie.id);
+      const existing = new Set((movie.other || '').split(/[,\n]/).map(function (tag) { return tag.trim().toLocaleLowerCase(); }));
+      const additions = tags.filter(function (tag) { return !existing.has(tag.toLocaleLowerCase()); });
+      const other = movie.other + (movie.other && additions.length ? '\n' : '') + additions.join(', ');
+      if (other.length > 4000) return { input: line, error: movie.title + ': adding these pivots would exceed the 4,000-character limit' };
+      return { input: line, id: movie.id, title: movie.title, before: movie.other, after: other, additions: additions };
+    });
+    return { rows: rows, changes: rows.filter(function (row) { return row.additions?.length; }), valid: rows.every(function (row) { return !row.error; }) };
+  }
   const sortFields = ['rating', 'priority', 'title', 'review', 'how', 'date', 'release', 'other', 'collections', 'genres', 'actors', 'directors', 'companies', 'watched'];
   function sortPreference(value, tab) {
     const source = u.plainObject(value);
@@ -82,5 +106,5 @@
     return "hsl(" + Math.round(Math.max(0, Math.min(1, fraction)) * 120) + " 52% " + (priority ? "88%" : "25%") + ")";
   }
   function searchable(movie) { return [movie.title, movie.tmdbId, movie.how, movie.other, movie.notes, movie.review, movie.historicalRating].concat(movie.genres, movie.productionCompanies, movie.directors, movie.actors, movie.collections).join(" ").toLowerCase(); }
-  App.movies = { sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  App.movies = { bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
 })();

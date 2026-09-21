@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.19",
-      "buildId": "0.0.1.19",
+      "version": "0.0.1.20",
+      "buildId": "0.0.1.20",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.20", "date": "2026-09-20T12:00:00.000Z", "title": "Bulk Pivot Entry", "summary": "Append pivots to multiple saved movies at once.", "features": ["Paste pivots and movie titles or TMDB IDs", "Review matches before appending; existing values are preserved"], "improvements": ["Skip duplicate tags and flag missing or ambiguous movies", "Save a recovery copy before applying a batch"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.19", "date": "2026-09-20T12:00:00.000Z", "title": "Saved Movie Tab Sorting", "summary": "Independent sorting and faster navigation for each movie list.", "features": ["Saved sorting per All, Wishlist, and Watched tab", "Click any table header to reverse its sort", "A/I/W movie-state shortcuts"], "improvements": ["Rating, Priority, and Recently Watched defaults", "Stronger cell text selection and editor focus"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.18", "date": "2026-09-20T12:00:00.000Z", "title": "Subgenres and Full-Height Pivots", "summary": "Organized Other Pivots and more room for pivot rows.", "features": ["Subgenre-prefixed Other tags appear in Genres with an asterisk", "Other Pivots sorts within Others, Subgenres, and Collections"], "improvements": ["Pivot cards fill the available viewport with less space above", "Movie search period hint matches global search; removed period shortcut from Pivots"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.17", "date": "2026-09-20T12:00:00.000Z", "title": "Synced Pivot Settings", "summary": "Pivot minimums and sorting now travel with cloud data.", "features": ["Persist and sync each pivot\u2019s minimum, sort column, and direction"], "improvements": ["Visible period shortcut in Pivots", "Exclude missing Other and Collection groups", "Compact numeric headers with centered Min and right-aligned totals"], "fixes": [], "knownIssues": []},

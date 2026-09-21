@@ -585,3 +585,22 @@ test('movie tabs have independent saved defaults and sorts stay out of content s
   assert.ok(movies.compare(a, b, { key: 'review', direction: 'asc' }) > 0);
   assert.ok(movies.compare(a, b, { key: 'date', direction: 'desc' }) > 0);
 });
+
+test('bulk pivots append without overwriting and reject unresolved or oversized batches', () => {
+  const h = harness(), model = h.App.movies;
+  const items = [movieFixture(h.App, { id: 'one', tmdbId: 1, title: 'Alpha, Beta', other: 'Existing\nOriginal availability note: later' }), movieFixture(h.App, { id: 'two', tmdbId: 2, title: 'Duplicate' }), movieFixture(h.App, { id: 'three', tmdbId: 3, title: 'Duplicate' }), { id: 'deleted', deleted: true }];
+  const before = JSON.stringify(items);
+  const result = model.bulkPivots(items, 'existing, Subgenre Loop, Subgenre Loop\nFavorite', ' alpha, beta \n1\nTMDB: 2');
+  assert.equal(result.valid, true);
+  assert.equal(result.changes.length, 2);
+  assert.equal(result.changes[0].after, items[0].other + '\nSubgenre Loop, Favorite');
+  assert.equal(result.rows[1].duplicate, true);
+  assert.equal(JSON.stringify(items), before);
+  assert.equal(model.bulkPivots(items, 'Tag', 'Duplicate\nMissing').valid, false);
+  assert.equal(model.bulkPivots(items, 'x'.repeat(4001), '1').valid, false);
+  assert.equal(model.bulkPivots(items, 'Existing', '1').changes.length, 0);
+  assert.throws(() => model.bulkPivots(items, '', '1'), /pivot/);
+  h.state.workspace.movies = items.slice(0, 3).map(movie => model.normalize({ ...movie, other: result.changes.find(row => row.id === movie.id)?.after ?? movie.other }));
+  const restored = h.App.stateModel.prepareSync(h.App.stateModel.syncPayload(h.state)).state;
+  assert.equal(restored.workspace.movies.find(movie => movie.id === 'one').other, result.changes[0].after);
+});
