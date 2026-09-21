@@ -19,7 +19,7 @@ test('opening populated pivots renders all eight tables without summary cards', 
   App.storage = { getState: () => ({ workspace: { movies: [App.movies.normalize({ id: 'one', tmdbId: 1, title: 'Example', status: 'watched', rating: 3.5 })] } }) };
   App.icons = { markup: () => '' };
   for (const dimension of App.pivots.dimensions) {
-    const children = new Map([['tbody', element()], ['[data-pivot-count]', element()]]);
+    const children = new Map([['tbody', element()], ['[data-pivot-count]', element()], ['[data-pivot-min]', element()]]);
     nodes.set('#pivot-' + dimension.id, { querySelector: selector => children.get(selector), querySelectorAll: () => [] });
   }
   vm.runInContext(readFileSync(new URL('../assets/js/pivots-ui.js', import.meta.url), 'utf8'), context);
@@ -30,6 +30,9 @@ test('opening populated pivots renders all eight tables without summary cards', 
   for (const dimension of App.pivots.dimensions) {
     const html = nodes.get('#pivot-' + dimension.id).querySelector('tbody').innerHTML;
     assert.match(html, /<tr>/, dimension.id);
-    assert.match(html, />3\.50<\/span>/, dimension.id);
+    if (['other', 'collections'].includes(dimension.id)) {
+      assert.doesNotMatch(html, /No Other Pivots|No Collection Listed/);
+      assert.match(html, /No matching groups/);
+    } else assert.match(html, />3\.50<\/span>/, dimension.id);
   }
 });

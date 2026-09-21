@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.16",
-      "buildId": "0.0.1.16",
+      "version": "0.0.1.17",
+      "buildId": "0.0.1.17",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.17", "date": "2026-09-20T12:00:00.000Z", "title": "Synced Pivot Settings", "summary": "Pivot minimums and sorting now travel with cloud data.", "features": ["Persist and sync each pivot\u2019s minimum, sort column, and direction"], "improvements": ["Visible period shortcut in Pivots", "Exclude missing Other and Collection groups", "Compact numeric headers with centered Min and right-aligned totals"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.16", "date": "2026-09-20T12:00:00.000Z", "title": "Restore Pivot Rows", "summary": "Fixed blank pivot tables after removing the summary cards.", "features": [], "improvements": [], "fixes": ["Restored average formatting used by every populated pivot table"], "knownIssues": []},
       {"version": "0.0.1.15", "date": "2026-09-20T12:00:00.000Z", "title": "Simplified Pivot View", "summary": "Pivot tables sit directly below the toolbar.", "features": [], "improvements": ["Removed the pivot heading, summary cards, and explanatory text"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.14", "date": "2026-09-20T12:00:00.000Z", "title": "Compact Groups and Collection Stars", "summary": "Narrower pivots, starred collections, and faster table editing.", "features": ["Star collections to include them in Other Pivots", "Period focuses the current view; Enter saves inline edits and Escape cancels"], "improvements": ["Compact Group sorting controls and inline group counts", "Missing values sort last A\u2013Z; shown count moves right of Search Movies"], "fixes": ["Cancel refreshes pending list changes and restores focus"], "knownIssues": []},

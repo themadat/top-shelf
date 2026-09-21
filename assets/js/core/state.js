@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 3;
-  // Older builds reject this movie-capable envelope instead of dropping its content.
-  const SYNC_SCHEMA_VERSION = 7;
+  const SYNC_VERSION = 4;
+  // Older builds reject this envelope instead of dropping synced pivot settings.
+  const SYNC_SCHEMA_VERSION = 8;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -24,6 +24,20 @@
     return [
       { id: "app-notes", title: "Notes", html: "", order: 0, createdAt: now, updatedAt: now }
     ];
+  }
+
+  function normalizePivotSettings(value) {
+    const source = u.plainObject(value), result = {};
+    ["ratings", "years", "genres", "other", "collections", "actors", "directors", "productionCompanies"].forEach(function (id) {
+      if (!Object.hasOwn(source, id)) return;
+      const pref = u.plainObject(source[id]);
+      result[id] = {
+        minimum: Number.isInteger(pref.minimum) && pref.minimum >= 1 && pref.minimum <= 5000 ? pref.minimum : 1,
+        sort: ["category", "count", "average"].includes(pref.sort) ? pref.sort : (["ratings", "years"].includes(id) ? "category" : "count"),
+        direction: pref.direction === "asc" ? "asc" : "desc"
+      };
+    });
+    return result;
   }
 
   function defaultTheme() {
@@ -48,6 +62,7 @@
       workspace: {
         title: config.identity.name,
         movies: [],
+        pivotSettings: {},
         records: records,
         documents: documents
       },
@@ -398,6 +413,7 @@
       workspace: {
         title: u.cleanLine(sourceWorkspace.title || base.workspace.title, 100) || base.workspace.title,
         movies: App.movies.normalizeList(sourceWorkspace.movies),
+        pivotSettings: normalizePivotSettings(sourceWorkspace.pivotSettings),
         records: records,
         documents: documents
       },
@@ -558,6 +574,7 @@
     const data = {};
     const notes = u.richTextToPlainText(normalized.workspace.documents[0].html, config.controls.maxDocumentHtmlLength);
     if (notes) data.notes = notes;
+    if (Object.keys(normalized.workspace.pivotSettings).length) data.pivotSettings = normalized.workspace.pivotSettings;
     if (normalized.workspace.movies.length) data.movies = normalized.workspace.movies;
     // Preserve real content from older backups, without exporting empty scaffolding.
     if (normalized.workspace.records.length) data.records = normalized.workspace.records.map(function (record) {
@@ -581,10 +598,11 @@
     }
     const legacyContent = input.syncFormat === SYNC_FORMAT && input.syncVersion === 1 && input.schemaVersion === 5;
     const priorMovies = input.syncFormat === SYNC_FORMAT && input.syncVersion === 2 && input.schemaVersion === 6;
-    if (!legacyContent && !priorMovies && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const priorPivots = input.syncFormat === SYNC_FORMAT && input.syncVersion === 3 && input.schemaVersion === 7;
+    if (!legacyContent && !priorMovies && !priorPivots && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"]).includes(key); })
+      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorMovies || priorPivots ? [] : ["pivotSettings"])).includes(key); })
       || ("notes" in data && (typeof data.notes !== "string" || data.notes.length > config.controls.maxDocumentHtmlLength))
       || ("records" in data && (!Array.isArray(data.records) || data.records.length > config.controls.maxRecords))) {
       throw new Error("The cloud file contains invalid or unsupported content.");
@@ -592,14 +610,17 @@
     if ((data.records || []).some(function (item) { return !item || typeof item.id !== "string" || !item.id; })) {
       throw new Error("The cloud file contains an invalid saved item.");
     }
+    if ("pivotSettings" in data && (!data.pivotSettings || typeof data.pivotSettings !== "object" || Array.isArray(data.pivotSettings)
+      || u.stableJson(normalizePivotSettings(data.pivotSettings)) !== u.stableJson(data.pivotSettings))) throw new Error("The cloud file contains invalid pivot settings.");
     const state = normalize({
       workspace: {
         documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(data.notes || "").replace(/\n/g, "<br>") }],
         movies: App.movies.normalizeList(data.movies),
+        pivotSettings: normalizePivotSettings(data.pivotSettings),
         records: data.records || []
       }
     });
-    return { state: state, legacy: legacyContent || priorMovies, migrations: [], validation: validate(state) };
+    return { state: state, legacy: legacyContent || priorMovies || priorPivots, migrations: [], validation: validate(state) };
   }
 
   function applySync(localState, remoteState) {
@@ -608,6 +629,7 @@
     next.workspace.documents = remote.workspace.documents;
     next.workspace.records = remote.workspace.records;
     next.workspace.movies = remote.workspace.movies;
+    next.workspace.pivotSettings = remote.workspace.pivotSettings;
     next.meta.tombstones = remote.meta.tombstones;
     return normalize(touch(next));
   }
@@ -618,6 +640,12 @@
     if (local.notes && remote.notes && local.notes !== remote.notes) throw new Error("Notes differ. Choose which copy to keep.");
     const data = {};
     if (local.notes || remote.notes) data.notes = local.notes || remote.notes;
+    const pivotSettings = Object.assign({}, local.pivotSettings || {});
+    Object.entries(remote.pivotSettings || {}).forEach(function (entry) {
+      if (pivotSettings[entry[0]] && u.stableJson(pivotSettings[entry[0]]) !== u.stableJson(entry[1])) throw new Error("Pivot settings differ. Choose which copy to keep.");
+      pivotSettings[entry[0]] = entry[1];
+    });
+    if (Object.keys(pivotSettings).length) data.pivotSettings = pivotSettings;
     [["records", "id", config.controls.maxRecords], ["movies", "id", config.controls.maxMovies]].forEach(function (entry) {
       const items = new Map();
       (local[entry[0]] || []).concat(remote[entry[0]] || []).forEach(function (item) {

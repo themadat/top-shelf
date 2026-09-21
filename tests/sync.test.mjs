@@ -255,7 +255,7 @@ test('first upload still requires a choice; a synchronized copy needs no write',
 test('empty foundations sync only an empty content envelope, independent of device, UI, or save metadata', () => {
   const h = harness(), model = h.App.stateModel;
   const original = JSON.stringify(model.syncPayload(h.state));
-  assert.deepEqual(JSON.parse(original), { syncFormat: 'top-shelf-app-data', syncVersion: 3, schemaVersion: 7, data: {} });
+  assert.deepEqual(JSON.parse(original), { syncFormat: 'top-shelf-app-data', syncVersion: 4, schemaVersion: 8, data: {} });
   assert.ok(Buffer.byteLength(JSON.stringify(model.syncPayload(h.state), null, 2)) < 120);
   h.App.storage.mutate(state => {
     state.preferences.appearance.mode = 'dark'; state.ui.search = 'cloud'; state.ui.supportTab = 'dataSync';
@@ -302,7 +302,7 @@ test('legacy whole-state files migrate without false conflicts and compact on ex
   await h.sync.syncNow();
   const written = JSON.parse(Buffer.from(JSON.parse(h.requests.find(r => r.options.method === 'PUT').options.body).content, 'base64').toString());
   assert.deepEqual(written.data, {});
-  assert.equal(written.syncVersion, 3);
+  assert.equal(written.syncVersion, 4);
   assert.equal(h.state.preferences.appearance.mode, 'system');
 });
 
@@ -427,8 +427,8 @@ test('movie content round trips through backups and sync with credentials omitte
   const h = harness(), model = h.App.stateModel;
   h.state.workspace.movies = [movieFixture(h.App, { how: 'Cinema', other: 'With friends', priority: 1, notes: 'See in IMAX' })];
   const payload = model.syncPayload(h.state);
-  assert.equal(payload.syncVersion, 3);
-  assert.equal(payload.schemaVersion, 7);
+  assert.equal(payload.syncVersion, 4);
+  assert.equal(payload.schemaVersion, 8);
   assert.equal(payload.data.movies[0].how, 'Cinema');
   assert.equal(model.syncHash(model.prepareSync(payload).state), model.syncHash(h.state));
   assert.equal(model.prepare(model.exportEnvelope(h.state)).state.workspace.movies[0].notes, 'See in IMAX');
@@ -531,5 +531,36 @@ test('collection stars survive backup and content sync separately from manual ta
   for (const restored of [model.prepare(model.exportEnvelope(h.state)).state, model.prepareSync(model.syncPayload(h.state)).state]) {
     assert.deepEqual(Array.from(restored.workspace.movies[0].starredCollections), ['One, Two']);
     assert.equal(restored.workspace.movies[0].other, 'Manual');
+  }
+});
+
+test('pivot preferences persist through backup, cloud download, and per-pivot merge', () => {
+  const h = harness(), model = h.App.stateModel;
+  const before = model.syncHash(h.state);
+  h.state.workspace.pivotSettings = { ratings: { minimum: 3, sort: 'average', direction: 'asc' } };
+  const expected = JSON.stringify(h.state.workspace.pivotSettings);
+  assert.notEqual(model.syncHash(h.state), before);
+  const remote = model.prepareSync(model.syncPayload(h.state)).state;
+  for (const restored of [model.prepare(model.exportEnvelope(h.state)).state, remote, model.applySync(model.createDefaultState(), remote)]) {
+    assert.equal(JSON.stringify(restored.workspace.pivotSettings), expected);
+  }
+  const local = model.createDefaultState();
+  local.workspace.pivotSettings = { years: { minimum: 5, sort: 'category', direction: 'desc' } };
+  const merged = model.merge(local, remote);
+  assert.equal(merged.workspace.pivotSettings.ratings.minimum, 3);
+  assert.equal(merged.workspace.pivotSettings.years.minimum, 5);
+  local.workspace.pivotSettings.ratings = { minimum: 2, sort: 'count', direction: 'desc' };
+  assert.throws(() => model.merge(local, remote), /Pivot settings differ/);
+  assert.equal(Object.keys(model.applySync(remote, model.createDefaultState()).workspace.pivotSettings).length, 0);
+});
+
+test('old cloud data defaults pivot settings and invalid cloud settings are rejected', () => {
+  const h = harness(), model = h.App.stateModel;
+  const old = model.prepareSync({ syncFormat: 'top-shelf-app-data', syncVersion: 3, schemaVersion: 7, data: {} });
+  assert.equal(old.legacy, true);
+  assert.equal(Object.keys(old.state.workspace.pivotSettings).length, 0);
+  for (const pivotSettings of [[], null, { unknown: {} }, { ratings: { minimum: 0, sort: 'count', direction: 'desc' } }, { ratings: { minimum: 1, sort: 'bad', direction: 'asc' } }]) {
+    const payload = model.syncPayload(h.state); payload.data.pivotSettings = pivotSettings;
+    assert.throws(() => model.prepareSync(payload), /invalid pivot settings/);
   }
 });

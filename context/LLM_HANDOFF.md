@@ -10,7 +10,7 @@ assets/js/core/movies.js owns validation/normalization and TMDB mapping; core/tm
 
 Retained shell: app icon/theme and hold-for-Developer controls, name/version/Beta badges, centered search across Notes and support, one blank-on-first-run plain-text Notes modal, vertical Settings, appearance/backup/reset, dedicated Data Sync with JSON preview, generic Help, release history, Roadmap with the spreadsheet backlog, Shortcuts, and Developer diagnostics. Local persistence/recovery, JSON portability, optional GitHub Sync, accessible shared components, PWA updates, and offline assets remain.
 
-Identity and configuration live in assets/js/config.js. Storage uses topShelf.state.v5 with topShelf.state.v4 as a migration source; other keys use topShelf, the cache uses top-shelf-shell, the manifest id is ./top-shelf, full backups use top-shelf-backup, and content sync uses top-shelf-app-data v3/schema v7. Local state schema v5 retains legacy record/document compatibility without exposing their old interfaces. Cloud schema v7 excludes device settings, credentials, timestamps, and empty collections. Only the previous Top Shelf namespace is migrated. v1 and v2 cloud envelopes remain readable and compact into v3; old builds reject new cloud data. Update all copies to 0.0.1.4 before syncing movies.
+Identity and configuration live in assets/js/config.js. Storage uses topShelf.state.v5 with topShelf.state.v4 as a migration source; other keys use topShelf, the cache uses top-shelf-shell, the manifest id is ./top-shelf, full backups use top-shelf-backup, and content sync uses top-shelf-app-data v4/schema v8. Local state schema v5 retains legacy record/document compatibility without exposing their old interfaces. Cloud schema v8 excludes device settings, credentials, timestamps, and empty collections. Only the previous Top Shelf namespace is migrated. v1–v3 cloud envelopes remain readable and compact into v4; old builds reject new cloud data. Update all copies to 0.0.1.4 before syncing movies.
 
 GitHub Sync is enabled and fixed to themadat/app-data/main/data/top-shelf.json. Imports cannot redirect it. The local target is configured; external file existence, a narrowly scoped token, and real Test/Save plus upload/download verification remain pending user setup. Follow the links and checklist in docs/RESET.md; never request a token in chat. Do not write to the separate app-data repository without explicit authorization.
 
@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.17.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.18.
 
 ## Workflows
 
@@ -80,7 +80,7 @@ After file changes, give one concise outcome/verification summary followed by ex
 
 Movie reference content: Settings → Info (below Data Sync, using the supplied infoSquare symbol) contains original spreadsheet name/description, personal favorites, rating mapping, and manual links. Roadmap preserves two unimplemented spreadsheet backlog items. What’s New keeps the 2023–2024 spreadsheet history separate from Top Shelf releases.
 
-Movies → Pivots computes eight tables from every non-deleted watched movie, independent of movie-list search/filters. core/pivots.js owns grouping/sorting; pivots-ui.js owns the dashboard. Counts are per distinct membership per movie; historical ratings use mapped scores. Missing values get explicit groups. Years switch release/watched date. Per-table minimum count and sorting are session-only; no new saved data or sync schema. Actors use the existing saved top-ten cast.
+Movies → Pivots computes eight tables from every non-deleted watched movie, independent of movie-list search/filters. core/pivots.js owns grouping/sorting; pivots-ui.js owns the dashboard. Counts are per distinct membership per movie; historical ratings use mapped scores. Missing values get explicit groups. Years switch release/watched date. Per-table minimum count and sorting are saved in workspace.pivotSettings and synced. Actors use the existing saved top-ten cast.
 
 The top bar includes combined storage/cloud-sync status and an Update button. Update checks for a new worker, saves current data, and force-refreshes; ready updates change its icon to red without an availability pop-up. Settings → Notifications controls What’s New dismissal from 1–300 seconds (default 20), stored in local preferences and full backups, excluded from content sync.
 
@@ -99,3 +99,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.15: Removed the visible pivot heading, summary cards, and explanatory paragraphs. Pivot tables start directly below the toolbar; the section retains an accessible name and the empty state.
 
 0.0.1.16: Restored the average formatter still required by pivot rows after the summary removal. Populated pivot UI rendering has regression coverage.
+
+0.0.1.17: Pivot Min, sort key, and direction persist in workspace.pivotSettings, full backups, and cloud v4/schema v8. Cloud v1–v3 remain readable; update all clients before syncing. Conflicting settings for the same pivot require choosing a copy; disjoint pivot settings merge. Missing Other/Collection groups are hidden. Headers use # and x̄ with accessible names; Min is centered, totals right-aligned, and the Ratings Min period hint is inline.

@@ -972,3 +972,12 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .movie-toolbar .movie-search { padding: 0 .55rem 0 0; }
 [data-shortcut-always]::after { opacity: 1; transform: none; }
 @media (max-width: 500px) { #pivot-ratings, #pivot-years { width: min-content; } }
+
+/* Intrinsic numeric columns, centered minimum, and right-aligned group totals. */
+.pivot-card header { grid-template-columns: minmax(max-content, 1fr) max-content minmax(max-content, 1fr); }
+.pivot-card header > label:not(.pivot-year-basis) { justify-self: center; }
+.pivot-card header small { justify-self: end; }
+.pivot-card header [data-shortcut-always]::after { content: none; }
+.pivot-focus-hint { padding: 0 3px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); color: var(--muted); font: inherit; }
+.pivot-card td, .pivot-card th[data-sort-column="count"], .pivot-card th[data-sort-column="average"] { width: 1%; white-space: nowrap; }
+.pivot-card { min-width: 125px; }
