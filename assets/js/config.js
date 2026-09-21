@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.21",
-      "buildId": "0.0.1.21",
+      "version": "0.0.1.22",
+      "buildId": "0.0.1.22",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.22", "date": "2026-09-21T12:00:00.000Z", "title": "Clear Bulk Pivot Issues", "summary": "Unmatched movies stand out before bulk pivots are applied.", "features": [], "improvements": ["Prominent issue count and labeled problem rows above matched movies", "Focus and scroll to errors after reviewing an unresolved batch"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.21", "date": "2026-09-20T12:00:00.000Z", "title": "Adjusted Pivot Scores", "summary": "Rank pivot groups by rating with confidence from their movie counts.", "features": ["Baseline and Weight controls in the Pivots toolbar", "Adjusted score column and Score sorting in every pivot"], "improvements": ["Scoring settings persist with synced pivot preferences"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.20", "date": "2026-09-20T12:00:00.000Z", "title": "Bulk Pivot Entry", "summary": "Append pivots to multiple saved movies at once.", "features": ["Paste pivots and movie titles or TMDB IDs", "Review matches before appending; existing values are preserved"], "improvements": ["Skip duplicate tags and flag missing or ambiguous movies", "Save a recovery copy before applying a batch"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.19", "date": "2026-09-20T12:00:00.000Z", "title": "Saved Movie Tab Sorting", "summary": "Independent sorting and faster navigation for each movie list.", "features": ["Saved sorting per All, Wishlist, and Watched tab", "Click any table header to reverse its sort", "A/I/W movie-state shortcuts"], "improvements": ["Rating, Priority, and Recently Watched defaults", "Stronger cell text selection and editor focus"], "fixes": [], "knownIssues": []},

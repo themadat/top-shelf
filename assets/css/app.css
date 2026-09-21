@@ -1013,3 +1013,11 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
   .movie-toolbar.showing-pivots .movie-add { grid-column: 2; grid-row: 1; }
   .pivot-scoring { grid-column: 1 / -1; grid-row: 2; justify-content: center; }
 }
+
+#bulkPivotError:not(:empty) { padding: .85rem; border: 2px solid var(--danger); border-left-width: 6px; border-radius: 8px; background: color-mix(in srgb, var(--danger) 14%, var(--surface)); color: var(--text); font-weight: 700; }
+.bulk-pivot-issues { border: 2px solid var(--danger); border-radius: 8px; padding: .8rem; background: color-mix(in srgb, var(--danger) 8%, var(--surface)); }
+.bulk-pivot-issues h3 { margin: 0 0 .6rem; }
+.bulk-pivot-issues ul { list-style: none; margin: 0; padding: 0; }
+#bulkPivotPreview .bulk-pivot-issues li { display: grid; gap: .35rem; padding: .75rem; border-left: 4px solid var(--danger); background: var(--surface); margin-bottom: .6rem; }
+.bulk-pivot-issue-label { width: fit-content; padding: .2rem .45rem; border: 1px solid var(--danger); border-radius: 4px; font-size: .7rem; font-weight: 800; color: var(--text); background: color-mix(in srgb, var(--danger) 18%, var(--surface)); }
+#bulkPivotMovies[aria-invalid="true"] { border: 2px solid var(--danger); }

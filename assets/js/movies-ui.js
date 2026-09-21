@@ -172,15 +172,26 @@
   }
   function initBulkPivots() {
     let reviewed = null;
-    function invalidate() { reviewed = null; $('#bulkPivotApply').disabled = true; $('#bulkPivotPreview').textContent = ''; $('#bulkPivotError').textContent = ''; }
+    function invalidate() { reviewed = null; $('#bulkPivotApply').disabled = true; $('#bulkPivotPreview').textContent = ''; $('#bulkPivotError').textContent = ''; $('#bulkPivotMovies').removeAttribute('aria-invalid'); }
     function preview() {
       invalidate();
       try {
         const result = model.bulkPivots(saved(), $('#bulkPivotTags').value, $('#bulkPivotMovies').value);
-        $('#bulkPivotPreview').innerHTML = '<p>' + result.changes.length + ' movies to update.</p><ul>' + result.rows.map(function (row) {
-          return '<li><strong>' + esc(row.title || row.input) + '</strong>: ' + (row.error ? esc(row.error) : row.duplicate ? 'Already included above' : row.additions.length ? 'Append ' + esc(row.additions.join(', ')) : 'No change — pivots already present') + '</li>';
-        }).join('') + '</ul>';
-        if (!result.valid) $('#bulkPivotError').textContent = 'Resolve unmatched or ambiguous movies before applying.';
+        const issues = result.rows.filter(function (row) { return row.error; });
+        const matched = result.rows.filter(function (row) { return !row.error; });
+        const issueList = issues.length ? '<section class="bulk-pivot-issues" aria-labelledby="bulkPivotIssuesTitle"><h3 id="bulkPivotIssuesTitle">Needs Attention (' + issues.length + ')</h3><ul>' + issues.map(function (row) {
+          const label = row.error.startsWith('Not found') ? 'NOT FOUND' : row.error.startsWith('Multiple matches') ? 'MULTIPLE MATCHES' : 'CANNOT APPLY';
+          return '<li><span class="bulk-pivot-issue-label">' + label + '</span><strong>' + esc(row.input) + '</strong><span>' + esc(row.error) + '</span></li>';
+        }).join('') + '</ul><p>Correct the movie names or use TMDB IDs in the Movies box, then review again.</p></section>' : '';
+        $('#bulkPivotPreview').innerHTML = issueList + '<p>' + result.changes.length + ' movies ' + (issues.length ? 'matched for updates (not applied)' : 'to update') + '.</p>' + (matched.length ? '<details' + (issues.length ? '' : ' open') + '><summary>Matched Movies (' + matched.length + ')</summary><ul>' + matched.map(function (row) {
+          return '<li><strong>' + esc(row.title || row.input) + '</strong>: ' + (row.duplicate ? 'Already included above' : row.additions.length ? 'Append ' + esc(row.additions.join(', ')) : 'No change — pivots already present') + '</li>';
+        }).join('') + '</ul></details>' : '');
+        if (!result.valid) {
+          $('#bulkPivotError').textContent = issues.length + ' movie ' + (issues.length === 1 ? 'entry needs' : 'entries need') + ' attention. Nothing can be applied until these are resolved.';
+          $('#bulkPivotMovies').setAttribute('aria-invalid', 'true');
+          $('#bulkPivotError').focus();
+          $('#bulkPivotError').scrollIntoView({ block: 'start' });
+        }
         else if (result.changes.length) { reviewed = result; $('#bulkPivotApply').disabled = false; }
       } catch (error) { $('#bulkPivotError').textContent = error.message; }
     }
