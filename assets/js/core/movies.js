@@ -147,7 +147,7 @@
   }
   function color(value, priority) {
     const fraction = priority ? (5 - Number(value)) / 4 : Number(value) / 5;
-    return "hsl(" + Math.round(Math.max(0, Math.min(1, fraction)) * 120) + " 52% " + (priority ? "88%" : "25%") + ")";
+    return "hsl(" + Math.round(Math.max(0, Math.min(1, fraction)) * 120) + " 78% " + (priority ? "72%" : "28%") + ")";
   }
   function searchable(movie) { return [movie.title, movie.tmdbId, movie.how, movie.other, movie.notes, movie.review, movie.historicalRating].concat(movie.genres, movie.productionCompanies, movie.directors, movie.actors, movie.collections).join(" ").toLowerCase(); }
   function incomplete(movie) { return !movie.incompleteOverride && (!movie.releaseDate || ["genres", "actors", "directors", "productionCompanies"].some(function (field) { return !movie[field]?.length; })); }

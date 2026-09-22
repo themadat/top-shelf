@@ -407,10 +407,10 @@ test('movie fields validate state-specific requirements and preserve decimal rat
   const watched = movieFixture(h.App, { status: 'watched', rating: 4.75, watchedDate: '2026-09-13', review: 'A <literal> review' });
   assert.equal(watched.rating, 4.75);
   assert.equal(watched.review, 'A <literal> review');
-  assert.equal(movies.color(0, false), 'hsl(0 52% 25%)');
-  assert.equal(movies.color(5, false), 'hsl(120 52% 25%)');
-  assert.equal(movies.color(1, true), 'hsl(120 52% 88%)');
-  assert.equal(movies.color(5, true), 'hsl(0 52% 88%)');
+  assert.equal(movies.color(0, false), 'hsl(0 78% 28%)');
+  assert.equal(movies.color(5, false), 'hsl(120 78% 28%)');
+  assert.equal(movies.color(1, true), 'hsl(120 78% 72%)');
+  assert.equal(movies.color(5, true), 'hsl(0 78% 72%)');
 });
 
 test('TMDB maps multiple directors, ordered top-ten cast, and optional collection', () => {
