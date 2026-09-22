@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.33.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.34.
 
 ## Workflows
 
@@ -131,3 +131,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.31: Movie sort dropdown removed; header sorting retained. How Values is in Settings Info. incompleteOverride is a saved movie boolean, edited via Exclude from Incomplete, and bypasses missing-metadata filtering. cleanHow normalizes known provider aliases and deduplicates comma-separated values on load/save and lookup, shortens estimate dates, and clears the old unknown sentinel. Unresolved checks retain existing text with one spaced star. How limit is 302 to allow the marker plus 300 characters; column is 280px.
 
 0.0.1.32: Movie table headers have pointer resize separators; double-click or Enter fits the widest currently displayed cell/header, including clipped text. Arrow keys resize by 10px. ui.movieColumnWidths stores per-column device widths shared across movie tabs, normalized and reset with preferences; excluded from content sync. Fixed colgroup sizing prevents content forcing widths. Width-only changes skip movie render to preserve drag/focus/scroll.
+
+0.0.1.33: Movie toolbar actions use the shared action-button symbol-over-label style and button presentation preference. User SVGs are in the symbol catalog as incomplete, subgenreReview, updateHow. Subgenre queue updates only button-label and accessible name to preserve the symbol.

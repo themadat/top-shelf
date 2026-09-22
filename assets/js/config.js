@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.32",
-      "buildId": "0.0.1.32",
+      "version": "0.0.1.33",
+      "buildId": "0.0.1.33",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.33", "date": "2026-09-22T12:00:00.000Z", "title": "Movie Toolbar Symbols", "summary": "Use standard symbol-over-label action buttons in the movie toolbar.", "features": ["Custom symbols for Incomplete, Subgenre Review, and Update How"], "improvements": ["Movie actions follow the Icons, Text, and Icons + Text preference"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.32", "date": "2026-09-22T12:00:00.000Z", "title": "Resizable Movie Columns", "summary": "Drag column edges or double-click to fit the widest displayed content.", "features": ["Saved movie column widths", "Keyboard resizing with arrow keys and Enter to fit"], "improvements": [], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.31", "date": "2026-09-22T12:00:00.000Z", "title": "Clearer Movie How Values", "summary": "Shorter streaming names and estimates, with an Incomplete override.", "features": ["Per-movie Exclude from Incomplete checkbox"], "improvements": ["Shorten and deduplicate saved and fetched providers", "Wider How column; How Values moved to Settings Info", "Column headers replace the sort dropdown"], "fixes": ["Unknown streaming stays blank; preserve existing How with a single spaced star"], "knownIssues": []},
       {"version": "0.0.1.30", "date": "2026-09-22T12:00:00.000Z", "title": "Expanded US Streaming Rules", "summary": "Use the supplied studio windows and US theatrical dates for streaming estimates.", "features": ["30 bundled streaming windows with label inheritance and confidence", "Sequential split windows, date ranges, and title research links"], "improvements": ["Verified title exceptions and distributors precede production-company estimates", "US theatrical dates exclude premieres and rental/purchase releases"], "fixes": [], "knownIssues": ["Title-specific exceptions require verified research; bundled exception list starts empty."]},
