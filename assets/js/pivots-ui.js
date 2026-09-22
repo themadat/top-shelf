@@ -14,6 +14,7 @@
   }
   const starFields = { collections: 'starredCollections', actors: 'starredActors', directors: 'starredDirectors', productionCompanies: 'starredCompanies' };
   let active = false;
+  const searches = {};
   function average(value) { return value === null ? "—" : value.toFixed(2); }
   function render() {
     if (!active) return;
@@ -24,7 +25,7 @@
     $("#pivotEmpty").hidden = result.count > 0;
     $("#pivotGrid").hidden = result.count === 0;
     model.dimensions.forEach(function (dimension) {
-      const pref = preference(dimension.id), all = result.groups[dimension.id].filter(function (row) { return !row.missing || !["other", "collections"].includes(dimension.id); }), rows = model.rows(all, pref.minimum, pref.sort, pref.direction);
+      const pref = preference(dimension.id), all = result.groups[dimension.id].filter(function (row) { return !row.missing || !["other", "collections"].includes(dimension.id); }), rows = model.rows(all, pref.minimum, pref.sort, pref.direction).filter(function (row) { return row.name.toLocaleLowerCase().includes(searches[dimension.id] || ''); });
       const section = $('#pivot-' + dimension.id);
       section.querySelector('[data-pivot-min]').value = pref.minimum;
       section.querySelectorAll('[data-pivot-sort]').forEach(function (button) {
@@ -51,7 +52,7 @@
   }
   function init() {
     $("#pivotGrid").innerHTML = model.dimensions.map(function (dimension) {
-      return '<section class="pivot-card" id="pivot-' + dimension.id + '" aria-labelledby="pivot-title-' + dimension.id + '"><header><h3 id="pivot-title-' + dimension.id + '">' + dimension.title + '</h3><label>Min<input data-pivot-min="' + dimension.id + '" type="number" min="1" max="5000" step="1" value="1" aria-label="Minimum Movies for ' + dimension.title + '"></label><small data-pivot-count role="status"></small>' + (dimension.id === 'years' ? '<label class="pivot-year-basis">Group By<select id="pivotYearBasis" aria-label="Group Years By"><option value="watched">Watched</option><option value="release">Release</option></select></label>' : '') + '</header><div class="pivot-controls">' + ['category', 'count', 'average', 'score'].map(function (sort) { return '<button type="button" class="button pivot-sort" data-pivot-sort="' + sort + '" data-pivot-id="' + dimension.id + '"><span class="pivot-sort-top"><span class="pivot-sort-icon" aria-hidden="true">' + App.icons.markup(sort === 'category' ? 'group' : sort === 'count' ? 'pivotCount' : sort === 'score' ? 'pivotScore' : 'pivotAverage') + '</span><span class="pivot-direction" aria-hidden="true"></span></span><span>' + (sort === 'category' ? 'Group' : sort === 'count' ? 'Count' : sort === 'score' ? 'Score' : 'Average') + '</span></button>'; }).join('') + '</div><div class="pivot-table-scroll" tabindex="0" role="region" aria-label="' + dimension.title + ' pivot table"><table><caption class="visually-hidden">' + dimension.title + ' — watched movie counts and average ratings</caption><thead><tr><th scope="col" data-sort-column="category">' + (dimension.id === 'years' ? 'Year' : dimension.id === 'ratings' ? 'Rating' : 'Name') + '</th><th scope="col" data-sort-column="count" aria-label="Count" title="Count">#</th><th scope="col" data-sort-column="average" aria-label="Average" title="Average">x̄</th><th scope="col" data-sort-column="score" aria-label="Adjusted Score" title="Confidence-adjusted Score">∑</th></tr></thead><tbody></tbody></table></div></section>';
+      return '<section class="pivot-card" id="pivot-' + dimension.id + '" aria-labelledby="pivot-title-' + dimension.id + '"><header><h3 id="pivot-title-' + dimension.id + '">' + dimension.title + '</h3><label>Min<input data-pivot-min="' + dimension.id + '" type="number" min="1" max="5000" step="1" value="1" aria-label="Minimum Movies for ' + dimension.title + '"></label><small data-pivot-count role="status"></small>' + (dimension.id === 'years' ? '<label class="pivot-year-basis">Group By<select id="pivotYearBasis" aria-label="Group Years By"><option value="watched">Watched</option><option value="release">Release</option></select></label>' : '') + '</header><label class="pivot-search"><span class="visually-hidden">Search ' + dimension.title + '</span><input type="search" data-pivot-search="' + dimension.id + '" placeholder="Search…" autocomplete="off" aria-controls="pivot-table-' + dimension.id + '"></label><div class="pivot-controls">' + ['category', 'count', 'average', 'score'].map(function (sort) { return '<button type="button" class="button pivot-sort" data-pivot-sort="' + sort + '" data-pivot-id="' + dimension.id + '"><span class="pivot-sort-top"><span class="pivot-sort-icon" aria-hidden="true">' + App.icons.markup(sort === 'category' ? 'group' : sort === 'count' ? 'pivotCount' : sort === 'score' ? 'pivotScore' : 'pivotAverage') + '</span><span class="pivot-direction" aria-hidden="true"></span></span><span>' + (sort === 'category' ? 'Group' : sort === 'count' ? 'Count' : sort === 'score' ? 'Score' : 'Average') + '</span></button>'; }).join('') + '</div><div class="pivot-table-scroll" tabindex="0" role="region" aria-label="' + dimension.title + ' pivot table"><table id="pivot-table-' + dimension.id + '"><caption class="visually-hidden">' + dimension.title + ' — watched movie counts and average ratings</caption><thead><tr><th scope="col" data-sort-column="category">' + (dimension.id === 'years' ? 'Year' : dimension.id === 'ratings' ? 'Rating' : 'Name') + '</th><th scope="col" data-sort-column="count" aria-label="Count" title="Count">#</th><th scope="col" data-sort-column="average" aria-label="Average" title="Average">x̄</th><th scope="col" data-sort-column="score" aria-label="Adjusted Score" title="Confidence-adjusted Score">∑</th></tr></thead><tbody></tbody></table></div></section>';
     }).join('');
     document.querySelectorAll('[data-movie-view]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -63,6 +64,12 @@
         document.querySelectorAll('[data-movie-view]').forEach(function (control) { control.setAttribute('aria-pressed', String(control === button)); });
         render();
       });
+    });
+    $('#pivotGrid').addEventListener('input', function (event) {
+      const id = event.target.dataset.pivotSearch;
+      if (!id) return;
+      searches[id] = event.target.value.toLocaleLowerCase().trim();
+      render();
     });
     $('#pivotGrid').addEventListener('click', function (event) {
       const star = event.target.closest('[data-star-collection]');

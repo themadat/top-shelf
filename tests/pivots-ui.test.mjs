@@ -35,4 +35,16 @@ test('opening populated pivots renders all eight tables without summary cards', 
       assert.match(html, /No matching groups/);
     } else assert.match(html, />3\.50<\/span>/, dimension.id);
   }
+  const grid = nodes.get('#pivotGrid');
+  assert.equal((grid.innerHTML.match(/data-pivot-search=/g) || []).length, 8);
+  const ratingBody = nodes.get('#pivot-ratings').querySelector('tbody');
+  const yearBefore = nodes.get('#pivot-years').querySelector('tbody').innerHTML;
+  grid.listeners.input({ target: { dataset: { pivotSearch: 'ratings' }, value: 'not a rating' } });
+  assert.match(ratingBody.innerHTML, /No matching groups/);
+  assert.equal(nodes.get('#pivot-years').querySelector('tbody').innerHTML, yearBefore);
+  grid.listeners.input({ target: { dataset: { pivotSearch: 'ratings' }, value: ' 3.5 ' } });
+  assert.match(ratingBody.innerHTML, />3\.50<\/span>/);
+  grid.listeners.input({ target: { dataset: { pivotSearch: 'ratings' }, value: '' } });
+  assert.match(ratingBody.innerHTML, />3\.50<\/span>/);
+
 });

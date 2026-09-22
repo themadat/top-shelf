@@ -1109,3 +1109,6 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 #movieForm textarea[name="notes"], #movieForm textarea[name="review"] { min-height: 9rem; }
 
 #movieNamesText { display: block; width: 100%; margin-top: .5rem; min-height: 16rem; }
+
+.pivot-search { display: block; min-width: 0; margin: .2rem 0; }
+.pivot-search input { width: 100%; min-width: 0; min-height: 30px; padding: .25rem .4rem; font-size: .75rem; }
