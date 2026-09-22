@@ -261,19 +261,37 @@
     if (!App.storage.saveRecovery('Before updating Wishlist How')) { status.textContent = 'Could not save a recovery copy. No movies were changed.'; return; }
     streamingBusy = true; streamingController = new AbortController(); button.disabled = true; $('#wishlistStreamingCancel').hidden = false;
     const controller = streamingController;
+    const results = $('#wishlistStreamingResults'); results.replaceChildren();
     let updated = 0, checked = 0, estimated = 0, unknown = 0, skipped = 0, failure = '';
     try {
       for (const target of targets) {
         if (controller.signal.aborted) break;
         status.textContent = 'Checking US availability ' + (checked + 1) + '/' + targets.length + '…';
         const available = await App.tmdb.streaming(target.tmdbId, controller.signal);
+        const usTheatricalDate = available ? '' : await App.tmdb.theatricalDate(target.tmdbId, controller.signal);
         if (controller.signal.aborted) break;
         checked++;
         const current = saved().find(function (movie) { return movie.id === target.id; });
         if (!current || current.status !== 'wishlist' || JSON.stringify(current) !== JSON.stringify(target) || (draft?.id === target.id && $('#movieDialog').open) || inlineEdit?.id === target.id) { skipped++; continue; }
-        const how = App.streamingRules.describe(current, available);
-        if (how.startsWith('Likely ')) estimated++;
-        else if (!available) unknown++;
+        const prediction = App.streamingRules.predict(current, { available: available, usTheatricalDate: usTheatricalDate });
+        const how = prediction.how;
+        if (prediction.status === 'ESTIMATE') estimated++;
+        else if (prediction.status === 'UNKNOWN') unknown++;
+        const item = document.createElement('li');
+        item.textContent = current.title + ': ' + how;
+        if (prediction.windows.length) {
+          const details = document.createElement('details'), summary = document.createElement('summary'), list = document.createElement('ul');
+          summary.textContent = 'Subscription Windows'; details.append(summary, list);
+          prediction.windows.forEach(function (window) { const row = document.createElement('li'); row.textContent = (window.window || 'Title rights') + ': ' + window.services.join(' / ') + (window.estimatedDates ? ' · estimated ' + window.estimatedDates.join('–') : window.officialDate ? ' · official ' + window.officialDate : ' · timing unknown') + (window.confidence ? ' · ' + window.confidence + ' rights confidence' : '') + (window.notes ? ' · ' + window.notes : ''); list.append(row); });
+          item.append(details);
+        }
+        if (prediction.needsResearch) {
+          const link = document.createElement('a');
+          link.href = 'https://www.google.com/search?q=' + encodeURIComponent(current.title + ' ' + (current.releaseDate || '').slice(0, 4) + ' US subscription streaming distribution rights official release date');
+          link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Research This Title';
+          item.append(document.createTextNode(' · ' + prediction.reason + ' '), link);
+        }
+        results.append(item);
         if (current.how === how) continue;
         App.storage.mutate(function (next) { next.workspace.movies.find(function (movie) { return movie.id === target.id; }).how = how; }, { reason: 'wishlist-streaming' });
         updated++;
@@ -342,8 +360,8 @@
     document.querySelectorAll('[data-editor-priority]').forEach(function (button) { button.addEventListener('click', function () { const input = $('#movieForm').elements.priority; input.value = input.value === button.dataset.editorPriority ? '' : button.dataset.editorPriority; statusFields(); }); });
     $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.addEventListener('input', dateFields); input.addEventListener('change', dateFields); });
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); if (button.dataset.editorState === 'watched') $('#movieForm').elements.rating.focus(); else $('[data-editor-priority]').focus(); }); });
-    $('#wishlistRulesDate').textContent = 'Research snapshot: ' + App.streamingRules.reviewedOn + '. Rules are bundled with the app; no LLM or web research runs during a check. First-window predictions apply only within one year of release and the listed release years.';
-    $('#wishlistRulesList').innerHTML = App.streamingRules.rules.map(function (rule) { return '<li>' + esc(rule.studio) + ' → ' + esc(rule.service) + ' (' + rule.from + '–' + rule.through + ') · <a href="' + esc(rule.source) + '" target="_blank" rel="noopener noreferrer">Source</a></li>'; }).join('');
+    $('#wishlistRulesDate').textContent = 'User-supplied US rules snapshot: ' + App.streamingRules.reviewedOn + '. Timing is estimated from the US theatrical opening (wide, then limited). Rights confidence does not guarantee a date. Older catalog needs title-specific research. Rules and title exceptions are bundled; no automatic web research runs during checks.';
+    $('#wishlistRulesList').innerHTML = App.streamingRules.rules.map(function (rule) { return '<li>' + esc(rule.studio) + ' → ' + esc(rule.services.join(' / ')) + ' · ' + esc(rule.window) + ' · typical ' + (rule.typicalDays ? rule.typicalDays.join('–') + ' days' : 'unknown') + ' · min ' + (rule.minDays ? rule.minDays.join('–') : 'unknown') + ' · max ' + (rule.maxDays ? rule.maxDays.join('–') : 'unknown') + ' · ' + esc(rule.confidence) + ' rights confidence. ' + esc(rule.notes) + '</li>'; }).join('');
     $('#wishlistStreamingCancel').addEventListener('click', function () { streamingController?.abort(); });
     $("#wishlistStreamingButton").addEventListener("click", function () { fillStreaming(); });
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });

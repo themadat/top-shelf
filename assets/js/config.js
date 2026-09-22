@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.29",
-      "buildId": "0.0.1.29",
+      "version": "0.0.1.30",
+      "buildId": "0.0.1.30",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.30", "date": "2026-09-22T12:00:00.000Z", "title": "Expanded US Streaming Rules", "summary": "Use the supplied studio windows and US theatrical dates for streaming estimates.", "features": ["30 bundled streaming windows with label inheritance and confidence", "Sequential split windows, date ranges, and title research links"], "improvements": ["Verified title exceptions and distributors precede production-company estimates", "US theatrical dates exclude premieres and rental/purchase releases"], "fixes": [], "knownIssues": ["Title-specific exceptions require verified research; bundled exception list starts empty."]},
       {"version": "0.0.1.29", "date": "2026-09-22T12:00:00.000Z", "title": "Incomplete Movies and How Review", "summary": "Find missing movie metadata and review How values.", "features": ["Incomplete filter for missing release date, genres, actors, directors, or companies", "Copyable list of all distinct How values"], "improvements": ["Wishlist checks preserve unresolved existing How with a single asterisk", "Update Wishlist How moved into the top toolbar"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.28", "date": "2026-09-21T12:00:00.000Z", "title": "Wishlist Streaming Check", "summary": "Refresh How across your entire Wishlist with live US availability and built-in deal research.", "features": ["Update Wishlist How checks all Wishlist movies", "Bundled, sourced US streaming rules supply labeled likely destinations when unavailable"], "improvements": ["Recovery before replacing How, progress, cancellation and protection for concurrent edits", "Research runs once at development time; checks use TMDB without an LLM"], "fixes": [], "knownIssues": ["Production companies are only clues to distribution rights. Estimates have no confirmed date; unsupported or conflicting matches remain unknown."]},
       {"version": "0.0.1.27", "date": "2026-09-21T12:00:00.000Z", "title": "Movie Form Controls and Expandable JSON", "summary": "Compact movie controls and expandable TMDB responses.", "features": ["Priority buttons 1\u20135", "Collapsible JSON branches; Watch Providers opens US and collapses rent/buy"], "improvements": ["Supported subgenres beside review status on the State row", "Blank date placeholders and Notifications below Appearance", "Removed Lookup Settings from movie form"], "fixes": [], "knownIssues": []},

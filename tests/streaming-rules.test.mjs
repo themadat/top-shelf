@@ -10,10 +10,39 @@ test('live providers override deals, missing dates, and older catalog',()=>{
  assert.equal(model.describe(movie(['Universal Pictures'],'1999-01-01'),'Netflix','2026-09-21'),'Netflix');
  assert.equal(model.describe(movie([],''),'Tubi (ads)','2026-09-21'),'Tubi (ads)');
 });
-test('bundled research estimates only supported unambiguous recent company matches',()=>{
- for(const [company,service]of [['Universal Pictures','Peacock'],['Columbia Pictures','Netflix'],['Paramount Pictures','Paramount+'],['A24','HBO Max'],['Lionsgate','STARZ']])assert.equal(model.describe(movie([company]),'','2026-09-21'),'Likely '+service+' (US; company-based estimate; date unannounced)');
- for(const input of [movie(['Universal Pictures'],'2000-01-01'),movie(['Universal Pictures'],''),movie(['Universal Pictures'],'2035-01-01'),movie(['Blumhouse Productions']),movie(['A24','Paramount Pictures'])])assert.equal(model.describe(input,'','2026-09-21'),'No US streaming listed; destination unknown');
- assert.match(model.describe(movie([' UNIVERSAL PICTURES ', 'Focus Features']),'','2026-09-21'),/^Likely Peacock/);
+test('supplied labels inherit initial destinations without converting Pay-2 or split windows into first destinations',()=>{
+ for(const [company,service]of [['Universal Pictures','Peacock'],['Focus Features','Peacock'],['DreamWorks Animation','Peacock'],['Illumination','Peacock'],['Columbia Pictures','Netflix'],['TriStar Pictures','Netflix'],['Screen Gems','Netflix'],['Sony Pictures Animation','Netflix'],['Paramount Pictures','Paramount+'],['A24','HBO Max'],['Lionsgate','Starz'],['Summit Entertainment','Starz'],['DC Studios','HBO Max'],['New Line Cinema','HBO Max'],['Pixar Animation Studios','Disney+'],['Marvel Studios','Disney+'],['Lucasfilm','Disney+'],['Walt Disney Animation Studios','Disney+'],['Walt Disney Pictures','Disney+'],['20th Century Studios','Hulu / Disney+'],['Searchlight Pictures','Hulu / Disney+'],['NEON','Hulu'],['MGM','Prime Video'],['Apple Original Films','Apple TV']]) {
+   const result=model.predict(movie([company]),{usTheatricalDate:'2026-06-01',today:'2026-09-22'});
+   assert.equal(result.status,'ESTIMATE',company); assert.ok(result.how.startsWith('Likely '+service+' ('),company);
+ }
+ for(const companies of [['Independent'],['Legendary Entertainment'],['Legendary Entertainment','Paramount Pictures'],['A24','Paramount Pictures']]) assert.equal(model.predict(movie(companies)).status,'UNKNOWN');
+});
+test('date estimates preserve ranges and separate sequential windows',()=>{
+ const options={usTheatricalDate:'2026-06-01',today:'2026-09-22'};
+ const universal=model.predict(movie(['Universal Pictures']),options);
+ assert.equal(universal.windows.map(x=>x.window).join(','),'Pay-1A,Pay-1B,Pay-1C');
+ assert.equal(universal.windows.map(x=>x.services[0]).join(','),'Peacock,Netflix,Peacock');
+ assert.equal(universal.windows[0].estimatedDates[0],'2026-09-29');
+ assert.equal(universal.windows[1].estimatedDates[0],'2027-01-27');
+ assert.equal(universal.windows[2].estimatedDates,null);
+ const warner=model.predict(movie(['New Line Cinema']),options);
+ assert.equal(warner.windows[0].estimatedDates.join(','),'2026-08-10,2026-08-30');
+ assert.match(warner.how,/2026-08-10–2026-08-30/);
+ assert.equal(model.predict(movie(['Columbia Pictures']),options).windows[1].window,'Pay-2');
+ assert.equal(model.predict(movie(['Columbia Pictures']),{...options,usTheatricalDate:'2027-01-01'}).windows.length,1);
+ assert.equal(model.predict(movie(['Universal Pictures'])).windows[0].estimatedDates,null);
+ assert.equal(model.predict(movie(['Universal Pictures']),{...options,usTheatricalDate:'2000-01-01'}).status,'UNKNOWN');
+});
+test('verified title dates, rights and distributor precede company clues; rental dates are ignored',()=>{
+ const input=movie(['Paramount Pictures']);
+ const titleRights={source:'https://example.com/official',services:['Netflix'],officialDate:'2026-10-01'};
+ assert.equal(model.predict(input,{titleRights,available:'Peacock'}).status,'OFFICIAL');
+ assert.match(model.predict(input,{titleRights}).how,/Netflix.*official 2026-10-01/);
+ assert.equal(model.predict(input,{titleRights:{...titleRights,officialDate:''}}).status,'RIGHTS');
+ assert.match(model.predict(input,{distributor:'Columbia Pictures'}).how,/Likely Netflix/);
+ assert.equal(model.predict(input,{distributor:'Independent'}).status,'UNKNOWN');
+ assert.equal(model.predict(input,{titleRights:{...titleRights,source:''}}).status,'ESTIMATE');
+ assert.doesNotMatch(model.predict(input,{digitalReleaseDate:'2026-10-01'}).how,/2026-10-01/);
 });
 
 test('unresolved checks keep previous How with one marker, successful checks replace it',()=>{

@@ -67,6 +67,22 @@
     const raw = await request('movie/' + id + '/watch/providers', {}, signal);
     return { how: streamingNames(raw), raw: raw };
   }
+  function usTheatricalDate(data) {
+    if (!Array.isArray(data?.results)) throw new Error('TMDB returned invalid release-date data.');
+    const us = data.results.find(function (region) { return region.iso_3166_1 === 'US'; });
+    if (!us) return '';
+    if (!Array.isArray(us.release_dates)) throw new Error('TMDB returned invalid release-date data.');
+    // Prefer the nationwide theatrical opening; limited theatrical is the fallback.
+    for (const type of [3, 2]) {
+      const dates = us.release_dates.filter(function (entry) { return entry.type === type; }).map(function (entry) { return App.movies.date(String(entry.release_date || '').slice(0, 10)); }).filter(Boolean).sort();
+      if (dates.length) return dates[0];
+    }
+    return '';
+  }
+  async function theatricalDate(id, signal) {
+    if (!/^\d+$/.test(String(id)) || Number(id) < 1) throw new Error('Enter a numeric TMDB movie ID.');
+    return usTheatricalDate(await request('movie/' + id + '/release_dates', {}, signal));
+  }
   async function streaming(id, signal) { return (await streamingResponse(id, signal)).how; }
-  App.tmdb = { remembered: remembered, detailsResponse: detailsResponse, streamingResponse: streamingResponse, streaming: streaming, streamingNames: streamingNames, token: token, saveToken: saveToken, forget: forget, search: search, details: details };
+  App.tmdb = { theatricalDate: theatricalDate, usTheatricalDate: usTheatricalDate, remembered: remembered, detailsResponse: detailsResponse, streamingResponse: streamingResponse, streaming: streaming, streamingNames: streamingNames, token: token, saveToken: saveToken, forget: forget, search: search, details: details };
 })();
