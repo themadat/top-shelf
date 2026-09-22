@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.48.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.49.
 
 ## Workflows
 
@@ -161,3 +161,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.46: Optional movie.tmdbAverage stores TMDB vote_average on its native 0–10 scale, null if vote_count is zero/missing. Wishlist alone displays sortable/resizable TMDB Avg /10 after priority. New/editor lookups populate it; Wishlist Update Ratings refreshes existing entries sequentially with recovery, cancellation, stale-edit guards and partial-save error reporting. Personal rating and How remain unchanged. Update older clients before syncing to avoid dropping the new optional field.
 
 0.0.1.47: Compact pivot subsection headings use theme accent-strong text, accent-soft background and an accent top border.
+
+0.0.1.48: Wishlist average column is labelled Ave. TMDB scores use the shared red-to-green badge mapped from 0–10, retain numeric text and an out-of-10 accessible label, with missing values neutral.
