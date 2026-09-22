@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.37",
-      "buildId": "0.0.1.37",
+      "version": "0.0.1.38",
+      "buildId": "0.0.1.38",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.38", "date": "2026-09-22T12:00:00.000Z", "title": "How Provider Priorities", "summary": "Color and order streaming providers by your preferences.", "features": ["Green, yellow and red provider labels with priority sorting"], "improvements": ["Shortened provider aliases", "Larger Notes and Review/Notes editors", "Removed Movie Preferences from Info"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.37", "date": "2026-09-22T12:00:00.000Z", "title": "Preserve Sync Direction After Updates", "summary": "Recognize an unchanged GitHub revision when app upgrades change normalized data fingerprints.", "features": [], "improvements": [], "fixes": ["Keep pending local uploads from becoming false conflicts after updates", "Preserve conflict checks for changed remote revisions and targets"], "knownIssues": []},
       {"version": "0.0.1.36", "date": "2026-09-22T12:00:00.000Z", "title": "Movies for Analysis", "summary": "Copy all saved movie details for analysis in an LLM.", "features": ["Settings Info movie export with preview and Copy All Movies"], "improvements": ["Alphabetical JSON includes Wishlist and Watched regardless of filters"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.35", "date": "2026-09-22T12:00:00.000Z", "title": "Starred People and Legacy Ratings", "summary": "Star actors, directors, and companies into Other Pivots.", "features": ["Stars for actors, directors, and companies", "Separate numeric and legacy sections in Ratings"], "improvements": [], "fixes": [], "knownIssues": []},

@@ -62,7 +62,7 @@ test('incomplete metadata detects any requested gap and ignores optional fields'
 
 test('How normalization shortens providers and estimates without losing personal notes',()=>{
  const api=context.window.LocalApp.movies;
- assert.equal(api.cleanHow('Amazon Prime Video, Amazon Prime Video with Ads, Kanopy (free), Plex Channel (ads), Plex (ads)'), 'Prime, Kanopy, Plex');
+ assert.equal(api.cleanHow('Amazon Prime Video, Amazon Prime Video with Ads, Kanopy (free), Plex Channel (ads), Plex (ads)'), 'Prime, Plex, Kanopy');
  assert.equal(api.cleanHow('Likely Hulu / Disney+ (US; estimated 2032-02-17–2032-04-17; company-based)'), 'Likely Hulu / Disney+ (~ 2032-02-17 to 04-17)');
  assert.equal(api.cleanHow('Likely Netflix (US; estimated 2032-12-17–2033-04-17; distributor-based)'), 'Likely Netflix (~ 2032-12-17 to 2033-04-17)');
  assert.equal(api.cleanHow('No US streaming listed; destination unknown'), '');
@@ -72,4 +72,16 @@ test('How normalization shortens providers and estimates without losing personal
  assert.equal(api.cleanHow('constructor'), 'constructor');
  assert.equal(api.incomplete({...movie([]),incompleteOverride:true}), false);
  assert.equal(api.normalize({id:'1',tmdbId:1,status:'wishlist',title:'Example',incompleteOverride:true}).incompleteOverride,true);
+});
+
+test('How priority normalizes aliases, preserves estimates and ranks mixed providers',()=>{
+ const api=context.window.LocalApp.movies;
+ assert.equal(api.cleanHow('Netflix, Cineverse (ads), Apple TV+, Howdy Amazon Channel, Disney+, Fandango at Home Free (ads)'), 'Apple TV, Cineverse, Fandango, Disney+, Netflix, Howdy');
+ assert.equal(api.cleanHow('* Likely Disney+ / Hulu (~ 2032-02-17 to 04-17)'), '* Likely Hulu / Disney+ (~ 2032-02-17 to 04-17)');
+ assert.equal(api.cleanHow('Filmzie (ads), JustWatch TV (free), Mometu (ads), IndieFlix Shorts Amazon Channel, Shout! Factory Amazon Channel, Sony Pictures Core Amazon Channel'), 'Filmzie, JustWatch TV, Mometu, IndieFlix, Shout!, Sony');
+ for(const [name,color] of [['* Apple TV','green'],['Likely Netflix (~ 2027-01-01)','yellow'],['YouTube TV','red'],['YouTube','green'],['personal note','neutral'],['constructor','neutral']]) assert.equal(api.howProvider(name).color,color);
+ const rows=['', 'Unknown', 'Netflix', 'Starz', 'Hulu, Apple TV', 'Disney+', 'Prime'].map(how=>({how,title:how}));
+ assert.equal(rows.sort((a,b)=>api.compare(a,b,{key:'how',direction:'asc'})).map(x=>x.how).join('|'),'Hulu, Apple TV|Prime|Disney+|Netflix|Starz|Unknown|');
+ assert.equal(rows.sort((a,b)=>api.compare(a,b,{key:'how',direction:'desc'})).at(-1).how,'');
+ const once=api.cleanHow('* Netflix, Plex (ads), The Roku Channel, Plex Channel');assert.equal(api.cleanHow(once),once);
 });

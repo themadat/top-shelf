@@ -4,6 +4,16 @@
   const historicalRatings = Object.freeze({ "100!": 5, YES: 4, MEH: 3, NO: 2, RUN: 1 });
   // Normalize known provider labels while preserving personal How notes.
   const howAliases = {"amazon prime video": "Prime", "amazon prime video with ads": "Prime", "amazon prime video free with ads": "Prime", "prime video": "Prime", "kanopy": "Kanopy", "hoopla": "Hoopla", "youtube free": "YouTube", "tubi tv": "Tubi", "amc plus apple tv channel": "AMC+", "amc+ amazon channel": "AMC+", "amc+ roku premium channel": "AMC+", "starz apple tv channel": "Starz", "starz amazon channel": "Starz", "apple tv amazon channel": "Apple TV", "cinemax amazon channel": "Cinemax", "cinemax apple tv channel": "Cinemax", "fawesome": "Fawesome", "plex": "Plex", "plex channel": "Plex", "mgm+ amazon channel": "MGM+", "mgm plus roku premium channel": "MGM+", "mgm plus": "MGM+", "the roku channel": "Roku", "hbo max amazon channel": "HBO Max", "lionsgate+ amazon channels": "Lionsgate+", "moviesphere+ amazon channel": "MovieSphere+", "vix": "VIX", "netflix standard with ads": "Netflix", "paramount plus premium": "Paramount+", "paramount plus essential": "Paramount+", "paramount+ amazon channel": "Paramount+", "paramount+ roku premium channel": "Paramount+", "peacock premium": "Peacock", "peacock premium plus": "Peacock"};
+  const howGroups = [["green", ["Apple TV", "HBO Max", "Hulu", "Prime", "Paramount+", "Peacock", "Plex", "Roku", "Pluto", "TBS", "TNT", "tru TV", "Tubi", "YouTube", "Kanopy", "Hoopla", "Fawesome", "Cineverse", "Fandango", "Filmzie", "JustWatch TV", "Mometu"]], ["yellow", ["Disney+", "Netflix"]], ["red", ["AMC+", "Cinemax", "fuboTV", "BBC America", "Brewhouse", "History Vault", "Howdy", "IndieFlix", "Lionsgate+", "MGM+", "MovieSphere+", "Philo", "Shout!", "Showtime", "Sony", "Starz", "Sundance Now", "YouTube TV"]]];
+  Object.assign(howAliases, {"apple tv+": "Apple TV", "appletv+": "Apple TV", "max": "HBO Max", "pluto tv": "Pluto", "trutv": "tru TV", "fandango at home free": "Fandango", "howdy amazon channel": "Howdy", "indieflix shorts amazon channel": "IndieFlix", "shout! factory amazon channel": "Shout!", "sony pictures core amazon channel": "Sony"});
+  const howProviders = new Map();
+  howGroups.forEach(function (group) { group[1].forEach(function (name) { howAliases[name.toLowerCase()] = name; howProviders.set(name.toLowerCase(), { name: name, color: group[0], rank: howProviders.size }); }); });
+  function howProvider(value) {
+    const name = value.trim().replace(/^\*+\s*/, '').replace(/^Likely /, '').replace(/ \(.*$/, '').toLowerCase();
+    return howProviders.get((Object.prototype.hasOwnProperty.call(howAliases, name) ? howAliases[name] : name).toLowerCase()) || { color: 'neutral', rank: howProviders.size };
+  }
+  function howRank(value) { return Math.min.apply(null, String(value || '').split(/,| \/ /).map(function (part) { return howProvider(part).rank; })); }
+  function compareHow(a, b) { return howRank(a) - howRank(b) || a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }); }
   function cleanHow(value) {
     let text = u.cleanLine(value, 2000);
     if (text.replace(/^\*\s*/, '') === 'No US streaming listed; destination unknown') return '';
@@ -11,15 +21,19 @@
       .replace(/(\d{4}-\d{2}-\d{2})–(\d{4}-\d{2}-\d{2})/g, function (_, start, end) { return start + ' to ' + (start.slice(0, 4) === end.slice(0, 4) ? end.slice(5) : end); })
       .replace('date unknown (no US theatrical date)', 'date unknown');
     const marker = /^\*/.test(text) ? '* ' : '';
+    const likely = /^(?:\*+\s*)?Likely /.test(text) ? 'Likely ' : '';
+    const suffix = text.match(/ \(~ .*\)$/)?.[0] || '';
+    if (suffix) text = text.slice(0, -suffix.length);
+    text = text.replace(/^(\*+\s*)?Likely /, '$1');
     text = text.replace(/^\*+\s*/, '');
     const seen = new Set();
-    return marker + text.split(',').map(function (part) {
+    return marker + likely + text.split(',').map(function (part) {
       return part.trim().split(' / ').map(function (item) {
         const match = /^(Likely )?(.*?)( \(~ .*\))?$/.exec(item);
         const name = match[2].replace(/ \((?:free|ads)\)$/, '');
         return (match[1] || '') + (Object.prototype.hasOwnProperty.call(howAliases, name.toLowerCase()) ? howAliases[name.toLowerCase()] : match[2]) + (match[3] || '');
-      }).join(' / ');
-    }).filter(function (part) { const key = part.toLowerCase(); if (!part || seen.has(key)) return false; seen.add(key); return true; }).join(', ');
+      }).sort(function (a, b) { return howRank(a) - howRank(b); }).join(' / ');
+    }).filter(function (part) { const key = part.toLowerCase(); if (!part || seen.has(key)) return false; seen.add(key); return true; }).sort(function (a, b) { return howRank(a) - howRank(b); }).join(', ') + suffix;
   }
   function date(value) {
     const text = u.cleanLine(value, 10);
@@ -123,7 +137,7 @@
     };
     const missing = function (v) { return v == null || v === '' || (typeof v === 'string' && /^(--|—)$/.test(v.trim())); };
     const av = value(a, preference.key), bv = value(b, preference.key);
-    return Number(missing(av)) - Number(missing(bv)) || (missing(av) && missing(bv) ? 0 : (typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base', numeric: true })) * (preference.direction === 'asc' ? 1 : -1)) || a.title.localeCompare(b.title);
+    return Number(missing(av)) - Number(missing(bv)) || (missing(av) && missing(bv) ? 0 : (preference.key === 'how' ? compareHow(String(av), String(bv)) : typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base', numeric: true })) * (preference.direction === 'asc' ? 1 : -1)) || a.title.localeCompare(b.title);
   }
   function color(value, priority) {
     const fraction = priority ? (5 - Number(value)) / 4 : Number(value) / 5;
@@ -140,5 +154,5 @@
       movies: entries
     }, null, 2);
   }
-  App.movies = { analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  App.movies = { howProvider: howProvider, howRank: howRank, analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
 })();
