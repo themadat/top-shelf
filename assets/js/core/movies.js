@@ -143,7 +143,7 @@
   }
   function averageBand(value) {
     if (typeof value !== 'number' || !Number.isFinite(value)) return 'neutral';
-    return ['purple', 'red', 'orange', 'yellow', 'yellow-green', 'green', 'dark-green'][Math.min(6, Math.max(0, Math.floor(value * 7 / 10)))];
+    return ['purple', 'red', 'orange', 'yellow', 'yellow-green', 'green', 'dark-green'][Math.min(6, Math.max(0, Math.floor(value - 3)))];
   }
   function color(value, priority) {
     const fraction = priority ? (5 - Number(value)) / 4 : Number(value) / 5;

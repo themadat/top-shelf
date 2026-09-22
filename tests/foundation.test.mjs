@@ -135,3 +135,9 @@ test('TMDB average is independent of personal rating and survives normalization'
  assert.equal(App.stateModel.normalize(JSON.parse(JSON.stringify(state))).workspace.movies[0].tmdbAverage,7.35);
  assert.ok(App.movies.compare({title:'A',tmdbAverage:7.3},{title:'B',tmdbAverage:8.1},{key:'tmdbAverage',direction:'desc'})>0);
 });
+
+test('Ave color bands floor at 3 and step through seven one-point ranges',()=>{
+ const band=App.movies.averageBand;
+ for(const [value,expected] of [[0,'purple'],[2.9,'purple'],[3,'purple'],[3.99,'purple'],[4,'red'],[5,'orange'],[6,'yellow'],[7,'yellow-green'],[8,'green'],[9,'dark-green'],[10,'dark-green']]) assert.equal(band(value),expected,String(value));
+ assert.equal(band(null),'neutral');
+});

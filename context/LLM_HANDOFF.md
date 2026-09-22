@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.51.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.52.
 
 ## Workflows
 
@@ -167,3 +167,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.49: Ave uses seven equal 10/7-wide bands, low-to-high purple/red/orange/yellow/yellow-green/green/dark-green; 10 stays in the top band. Custom user SVG is updateRatings. Desktop movie search caps at 190px and actions stay on one row at >=1100px.
 
 0.0.1.50: Inline Priority selects the current text and requests numeric input. Priority/rating scales use stronger saturation; Ave retains seven equal bands with more distinct colors. Watched How cells render escaped plain text in both All and Watched; Wishlist retains provider highlights.
+
+0.0.1.51: Ave bands floor at 3: <4 purple, 4–<5 red, 5–<6 orange, 6–<7 yellow, 7–<8 yellow-green, 8–<9 green, 9–10 dark-green. Numeric values remain unchanged. Desktop search fills remaining width between toggles/actions. Wishlist collapsed details share rows when space permits; reduced padding/gaps bring table closer to toolbar.

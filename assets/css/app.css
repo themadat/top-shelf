@@ -1149,7 +1149,15 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .ave-red { background: #bd202b; color: #fff; }
 .ave-purple { background: #7426a5; color: #fff; }
 @media (min-width: 1100px) {
-  .movie-toolbar:not(.showing-pivots) { grid-template-columns: auto auto minmax(110px, 190px) minmax(0, 1fr); gap: .3rem; }
+  .movie-toolbar:not(.showing-pivots) { grid-template-columns: auto auto minmax(110px, 1fr) auto; gap: .3rem; }
   .movie-toolbar:not(.showing-pivots) .movie-add { max-width: none; flex-wrap: nowrap; gap: .2rem; }
   .movie-toolbar:not(.showing-pivots) .movie-add > .button { padding-left: .4rem; padding-right: .4rem; }
 }
+
+.movie-toolbar:not(.showing-pivots) { margin-bottom: .15rem; }
+.wishlist-streaming { gap: .15rem .65rem; padding: .15rem .35rem; }
+#wishlistStreamingStatus:empty { display: none; }
+.wishlist-streaming-rules { flex-basis: auto; }
+.wishlist-streaming-rules[open] { flex-basis: 100%; }
+.wishlist-streaming-rules summary { padding: .1rem 0; }
+.wishlist-streaming-rules ul:empty { margin: 0; }
