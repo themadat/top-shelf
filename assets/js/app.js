@@ -1024,6 +1024,7 @@
     portability.init();
     bindShelfNavigation();
     App.moviesUI.init();
+    App.subgenresUI.init();
     App.pivotsUI.init();
     bindGeneralEvents();
     bindRuntimeEvents();

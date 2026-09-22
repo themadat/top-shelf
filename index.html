@@ -12,27 +12,29 @@
   <meta name="apple-mobile-web-app-title" content="Top Shelf">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Top Shelf</title>
-  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.24">
-  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/icons/favicon.svg?v=0.0.1.24">
-  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.24">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.24" media="(prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.24" media="(prefers-color-scheme: dark)">
-  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.24">
-  <script defer src="assets/js/config.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/icons.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/utils.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/movies.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/pivots.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/tmdb.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/state.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/storage.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/components.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/portability.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/sync.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/core/pwa.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/movies-ui.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/pivots-ui.js?v=0.0.1.24"></script>
-  <script defer src="assets/js/app.js?v=0.0.1.24"></script>
+  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.25">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/icons/favicon.svg?v=0.0.1.25">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.25">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.25" media="(prefers-color-scheme: light)">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.25" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.25">
+  <script defer src="assets/js/config.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/icons.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/utils.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/movies.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/pivots.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/tmdb.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/state.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/storage.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/components.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/portability.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/sync.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/pwa.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/core/subgenres.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/subgenres-ui.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/movies-ui.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/pivots-ui.js?v=0.0.1.25"></script>
+  <script defer src="assets/js/app.js?v=0.0.1.25"></script>
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Skip to main content</a>
@@ -40,12 +42,12 @@
   <header class="app-header">
     <div class="title-cluster">
       <button id="appIconButton" class="app-icon-button" type="button" aria-label="Switch color theme. Press and hold to toggle Developer Mode" title="Switch color theme · Press and hold for Developer Mode" aria-keyshortcuts="T Control+Alt+Shift+T" data-shortcut="T">
-        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.24" alt="">
+        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.25" alt="">
       </button>
       <div class="identity-copy">
         <span id="appName" class="app-name">Top Shelf</span>
         <div class="identity-pill-row">
-          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V Control+Alt+Shift+V" data-shortcut="V">V0.0.1.24</button>
+          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V Control+Alt+Shift+V" data-shortcut="V">V0.0.1.25</button>
           <span id="betaPill" class="environment-pill beta-pill" title="This is the beta application" hidden>BETA</span>
         </div>
       </div>
@@ -111,7 +113,7 @@
           <label>Baseline<input id="pivotBaseline" type="number" min="0" max="5" step="any" value="3" aria-label="Score Baseline"></label>
           <label>Weight<input id="pivotWeight" type="number" min="0" max="1000" step="any" value="5" aria-label="Score Weight"></label>
         </div>
-        <div class="movie-add"><button type="button" class="button" id="bulkPivotsButton"><span aria-hidden="true" data-symbol="group"></span><span>Bulk Pivots</span></button><button type="button" class="button primary" data-add-movie><span aria-hidden="true" data-symbol="add"></span><span>Add Movie</span></button></div>
+        <div class="movie-add"><button type="button" class="button" id="subgenreReviewButton">Need Subgenre Review</button><button type="button" class="button" id="bulkPivotsButton"><span aria-hidden="true" data-symbol="group"></span><span>Bulk Pivots</span></button><button type="button" class="button primary" data-add-movie><span aria-hidden="true" data-symbol="add"></span><span>Add Movie</span></button></div>
       </div>
       <div id="movieListView"><div id="wishlistStreaming" class="wishlist-streaming" hidden><button type="button" class="button small" id="wishlistStreamingButton">Find US Streaming</button><span id="wishlistStreamingStatus" role="status"></span><small>Availability: <a href="https://www.justwatch.com/us" target="_blank" rel="noopener noreferrer">JustWatch</a> via <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer">TMDB</a> · US · Subscription, free, and ads</small></div><div id="movieList" class="movie-list"></div></div>
       <section id="moviePivotsView" aria-label="Watched Movie Pivots" hidden>
@@ -127,6 +129,23 @@
   </main>
 
 
+
+  <dialog id="subgenreReviewDialog" class="app-dialog movie-dialog" aria-labelledby="subgenreReviewTitle">
+    <div class="dialog-shell">
+      <header class="dialog-header"><h2 id="subgenreReviewTitle">Need Subgenre Review</h2><button type="button" class="icon-button" data-close-dialog="subgenreReviewDialog" aria-label="Close subgenre review"><span data-symbol="close" aria-hidden="true"></span></button></header>
+      <div class="dialog-body">
+        <p>Export the movies below and your supported subgenres for an LLM. Import its JSON response here to preview and apply updates. Movies reviewed with no matching subgenre also leave this queue.</p>
+        <p>Existing movies were treated as reviewed when this feature was introduced. New movies need review. This queue includes Wishlist and Watched, regardless of list filters.</p>
+        <p id="subgenreReviewSummary" role="status"></p>
+        <details><summary>Supported Subgenres</summary><ul id="subgenreVocabulary"></ul></details>
+        <details open><summary>Movies Needing Review</summary><ul id="subgenreQueue"></ul></details>
+        <button type="button" class="button" id="subgenreExport">Export LLM Review Request</button>
+        <label>Import LLM Results<input id="subgenreImport" type="file" accept=".json,application/json"></label>
+        <p id="subgenreError" role="alert"></p><div id="subgenrePreview" aria-live="polite"></div>
+      </div>
+      <footer class="dialog-footer"><button type="button" class="button" data-close-dialog="subgenreReviewDialog">Close</button><button type="button" class="button primary" id="subgenreApply" disabled>Apply Reviewed Updates</button></footer>
+    </div>
+  </dialog>
 
   <dialog id="bulkPivotsDialog" class="app-dialog movie-dialog" aria-labelledby="bulkPivotsTitle">
     <form id="bulkPivotsForm" class="dialog-shell">
@@ -149,6 +168,7 @@
 </section>
         <p id="movieError" class="inline-status warning" role="alert"></p>
         <div class="movie-state-row"><span>State</span><input id="movieStatus" name="status" type="hidden" value="wishlist"><div class="segmented" role="group" aria-label="Movie State"><button type="button" data-editor-state="wishlist" aria-pressed="true">Wishlist</button><button type="button" data-editor-state="watched" aria-pressed="false">Watched</button></div><button type="button" id="movieLookupSettingsButton" class="button small">Lookup Settings</button></div>
+        <label class="checkbox-row"><input name="subgenreReviewed" type="checkbox">Subgenres Reviewed</label>
         <div class="movie-fields movie-identity-row"><label><span>Title</span><input id="movieTitle" name="title" required maxlength="200"></label><label><span>How</span><input name="how" maxlength="300" placeholder="US streaming, cinema, disc…"></label><label><span>Other Pivots</span><textarea name="other" rows="1" maxlength="4000" placeholder="Tags, Subgenre Time Travel"></textarea></label></div>
         <p id="movieStreamingStatus" role="status" class="movie-muted"></p>
         <fieldset id="wishlistFields" class="movie-fields"><legend>Wishlist</legend><label><span>Priority <small>1 is highest</small></span><span id="moviePriorityPreview" class="movie-input-preview"><input name="priority" type="number" min="1" max="5" step="1" placeholder="1–5"></span></label><label><span>Available Date <small>optional</small></span><input type="date" name="availableDate"></label><label class="movie-full"><span>Review/Notes <small>optional</small></span><textarea name="notes" rows="2" maxlength="20000"></textarea></label></fieldset>
@@ -262,7 +282,7 @@
           </section>
 
           <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden>
-            <div class="support-section-title"><span aria-hidden="true" data-symbol="releaseNotes"></span><div><span class="eyebrow">Current version <strong id="releaseCurrentVersion">v0.0.1.24</strong></span><h3>Release Notes</h3></div></div>
+            <div class="support-section-title"><span aria-hidden="true" data-symbol="releaseNotes"></span><div><span class="eyebrow">Current version <strong id="releaseCurrentVersion">v0.0.1.25</strong></span><h3>Release Notes</h3></div></div>
             <div id="releaseContent" class="release-list"></div><details class="settings-section"><summary>Stripes Movie Database — Spreadsheet History</summary><p>Legacy spreadsheet versions, separate from Top Shelf releases. All entries by Adam Lauer.</p><h4>1.5.0 · 2024-09-18</h4><ul><li>Updated Watch column format for better sorting.</li><li>Improved scripts: variable handling/scoping, success logic in movie updates, and a fix for the optional date-update column.</li></ul><h4>1.4.0 · 2024-06-19</h4><ul><li>Added a validation check in column A of Movies to ensure each row has its formulas.</li><li>Added Loop and Time Travel manual pivots.</li></ul><h4>1.3.0 · 2023-11-13</h4><ul><li>Pivots: added Actors and Directors groupings, thresholds and counts, and better formatting.</li><li>UpdatePivots: added a threshold on gets, refactored to be more generic, and added sortPivots after updating.</li></ul><h4>1.2.0 · 2023-11-12</h4><ul><li>Movies: added duplicate detection and resolved existing issues; changed 💯 rating to 100!; improved How column formula.</li></ul><h4>1.1.0 · 2023-11-11</h4><ul><li>Added a Notes tab with a programming-esque information format.</li><li>Movies: better formatting. Pivots: column groupings and better formatting.</li><li>UpdateUtilities: combined Constants and Utilities, refactored and cleaned up syntax, added SheetNames, Columns, and ColorHex.</li><li>UpdateMovies and UpdatePivots: refactored and cleaned up syntax.</li></ul><h4>1.0.0 · 2023-11-10</h4><ul><li>Initial creation with Movies and Pivots tabs.</li></ul></details>
           </section>
 

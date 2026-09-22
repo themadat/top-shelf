@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 4;
-  // Older builds reject this envelope instead of dropping synced pivot settings.
-  const SYNC_SCHEMA_VERSION = 8;
+  const SYNC_VERSION = 5;
+  // Older builds reject this envelope instead of dropping synced subgenre review status.
+  const SYNC_SCHEMA_VERSION = 9;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -265,7 +265,13 @@
     if (appearance?.accent2 === "#b86b4b") appearance.accent2 = config.themeDefaults.accent2;
     return source;
   }
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5 };
+  function migrate5to6(input) {
+    const source = u.clone(input);
+    source.schemaVersion = 6;
+    (source.workspace?.movies || []).forEach(function (movie) { if (!movie.deleted && movie.subgenreReviewed === undefined) movie.subgenreReviewed = true; });
+    return source;
+  }
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -609,7 +615,8 @@
     const legacyContent = input.syncFormat === SYNC_FORMAT && input.syncVersion === 1 && input.schemaVersion === 5;
     const priorMovies = input.syncFormat === SYNC_FORMAT && input.syncVersion === 2 && input.schemaVersion === 6;
     const priorPivots = input.syncFormat === SYNC_FORMAT && input.syncVersion === 3 && input.schemaVersion === 7;
-    if (!legacyContent && !priorMovies && !priorPivots && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const priorReview = input.syncFormat === SYNC_FORMAT && input.syncVersion === 4 && input.schemaVersion === 8;
+    if (!legacyContent && !priorMovies && !priorPivots && !priorReview && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
       || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorMovies || priorPivots ? [] : ["pivotSettings"])).includes(key); })
@@ -625,12 +632,12 @@
     const state = normalize({
       workspace: {
         documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(data.notes || "").replace(/\n/g, "<br>") }],
-        movies: App.movies.normalizeList(data.movies),
+        movies: App.movies.normalizeList((data.movies || []).map(function (movie) { return legacyContent || priorMovies || priorPivots || priorReview ? Object.assign({ subgenreReviewed: true }, movie) : movie; })),
         pivotSettings: normalizePivotSettings(data.pivotSettings),
         records: data.records || []
       }
     });
-    return { state: state, legacy: legacyContent || priorMovies || priorPivots, migrations: [], validation: validate(state) };
+    return { state: state, legacy: legacyContent || priorMovies || priorPivots || priorReview, migrations: [], validation: validate(state) };
   }
 
   function applySync(localState, remoteState) {

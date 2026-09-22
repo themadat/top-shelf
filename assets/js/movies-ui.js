@@ -9,7 +9,7 @@
   let filter = "all", query = "";
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
-  function fields() { const form = $("#movieForm"); return Object.fromEntries(new FormData(form).entries()); }
+  function fields() { const form = $("#movieForm"); return Object.assign(Object.fromEntries(new FormData(form).entries()), { subgenreReviewed: form.elements.subgenreReviewed.checked }); }
   function statusFields() {
     const watched = $("#movieStatus").value === "watched";
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.editorState === (watched ? 'watched' : 'wishlist'))); });
@@ -36,6 +36,7 @@
     draft = current ? u.clone(current) : { id: u.uid("movie"), status: status || (filter === "watched" ? "watched" : "wishlist") };
     $("#movieForm").reset();
     Object.entries(draft).forEach(function (entry) { const field = $("#movieForm").elements[entry[0]]; if (field) field.value = entry[1] == null ? "" : entry[1]; });
+    $("#movieForm").elements.subgenreReviewed.checked = draft.subgenreReviewed === true;
     $("#movieDialogTitle").textContent = current ? "Edit Movie" : "Add Movie";
     $("#movieLookupQuery").value = current ? String(current.tmdbId) : "";
     $("#movieLookupResults").innerHTML = ""; $("#movieError").textContent = "";

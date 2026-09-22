@@ -21,6 +21,7 @@
     if (historicalRating && !Object.hasOwn(historicalRatings, historicalRating)) throw new Error("Invalid historical rating.");
     const movie = {
       id: id, tmdbId: Number(v.tmdbId), title: u.cleanLine(v.title, 200), releaseDate: date(v.releaseDate),
+      subgenreReviewed: v.subgenreReviewed === true,
       how: u.cleanLine(v.how, 300), other: u.cleanText(v.other, 4000),
       genres: list(v.genres), productionCompanies: list(v.productionCompanies), directors: list(v.directors), actors: list(v.actors).slice(0, 10), collections: list(v.collections), starredCollections: list(v.starredCollections).filter(function (name) { return list(v.collections).includes(name); }),
       status: v.status === "watched" ? "watched" : "wishlist",

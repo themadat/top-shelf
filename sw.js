@@ -1,7 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "top-shelf-shell-0.0.1.24";
-const ASSET_VERSION = "0.0.1.24";
+const CACHE_NAME = "top-shelf-shell-0.0.1.25";
+const ASSET_VERSION = "0.0.1.25";
 const versioned = function (path) { return path + "?v=" + ASSET_VERSION; };
 const SHELL = [
   "./",
@@ -17,6 +17,8 @@ const SHELL = [
   versioned("./assets/js/pivots-ui.js"),
   versioned("./assets/js/core/tmdb.js"),
   versioned("./assets/js/movies-ui.js"),
+  versioned("./assets/js/core/subgenres.js"),
+  versioned("./assets/js/subgenres-ui.js"),
   versioned("./assets/js/core/state.js"),
   versioned("./assets/js/core/storage.js"),
   versioned("./assets/js/core/components.js"),

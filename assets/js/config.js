@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.24",
-      "buildId": "0.0.1.24",
+      "version": "0.0.1.25",
+      "buildId": "0.0.1.25",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -82,7 +82,7 @@
         "shortcut": "8"
       }
     ],
-    "schemaVersion": 5,
+    "schemaVersion": 6,
     "storage": {
       "stateKey": "topShelf.state.v5",
       "legacyKeys": ["topShelf.state.v4"],
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.25", "date": "2026-09-21T12:00:00.000Z", "title": "Subgenre Review Exchange", "summary": "Export pending movies and supported subgenres for LLM review, then preview and import its results.", "features": ["Need Subgenre Review queue with LLM instructions and JSON export", "Validated additive import with recovery and reviewed-with-no-match tracking", "Subgenres Reviewed checkbox in the movie editor"], "improvements": ["Existing movies migrate as reviewed; new movies start pending"], "fixes": [], "knownIssues": ["Update all app copies before syncing review status."]},
       {"version": "0.0.1.24", "date": "2026-09-21T12:00:00.000Z", "title": "Compact Movie Editor", "summary": "A compact movie editor with state toggles and US streaming suggestions.", "features": ["US streaming fills empty How fields after lookup", "TMDB source links in expandable Details"], "improvements": ["Lookup credentials moved to Settings", "Compact Title/How/Other Pivots and Rating/Legacy/Date rows", "Priority first, Review/Notes labels, and consistent control heights"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.23", "date": "2026-09-21T12:00:00.000Z", "title": "Wishlist Streaming Availability", "summary": "Fill empty Wishlist How fields with US streaming providers.", "features": ["TMDB US availability lookup with JustWatch attribution", "Find US Streaming checks missing How values without overwriting existing entries"], "improvements": ["Section shortcut numbers sit beside counts below the names"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.22", "date": "2026-09-21T12:00:00.000Z", "title": "Clear Bulk Pivot Issues", "summary": "Unmatched movies stand out before bulk pivots are applied.", "features": [], "improvements": ["Prominent issue count and labeled problem rows above matched movies", "Focus and scroll to errors after reviewing an unresolved batch"], "fixes": [], "knownIssues": []},
