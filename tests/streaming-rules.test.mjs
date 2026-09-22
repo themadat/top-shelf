@@ -15,3 +15,18 @@ test('bundled research estimates only supported unambiguous recent company match
  for(const input of [movie(['Universal Pictures'],'2000-01-01'),movie(['Universal Pictures'],''),movie(['Universal Pictures'],'2035-01-01'),movie(['Blumhouse Productions']),movie(['A24','Paramount Pictures'])])assert.equal(model.describe(input,'','2026-09-21'),'No US streaming listed; destination unknown');
  assert.match(model.describe(movie([' UNIVERSAL PICTURES ', 'Focus Features']),'','2026-09-21'),/^Likely Peacock/);
 });
+
+test('unresolved checks keep previous How with one marker, successful checks replace it',()=>{
+ const input={...movie([]),how:'Cinema'};
+ assert.equal(model.describe(input,'','2026-09-22'),'*Cinema');
+ input.how='*Cinema';assert.equal(model.describe(input,'','2026-09-22'),'*Cinema');
+ assert.equal(model.describe(input,'Netflix','2026-09-22'),'Netflix');
+ input.productionCompanies=['Universal Pictures'];assert.match(model.describe(input,'','2026-09-22'),/^Likely Peacock/);
+});
+test('incomplete metadata detects any requested gap and ignores optional fields',()=>{
+ const api=context.window.LocalApp.movies;
+ const complete={releaseDate:'2026-01-01',genres:['Drama'],actors:['Actor'],directors:['Director'],productionCompanies:['Studio']};
+ assert.equal(api.incomplete(complete),false);
+ for(const field of Object.keys(complete))assert.equal(api.incomplete({...complete,[field]:field==='releaseDate'?'':[]}),true);
+ const normalized=api.normalize({id:'1',tmdbId:1,title:'Long How',status:'wishlist',how:'*'+'x'.repeat(300)});assert.equal(normalized.how.length,301);
+});

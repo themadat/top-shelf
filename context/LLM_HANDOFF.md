@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.29.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.30.
 
 ## Workflows
 
@@ -123,3 +123,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.27: Movie form removes Lookup Settings, places Subgenres Reviewed with the comma-separated supported vocabulary in parentheses beside State (wraps on small screens), and uses priority toggle buttons 1–5 (repeat clears). Empty native dates show --/--/---- while unfocused. Notifications is below Appearance. TMDB responses use escaped collapsible object/array branches; Watch Providers defaults US open, other countries and rent/buy closed.
 
 0.0.1.28: Wishlist → Update Wishlist How explicitly checks all Wishlist movies independent of search and existing How. Recovery precedes the batch; sequential live US provider requests override static first-window company estimates in core/streaming-rules.js (dated/source-linked). Unknown/no-date/old catalog/conflicting studios remain unknown; no inferred date is saved. Existing How is replaced by this explicit action; entering Wishlist no longer auto-runs. Concurrent edits/open editors/status/ID changes are skipped. Stop cancels the request; completed updates persist, API/storage failures stop with progress. Built-in rules currently cover Universal, Sony, Paramount, A24 and Lionsgate; these are company-based clues, not confirmed rights.
+
+0.0.1.29: Unresolved Wishlist streaming checks retain existing How with one leading *; subsequent provider/likely results replace it. Blank or old generated unknown values remain unknown. How accepts 301 characters to retain a 300-character value plus marker. Incomplete is a session filter intersecting state/search and matches any missing releaseDate/genres/actors/directors/productionCompanies. Update Wishlist How is in the toolbar. How Values opens a copyable sorted unique list from all active movies, independent of filters.

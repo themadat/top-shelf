@@ -13,7 +13,8 @@
   ];
   function describe(movie, available, today) {
     if (available) return available;
-    const unknown = 'No US streaming listed; destination unknown';
+    const previous = (movie.how || '').trim();
+    const unknown = previous && previous.replace(/^\*+/, '') !== 'No US streaming listed; destination unknown' ? '*' + previous.replace(/^\*+/, '') : 'No US streaming listed; destination unknown';
     const date = App.movies.date(movie.releaseDate);
     if (!date) return unknown;
     const now = today || new Date().toISOString().slice(0, 10);

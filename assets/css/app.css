@@ -1090,3 +1090,7 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .wishlist-streaming-rules { flex-basis: 100%; font-size: .75rem; }
 .wishlist-streaming-rules p { margin: .4rem 0; }
 .wishlist-streaming-rules li { overflow-wrap: anywhere; }
+#movieIncompleteButton[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
+#movieHowValuesText { display: block; width: 100%; margin-top: .5rem; }
+.movie-toolbar .movie-add { display: flex; flex-wrap: wrap; gap: .25rem; max-width: 520px; }
+@media (max-width: 700px) { .movie-toolbar .movie-add { display: grid; } }

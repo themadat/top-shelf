@@ -51,7 +51,7 @@
   }
   let inlineEdit = null;
   let streamingBusy = false, streamingController = null;
-  let filter = "all", query = "";
+  let filter = "all", query = "", incompleteOnly = false;
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
   function fields() { const form = $("#movieForm"); return Object.assign(Object.fromEntries(new FormData(form).entries()), { subgenreReviewed: form.elements.subgenreReviewed.checked }); }
@@ -176,7 +176,7 @@
     input.setAttribute('aria-label', button.getAttribute('aria-label'));
     input.value = score && field === 'rating' && movie.historicalRating ? movie.historicalRating : movie[field] ?? '';
     if (score) { input.placeholder = field === 'rating' ? '0–5 or 100!, YES, MEH, NO, RUN' : '1–5'; }
-    else input.maxLength = field === 'other' ? 4000 : field === 'how' ? 300 : 20000;
+    else input.maxLength = field === 'other' ? 4000 : field === 'how' ? 301 : 20000;
     function restoreFocus() {
       const target = Array.from(document.querySelectorAll('[data-inline-id]')).find(function (item) { return item.dataset.inlineId === movie.id && item.dataset.inlineField === field; });
       (target || $('#movieSearch')).focus();
@@ -211,10 +211,11 @@
   }
   function render() {
     if (inlineEdit) return;
-    $('#wishlistStreaming').hidden = filter !== 'wishlist';
+    $('#wishlistStreaming').hidden = filter !== 'wishlist' && !streamingBusy && !$('#wishlistStreamingStatus').textContent;
     const items = saved(), wishlist = items.filter(function (movie) { return movie.status === "wishlist"; }).length;
     document.querySelectorAll("[data-movie-filter]").forEach(function (button) { const value = button.dataset.movieFilter; button.setAttribute("aria-pressed", String(filter === value)); button.querySelector("small").textContent = value === "all" ? items.length : value === "wishlist" ? wishlist : items.length - wishlist; });
-    const visible = items.filter(function (movie) { return (filter === "all" || movie.status === filter) && model.searchable(movie).includes(query.toLowerCase().trim()); });
+    const visible = items.filter(function (movie) { return (filter === "all" || movie.status === filter) && (!incompleteOnly || model.incomplete(movie)) && model.searchable(movie).includes(query.toLowerCase().trim()); });
+    $("#movieIncompleteButton").setAttribute("aria-pressed", String(incompleteOnly));
     const sort = sortPreference();
     visible.sort(function (a, b) { return model.compare(a, b, sort); });
     $('#movieSort').value = sort.key + ':' + sort.direction;
@@ -255,6 +256,7 @@
     if (!App.tmdb.token()) { lookupSettings($('#wishlistStreamingButton')); return; }
     const targets = saved().filter(function (movie) { return movie.status === 'wishlist'; }).map(function (movie) { return u.clone(movie); });
     const status = $('#wishlistStreamingStatus'), button = $('#wishlistStreamingButton');
+    $('#wishlistStreaming').hidden = false;
     if (!targets.length) { status.textContent = 'No Wishlist movies to check.'; return; }
     if (!App.storage.saveRecovery('Before updating Wishlist How')) { status.textContent = 'Could not save a recovery copy. No movies were changed.'; return; }
     streamingBusy = true; streamingController = new AbortController(); button.disabled = true; $('#wishlistStreamingCancel').hidden = false;
@@ -283,6 +285,7 @@
       status.textContent = 'Checked ' + checked + '/' + targets.length + '; ' + updated + ' updated; ' + estimated + ' estimates; ' + unknown + ' unknown; ' + skipped + ' changed or being edited, skipped.' + (failure ? ' Stopped: ' + failure : controller.signal.aborted ? ' Stopped. Completed updates are saved.' : ' Complete.');
     }
   }
+  function howValues() { return Array.from(new Set(saved().map(function (movie) { return movie.how; }).filter(Boolean))).sort(function (a, b) { return a.localeCompare(b); }).join('\n'); }
   function initBulkPivots() {
     let reviewed = null;
     function invalidate() { reviewed = null; $('#bulkPivotApply').disabled = true; $('#bulkPivotPreview').textContent = ''; $('#bulkPivotError').textContent = ''; $('#bulkPivotMovies').removeAttribute('aria-invalid'); }
@@ -333,6 +336,9 @@
   }
   function init() {
     initBulkPivots();
+    $('#movieIncompleteButton').addEventListener('click', function () { incompleteOnly = !incompleteOnly; render(); });
+    $('#movieHowValuesButton').addEventListener('click', function (event) { $('#movieHowValuesText').value = howValues(); App.components.openDialog('#movieHowValuesDialog', { trigger: event.currentTarget, focus: '#movieHowValuesText' }); });
+    $('#movieHowValuesCopy').addEventListener('click', async function () { const input = $('#movieHowValuesText'); input.value = howValues(); try { await navigator.clipboard.writeText(input.value); App.components.toast('How values copied.', { title: 'Copied', kind: 'success' }); } catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy List' }); } });
     document.querySelectorAll('[data-editor-priority]').forEach(function (button) { button.addEventListener('click', function () { const input = $('#movieForm').elements.priority; input.value = input.value === button.dataset.editorPriority ? '' : button.dataset.editorPriority; statusFields(); }); });
     $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.addEventListener('input', dateFields); input.addEventListener('change', dateFields); });
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); if (button.dataset.editorState === 'watched') $('#movieForm').elements.rating.focus(); else $('[data-editor-priority]').focus(); }); });

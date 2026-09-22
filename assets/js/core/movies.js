@@ -22,7 +22,7 @@
     const movie = {
       id: id, tmdbId: Number(v.tmdbId), title: u.cleanLine(v.title, 200), releaseDate: date(v.releaseDate),
       subgenreReviewed: v.subgenreReviewed === true,
-      how: u.cleanLine(v.how, 300), other: u.cleanText(v.other, 4000),
+      how: u.cleanLine(v.how, 301), other: u.cleanText(v.other, 4000),
       genres: list(v.genres), productionCompanies: list(v.productionCompanies), directors: list(v.directors), actors: list(v.actors).slice(0, 10), collections: list(v.collections), starredCollections: list(v.starredCollections).filter(function (name) { return list(v.collections).includes(name); }),
       status: v.status === "watched" ? "watched" : "wishlist",
       availableDate: date(v.availableDate), priority: number(v.priority), notes: u.cleanText(v.notes, 20000),
@@ -107,5 +107,6 @@
     return "hsl(" + Math.round(Math.max(0, Math.min(1, fraction)) * 120) + " 52% " + (priority ? "88%" : "25%") + ")";
   }
   function searchable(movie) { return [movie.title, movie.tmdbId, movie.how, movie.other, movie.notes, movie.review, movie.historicalRating].concat(movie.genres, movie.productionCompanies, movie.directors, movie.actors, movie.collections).join(" ").toLowerCase(); }
-  App.movies = { bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  function incomplete(movie) { return !movie.releaseDate || ["genres", "actors", "directors", "productionCompanies"].some(function (field) { return !movie[field]?.length; }); }
+  App.movies = { incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
 })();
