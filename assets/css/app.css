@@ -1140,3 +1140,16 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .movie-col-tmdbAverage .movie-cell { width: 88px; text-align: center; font-variant-numeric: tabular-nums; }
 
 .pivot-card .pivot-section-heading th { color: var(--accent-strong); background: var(--accent-soft); border-top-color: var(--accent); }
+
+.ave-dark-green { background: #175b32; color: #fff; }
+.ave-green { background: #a5d6a7; color: #173d20; }
+.ave-yellow-green { background: #d4e78b; color: #34420d; }
+.ave-yellow { background: #ffec89; color: #514100; }
+.ave-orange { background: #ffc078; color: #633100; }
+.ave-red { background: #b32624; color: #fff; }
+.ave-purple { background: #703b91; color: #fff; }
+@media (min-width: 1100px) {
+  .movie-toolbar:not(.showing-pivots) { grid-template-columns: auto auto minmax(110px, 190px) minmax(0, 1fr); gap: .3rem; }
+  .movie-toolbar:not(.showing-pivots) .movie-add { max-width: none; flex-wrap: nowrap; gap: .2rem; }
+  .movie-toolbar:not(.showing-pivots) .movie-add > .button { padding-left: .4rem; padding-right: .4rem; }
+}

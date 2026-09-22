@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.49.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.50.
 
 ## Workflows
 
@@ -163,3 +163,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.47: Compact pivot subsection headings use theme accent-strong text, accent-soft background and an accent top border.
 
 0.0.1.48: Wishlist average column is labelled Ave. TMDB scores use the shared red-to-green badge mapped from 0–10, retain numeric text and an out-of-10 accessible label, with missing values neutral.
+
+0.0.1.49: Ave uses seven equal 10/7-wide bands, low-to-high purple/red/orange/yellow/yellow-green/green/dark-green; 10 stays in the top band. Custom user SVG is updateRatings. Desktop movie search caps at 190px and actions stay on one row at >=1100px.

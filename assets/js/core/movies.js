@@ -141,6 +141,10 @@
     const av = value(a, preference.key), bv = value(b, preference.key);
     return Number(missing(av)) - Number(missing(bv)) || (missing(av) && missing(bv) ? 0 : (preference.key === 'how' ? compareHow(String(av), String(bv)) : typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base', numeric: true })) * (preference.direction === 'asc' ? 1 : -1)) || a.title.localeCompare(b.title);
   }
+  function averageBand(value) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return 'neutral';
+    return ['purple', 'red', 'orange', 'yellow', 'yellow-green', 'green', 'dark-green'][Math.min(6, Math.max(0, Math.floor(value * 7 / 10)))];
+  }
   function color(value, priority) {
     const fraction = priority ? (5 - Number(value)) / 4 : Number(value) / 5;
     return "hsl(" + Math.round(Math.max(0, Math.min(1, fraction)) * 120) + " 52% " + (priority ? "88%" : "25%") + ")";
@@ -156,5 +160,5 @@
       movies: entries
     }, null, 2);
   }
-  App.movies = { howProvider: howProvider, howRank: howRank, analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  App.movies = { averageBand: averageBand, howProvider: howProvider, howRank: howRank, analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
 })();

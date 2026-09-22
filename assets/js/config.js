@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.48",
-      "buildId": "0.0.1.48",
+      "version": "0.0.1.49",
+      "buildId": "0.0.1.49",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.49", "date": "2026-09-22T12:00:00.000Z", "title": "Average Rating Bands", "summary": "Seven rating bands and a tighter movie toolbar.", "features": [], "improvements": ["Seven equal Ave ranges from purple at 0 to dark green at 10", "Custom Update Ratings icon", "Narrower desktop search and single-row actions"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.48", "date": "2026-09-22T12:00:00.000Z", "title": "Wishlist Average Colors", "summary": "Color average ratings from red to green.", "features": [], "improvements": ["Ave column uses a 0–10 red-to-green scale with a labelled score"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.47", "date": "2026-09-22T12:00:00.000Z", "title": "Accent Pivot Headings", "summary": "Use the chosen accent color for pivot subsections.", "features": [], "improvements": ["Accent text, soft background and border on compact subsection headings"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.46", "date": "2026-09-22T12:00:00.000Z", "title": "Wishlist TMDB Ratings", "summary": "See average audience ratings beside Wishlist priority.", "features": ["Wishlist-only TMDB Avg /10 column", "Update Ratings fetches scores for saved Wishlist movies"], "improvements": ["TMDB averages are sortable and saved independently of personal ratings"], "fixes": [], "knownIssues": []},
