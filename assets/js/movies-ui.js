@@ -4,6 +4,40 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const esc = u.escapeHtml;
   let draft = null, lookupController = null, generation = 0;
+  let responseController = null, responseGeneration = 0, responses = {};
+  const TOKEN_MASK = '••••••••••••';
+  function tokenSettings() {
+    const configured = !!App.tmdb.token();
+    $('#tmdbToken').value = configured ? TOKEN_MASK : '';
+    $('#rememberTmdbToken').checked = configured ? App.tmdb.remembered() : true;
+    $('#tmdbCredentialStatus').textContent = configured ? 'Token saved in this browser. Enter a replacement to change it.' : 'No token saved. Credentials stay outside backups and sync.';
+  }
+  function resetResponses() {
+    responseGeneration++; responseController?.abort(); responseController = null; responses = {};
+    $('#movieResponseStatus').textContent = '';
+    renderResponses();
+  }
+  function renderResponses() {
+    $('#movieDetailsResponse').textContent = responses.details ? JSON.stringify(responses.details, null, 2) : 'No response loaded yet.';
+    $('#movieProvidersResponse').textContent = responses.providers ? JSON.stringify(responses.providers, null, 2) : 'No response loaded yet.';
+  }
+  async function loadResponses(force) {
+    if (!draft?.tmdbId) { $('#movieResponseStatus').textContent = 'Choose a movie first.'; return; }
+    if (responseController && !force) return;
+    responseController?.abort(); responseController = new AbortController();
+    const controller = responseController, sequence = ++responseGeneration, id = draft.tmdbId;
+    if (force) { responses = {}; renderResponses(); }
+    $('#movieResponseStatus').textContent = 'Loading returned data…';
+    const results = await Promise.allSettled([
+      responses.details ? Promise.resolve(null) : App.tmdb.detailsResponse(id, controller.signal),
+      responses.providers ? Promise.resolve(null) : App.tmdb.streamingResponse(id, controller.signal)
+    ]);
+    if (sequence !== responseGeneration || draft?.tmdbId !== id) return;
+    const errors = [];
+    results.forEach(function (result, index) { if (result.status === 'fulfilled' && result.value) responses[index === 0 ? 'details' : 'providers'] = result.value.raw; else if (result.status === 'rejected') errors.push(result.reason.message); });
+    responseController = null; renderResponses();
+    $('#movieResponseStatus').textContent = errors.length ? errors.join(' ') : 'Full TMDB responses shown below.';
+  }
   let inlineEdit = null;
   let streamingBusy = false, streamingAttempted = false;
   let filter = "all", query = "";
@@ -24,14 +58,12 @@
   function metadata() {
     const v = draft || {};
     $("#movieMetadata").innerHTML = [["TMDB ID", v.tmdbId], ["Release Date", v.releaseDate || "Not announced"], ["Genres", (v.genres || []).join(", ")], ["Production Companies", (v.productionCompanies || []).join(", ")], ["Director", (v.directors || []).join(", ")], ["Actors", (v.actors || []).join(", ")], ["Collections", (v.collections || []).join(", ")]].map(function (entry) { return '<div><dt>' + entry[0] + '</dt><dd>' + esc(String(entry[1] || "—")) + '</dd></div>'; }).join("");
-    const id = Number(v.tmdbId);
-    $('#movieDataLinks').innerHTML = Number.isSafeInteger(id) && id > 0 ? [['Movie Page', 'https://www.themoviedb.org/movie/' + id], ['Details + Credits JSON', 'https://api.themoviedb.org/3/movie/' + id + '?language=en-US&append_to_response=credits'], ['US Streaming Data JSON', 'https://api.themoviedb.org/3/movie/' + id + '/watch/providers?language=en-US'], ['Watch Options', 'https://www.themoviedb.org/movie/' + id + '/watch?locale=US']].map(function (entry) { return '<a href="' + esc(entry[1]) + '" target="_blank" rel="noopener noreferrer">' + entry[0] + '</a>'; }).join(' · ') : '';
     $("#movieMetadata").hidden = !v.tmdbId;
     $("#movieRefreshButton").hidden = !v.tmdbId;
     $("#movieSaveButton").disabled = !v.tmdbId;
   }
   function open(id, trigger, status) {
-    cancelLookup();
+    cancelLookup(); resetResponses();
     const current = saved().find(function (movie) { return movie.id === id; });
     draft = current ? u.clone(current) : { id: u.uid("movie"), status: status || (filter === "watched" ? "watched" : "wishlist") };
     $("#movieForm").reset();
@@ -41,7 +73,7 @@
     $("#movieLookupQuery").value = current ? String(current.tmdbId) : "";
     $("#movieLookupResults").innerHTML = ""; $("#movieError").textContent = "";
     $("#movieDeleteButton").hidden = !current;
-    $("#tmdbToken").value = "";
+    tokenSettings();
     $('#movieDetails').open = false;
     $('#movieStreamingStatus').textContent = '';
     $("#tmdbCredentialStatus").textContent = App.tmdb.token() ? "TMDB token is configured in this browser." : "A TMDB API Read Access Token is required for lookup.";
@@ -51,6 +83,7 @@
   }
   function lookupSettings(trigger) {
     App.application.openSupport('settings', trigger);
+    tokenSettings();
     $('#tmdbSettings').open = true;
     $('#tmdbCredentialStatus').textContent = App.tmdb.token() ? 'TMDB token is configured in this browser.' : 'Add your TMDB API Read Access Token to enable lookups.';
     requestAnimationFrame(function () { $('#tmdbToken').focus(); $('#tmdbSettings').scrollIntoView({ block: 'center' }); });
@@ -59,14 +92,16 @@
     if (!App.tmdb.token() || $('#movieForm').elements.how.value.trim()) return;
     $('#movieStreamingStatus').textContent = 'Checking US streaming availability…';
     try {
-      const how = await App.tmdb.streaming(id, lookupController?.signal);
+      const result = await App.tmdb.streamingResponse(id, lookupController?.signal);
+      const how = result.how;
       if (sequence !== generation || draft?.tmdbId !== id) return;
+      responses.providers = result.raw; renderResponses();
       if (!$('#movieForm').elements.how.value.trim()) $('#movieForm').elements.how.value = how;
       $('#movieStreamingStatus').textContent = how ? 'US streaming from JustWatch via TMDB. Edit How as needed.' : 'No US subscription, free, or ad-supported streaming listed.';
     } catch (error) { if (sequence === generation) $('#movieStreamingStatus').textContent = error.message; }
   }
   async function lookup(id) {
-    cancelLookup();
+    cancelLookup(); resetResponses();
     const sequence = generation;
     const queryValue = $("#movieLookupQuery").value.trim();
     if (!id && !queryValue) { $("#movieError").textContent = "Enter a title or TMDB movie ID."; return; }
@@ -76,12 +111,14 @@
     $("#movieError").textContent = "";
     try {
       if (id || /^\d+$/.test(queryValue)) {
-        const data = await App.tmdb.details(id || queryValue, lookupController.signal);
+        const response = await App.tmdb.detailsResponse(id || queryValue, lookupController.signal);
+        const data = response.movie;
         if (sequence !== generation) return;
         const duplicate = saved().find(function (movie) { return movie.tmdbId === data.tmdbId && movie.id !== draft.id; });
         if (duplicate) throw new Error('“' + duplicate.title + '” is already in your ' + duplicate.status + ' list. Edit that entry instead.');
         const keepTitle = draft.tmdbId === data.tmdbId && $("#movieForm").elements.title.value.trim();
         Object.assign(draft, data);
+        responses.details = response.raw; renderResponses();
         if (!keepTitle) $("#movieForm").elements.title.value = data.title;
         $("#movieLookupResults").innerHTML = '<p class="inline-status">Movie details loaded from TMDB.</p>';
         metadata();
@@ -308,12 +345,17 @@
     $("#movieLookupResults").addEventListener("click", function (event) { const button = event.target.closest("[data-tmdb-id]"); if (button) lookup(button.dataset.tmdbId); });
     $("#movieRefreshButton").addEventListener("click", function () { lookup(draft.tmdbId); });
     $("#movieDeleteButton").addEventListener("click", remove);
-    $("#movieDialog").addEventListener("close", cancelLookup);
+    $('#movieDetails').addEventListener('toggle', function () { if ($('#movieDetails').open) loadResponses(false); });
+    $('#movieResponseReload').addEventListener('click', function () { loadResponses(true); });
+    $("#movieDialog").addEventListener("close", function () { cancelLookup(); resetResponses(); });
+    tokenSettings();
+    $('#tmdbSettings').addEventListener('toggle', function () { if ($('#tmdbSettings').open) tokenSettings(); });
+    $('#tmdbToken').addEventListener('focus', function () { if ($('#tmdbToken').value === TOKEN_MASK) $('#tmdbToken').select(); });
     $("#saveTmdbToken").addEventListener("click", function () {
-      try { App.tmdb.saveToken($("#tmdbToken").value, $("#rememberTmdbToken").checked); $("#tmdbToken").value = ""; $("#tmdbCredentialStatus").textContent = "Token saved. Search for a movie to verify the connection."; }
+      try { App.tmdb.saveToken($("#tmdbToken").value === TOKEN_MASK ? App.tmdb.token() : $("#tmdbToken").value, $("#rememberTmdbToken").checked); tokenSettings(); $("#tmdbCredentialStatus").textContent = "Token saved. Search for a movie to verify the connection."; }
       catch (error) { $("#tmdbCredentialStatus").textContent = error.message; }
     });
-    $("#forgetTmdbToken").addEventListener("click", function () { cancelLookup(); try { App.tmdb.forget(); $("#tmdbToken").value = ""; $("#tmdbCredentialStatus").textContent = "TMDB token forgotten."; } catch (error) { $("#tmdbCredentialStatus").textContent = error.message; } });
+    $("#forgetTmdbToken").addEventListener("click", function () { cancelLookup(); try { App.tmdb.forget(); tokenSettings(); $("#tmdbCredentialStatus").textContent = "TMDB token forgotten."; } catch (error) { $("#tmdbCredentialStatus").textContent = error.message; } });
     window.addEventListener("app:statechange", function () { render(); });
     const measure = function () {
       document.documentElement.style.setProperty('--app-header-height', $('.app-header').getBoundingClientRect().height + 'px');

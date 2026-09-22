@@ -37,10 +37,13 @@
     if (!Array.isArray(data.results)) throw new Error("TMDB returned invalid search results.");
     return data.results.slice(0, 20);
   }
-  async function details(id, signal) {
+  async function detailsResponse(id, signal) {
     if (!/^\d+$/.test(String(id)) || Number(id) < 1) throw new Error("Enter a numeric TMDB movie ID.");
-    return App.movies.fromTmdb(await request("movie/" + id, { append_to_response: "credits" }, signal));
+    const raw = await request("movie/" + id, { append_to_response: "credits" }, signal);
+    return { movie: App.movies.fromTmdb(raw), raw: raw };
   }
+  async function details(id, signal) { return (await detailsResponse(id, signal)).movie; }
+  function remembered() { try { return !!localStorage.getItem(App.config.storage.tmdbSecretKey); } catch (error) { return false; } }
   function streamingNames(data) {
     if (!data || !data.results || typeof data.results !== 'object' || Array.isArray(data.results)) throw new Error('TMDB returned invalid availability data.');
     const us = data.results.US;
@@ -59,9 +62,11 @@
     if (value.length > 300) throw new Error('Provider list exceeds the How field limit. Enter providers manually.');
     return value;
   }
-  async function streaming(id, signal) {
+  async function streamingResponse(id, signal) {
     if (!/^\d+$/.test(String(id)) || Number(id) < 1) throw new Error('Enter a numeric TMDB movie ID.');
-    return streamingNames(await request('movie/' + id + '/watch/providers', {}, signal));
+    const raw = await request('movie/' + id + '/watch/providers', {}, signal);
+    return { how: streamingNames(raw), raw: raw };
   }
-  App.tmdb = { streaming: streaming, streamingNames: streamingNames, token: token, saveToken: saveToken, forget: forget, search: search, details: details };
+  async function streaming(id, signal) { return (await streamingResponse(id, signal)).how; }
+  App.tmdb = { remembered: remembered, detailsResponse: detailsResponse, streamingResponse: streamingResponse, streaming: streaming, streamingNames: streamingNames, token: token, saveToken: saveToken, forget: forget, search: search, details: details };
 })();

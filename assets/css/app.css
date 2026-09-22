@@ -1057,3 +1057,13 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 #subgenreReviewDialog #subgenreError { color: var(--danger); }
 #movieForm .checkbox-row { display: flex; align-items: center; gap: .5rem; }
 #movieForm .checkbox-row input { width: auto; min-height: auto; }
+
+#tmdbSettings { margin-top: 0; padding: .5rem .75rem; }
+#tmdbSettings summary { padding: .15rem 0; }
+.tmdb-token-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .4rem; align-items: center; margin-top: .4rem; }
+.tmdb-token-row label { grid-column: 1 / -1; }
+.tmdb-token-row input { min-width: 0; width: 100%; min-height: 32px; padding: .3rem .5rem; }
+.tmdb-token-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .4rem; margin-top: .35rem; }
+#tmdbSettings .movie-remember { margin: 0; gap: .35rem; }
+#tmdbCredentialStatus { margin: .3rem 0 0; font-size: .7rem; }
+.tmdb-response { max-height: 360px; max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: .6rem; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; font-size: .72rem; user-select: text; }
