@@ -13,7 +13,7 @@ const row=(id,extra={})=>({id:String(id),tmdbId:id,reviewed:true,subgenres:[],..
 test('request includes pending movies, deduplicated vocabulary, instructions and no personal notes',()=>{
  const movies=data(); movies.push(movie(4,{subgenreReviewed:true,other:'Subgenre time travel'}),{id:'deleted',deleted:true});
  const request=A.subgenres.request(movies);
- assert.deepEqual(Array.from(request.supportedSubgenres),['Neo-Noir','Time Travel']);
+ assert.deepEqual(Array.from(request.supportedSubgenres),['Homesian','Neo-Noir','Time Travel']);
  assert.deepEqual(Array.from(request.movies,m=>m.id),['2','3']);
  assert.equal(JSON.stringify(request).includes('Private notes'),false);
  assert.ok(request.instructions.length);
@@ -53,4 +53,13 @@ test('Incomplete override survives backups and cloud, and defaults off',()=>{
    assert.equal(copy.workspace.movies[0].incompleteOverride,true);
    assert.equal(copy.workspace.movies[1].incompleteOverride,false);
  }
+});
+
+test('Homesian is supported without reopening existing reviews or tagging movies',()=>{
+ const movies=data(), before=JSON.stringify(movies), pending=A.subgenres.queue(movies).map(movie=>movie.id);
+ assert.deepEqual(Array.from(A.subgenres.vocabulary([])),['Homesian']);
+ assert.equal(A.subgenres.request(movies).supportedSubgenres.includes('Homesian'),true);
+ assert.deepEqual(A.subgenres.queue(movies).map(movie=>movie.id),pending);
+ assert.equal(JSON.stringify(movies),before);
+ assert.equal(A.subgenres.preview(movies,result([row(2,{subgenres:['homesian']})]))[0].other,'Keep this\nSubgenre: Homesian');
 });
