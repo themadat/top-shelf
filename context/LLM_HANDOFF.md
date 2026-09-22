@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.44.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.45.
 
 ## Workflows
 
@@ -153,3 +153,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.42: Notes overrides the shared dialog maximum with 100dvh minus 2rem on desktop, and its flex shell fills the modal so the textarea uses all remaining height. Existing mobile full-screen/safe-area styles still apply.
 
 0.0.1.43: Homesian is a built-in supported subgenre, merged case-insensitively with movie-derived vocabulary. Existing movies are not reopened for review or automatically tagged; the user is manually classifying the existing library. New pending reviews include Homesian.
+
+0.0.1.44: Ratings/Years default to 208px cards/96px name columns; removed the high-specificity 1% column rule that overrode resizing. Notes buffers edits for 300ms before full state normalization, flushes pending text on blur/close/hidden/page exit, and cancels pending drafts on state replacement. Movie/pivot/subgenre views ignore edit-document state events to avoid library redraws while typing.

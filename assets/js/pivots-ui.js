@@ -143,7 +143,7 @@
       }
       render();
     });
-    window.addEventListener('app:statechange', render);
+    window.addEventListener('app:statechange', function (event) { if (event.detail?.reason !== 'edit-document') render(); });
   }
   App.pivotsUI = { init: init };
 })();

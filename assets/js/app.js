@@ -249,6 +249,18 @@
     renderGlobalSearchResults();
   }
 
+  let pendingNotes = null;
+  const queueNotesSave = u.debounce(function () {
+    if (pendingNotes === null) return;
+    const value = pendingNotes; pendingNotes = null;
+    saveNotes(value);
+  }, 300);
+  function flushNotes() {
+    if (pendingNotes === null) return;
+    queueNotesSave.flush();
+    storage.saveNow();
+  }
+
   function openNotes(trigger) {
     renderNotesEditor();
     components.openDialog("#notesDialog", { trigger: trigger, focus: "#notesTextarea" });
@@ -909,7 +921,16 @@
     $("#versionButton").addEventListener("click", function (event) { openSupport("releases", event.currentTarget); });
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
-    $("#notesTextarea").addEventListener("input", function (event) { saveNotes(event.target.value); });
+    $("#notesTextarea").addEventListener("input", function (event) {
+      pendingNotes = event.target.value;
+      $("[data-floating-local-label]").textContent = "Saving locally…";
+      queueNotesSave();
+    });
+    $("#notesTextarea").addEventListener("blur", flushNotes);
+    $("#notesDialog").addEventListener("close", flushNotes);
+    window.addEventListener("pagehide", flushNotes);
+    window.addEventListener("beforeunload", flushNotes);
+    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flushNotes(); });
     $("#whatsNewDismissSeconds").addEventListener("change", function () {
       if (!this.checkValidity()) { this.reportValidity(); return; }
       const seconds = Number(this.value);
@@ -995,7 +1016,7 @@
     window.addEventListener("app:pwaerror", function (event) { components.toast(event.detail.message, { title: "Offline support unavailable", kind: "warning", duration: 5000 }); });
     window.addEventListener("app:statechange", function (event) {
       const reasons = new Set(["import", "sync-download", "sync-merge", "recovery", "erase-all", "reset-preferences", "restore-demo"]);
-      if (reasons.has(event.detail.reason)) renderAll();
+      if (reasons.has(event.detail.reason)) { pendingNotes = null; queueNotesSave.cancel(); renderAll(); }
       else if ($("#supportDialog").open && state().ui.supportTab === "dataSync") renderSyncPayload();
     });
     window.addEventListener("resize", function () { if ($("#developerPanel") && !$("#developerPanel").hidden) renderDeveloper(); });

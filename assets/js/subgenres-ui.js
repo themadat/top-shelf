@@ -48,7 +48,7 @@
         App.components.toast(persisted ? 'Subgenre reviews saved.' : 'Updates kept for this session. Export a backup before closing.', { title: persisted ? 'Saved' : 'Storage unavailable', kind: persisted ? 'success' : 'warning' });
       } catch (error) { $('#subgenreApply').disabled = true; $('#subgenreError').textContent = error.message; }
     });
-    window.addEventListener('app:statechange', render); render();
+    window.addEventListener('app:statechange', function (event) { if (event.detail?.reason !== 'edit-document') render(); }); render();
   }
   App.subgenresUI = { init: init };
 })();

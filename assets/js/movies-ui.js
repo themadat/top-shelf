@@ -511,7 +511,7 @@
       catch (error) { $("#tmdbCredentialStatus").textContent = error.message; }
     });
     $("#forgetTmdbToken").addEventListener("click", function () { cancelLookup(); try { App.tmdb.forget(); tokenSettings(); $("#tmdbCredentialStatus").textContent = "TMDB token forgotten."; } catch (error) { $("#tmdbCredentialStatus").textContent = error.message; } });
-    window.addEventListener("app:statechange", function (event) { if (event.detail?.reason !== "movie-column-width") render(); });
+    window.addEventListener("app:statechange", function (event) { if (!["movie-column-width", "edit-document"].includes(event.detail?.reason)) render(); });
     const measure = function () {
       document.documentElement.style.setProperty('--app-header-height', $('.app-header').getBoundingClientRect().height + 'px');
       document.documentElement.style.setProperty('--movie-toolbar-height', $('#movieToolbar').getBoundingClientRect().height + 'px');

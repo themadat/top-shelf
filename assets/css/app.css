@@ -960,7 +960,7 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .pivot-sort[data-pivot-sort="average"] .pivot-sort-icon .sf-symbol { width: 15px; height: 10px; }
 .pivot-direction, .pivot-direction .sf-symbol { width: 9px; height: 10px; }
 #pivot-ratings, #pivot-years { width: min-content; }
-#pivot-ratings th:first-child, #pivot-years th:first-child { width: 1%; }
+#pivot-ratings th:first-child, #pivot-years th:first-child { width: var(--pivot-name-width); }
 .collection-star { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 3px; border: 0; background: transparent; color: var(--muted); vertical-align: middle; cursor: pointer; }
 .collection-star .sf-symbol { width: 14px; height: 14px; }
 .collection-star[aria-pressed="true"] { color: var(--accent); }
@@ -1117,7 +1117,7 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 /* Dense pivot panels with adjustable category columns. */
 .pivot-grid { gap: .15rem; }
 .pivot-grid .pivot-card { --pivot-name-width: 74px; width: var(--pivot-card-width, 170px); min-width: 0; max-width: none; flex: 0 0 auto; padding: .15rem; }
-.pivot-grid #pivot-ratings, .pivot-grid #pivot-years { --pivot-name-width: 48px; width: var(--pivot-card-width, 144px); }
+.pivot-grid #pivot-ratings, .pivot-grid #pivot-years { --pivot-name-width: 96px; width: var(--pivot-card-width, 208px); }
 .pivot-card header { gap: .1rem; margin-bottom: .2rem; }
 .pivot-card h3 { font-size: .7rem; }
 .pivot-card table { table-layout: fixed; }
