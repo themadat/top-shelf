@@ -445,6 +445,15 @@
   function init() {
     initBulkPivots();
     $('#movieIncompleteButton').addEventListener('click', function () { incompleteOnly = !incompleteOnly; render(); });
+    $('#movieNamesButton').addEventListener('click', function (event) {
+      $('#movieNamesText').value = saved().map(function (movie) { return movie.title; }).sort(function (a, b) { return a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }); }).join('\n');
+      App.components.openDialog('#movieNamesDialog', { trigger: event.currentTarget, focus: '#movieNamesText' });
+    });
+    $('#movieNamesCopy').addEventListener('click', async function () {
+      const input = $('#movieNamesText');
+      try { await navigator.clipboard.writeText(input.value); App.components.toast('Movie names copied.', { title: 'Copied', kind: 'success' }); }
+      catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy Names' }); }
+    });
     $('#movieAnalysisButton').addEventListener('click', function (event) {
       const movies = saved();
       $('#movieAnalysisText').value = model.analysisText(movies);

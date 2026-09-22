@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.39.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.40.
 
 ## Workflows
 
@@ -143,3 +143,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.37: Sync check repairs baselineHash from the freshly read/normalized remote when baselineTarget and nonempty baselineSha match the remote blob SHA, regardless of fingerprint prefix. This preserves local-only direction after normalization upgrades. Different remote revisions/targets still require ordinary reconciliation; checks do not upload or replace local content. Test remote revisions vary with content to model GitHub blob identity.
 
 0.0.1.38: Removed static Movie Preferences from Info. Notes dialog grows to 1200px/90svh; movie Review/Notes fields have six rows and 9rem minimum height. core/movies.js owns ordered green/yellow/red How providers and aliases. Normalization sorts known providers in user order, preserves unknown relative order, markers and estimates. How header sorts by highest-priority provider, then text, with blanks last. Each provider is independently colored in the editable table cell; unknown text is neutral. Existing state normalization handles saved/backup/cloud values consistently.
+
+0.0.1.39: Settings Info → Movie Names previews/copies all active Wishlist/Watched titles alphabetically, one per line, ignoring filters. Same-title separate movies retain separate lines. Clipboard failure selects the list. Pivot subsection headings use accent bands, strong top/left borders and uppercase bold labels.

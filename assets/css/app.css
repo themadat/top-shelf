@@ -982,7 +982,7 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 #moviePivotsView .pivot-grid { margin-top: 0; }
 .pivot-card { height: var(--pivot-available-height, calc(100dvh - var(--app-header-height, 80px) - var(--movie-toolbar-height, 60px) - 16px)); min-height: 180px; }
 
-.pivot-card .pivot-section-heading th { text-align: left; font-weight: 700; background: var(--surface-2); padding-top: .35rem; }
+.pivot-card .pivot-section-heading th { text-align: left; font-weight: 800; font-size: .72rem; letter-spacing: .065em; text-transform: uppercase; color: var(--text); background: var(--accent-soft); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--line-strong); border-left: 4px solid var(--accent); padding: .55rem .5rem; }
 
 #moviePivotsView { padding-top: 0; }
 
@@ -1107,3 +1107,5 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .how-yellow { background: #fff0ad; color: #604900; }
 .how-red { background: #ffdad6; color: #781e19; }
 #movieForm textarea[name="notes"], #movieForm textarea[name="review"] { min-height: 9rem; }
+
+#movieNamesText { display: block; width: 100%; margin-top: .5rem; min-height: 16rem; }
