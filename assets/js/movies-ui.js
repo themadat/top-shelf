@@ -17,9 +17,20 @@
     $('#movieResponseStatus').textContent = '';
     renderResponses();
   }
+  function jsonTree(value, path, providers) {
+    const key = path[path.length - 1], label = key === undefined ? '' : esc(JSON.stringify(key)) + ': ';
+    if (value === null || typeof value !== 'object') return '<div class="json-value">' + label + esc(JSON.stringify(value)) + '</div>';
+    const entries = Object.entries(value), array = Array.isArray(value);
+    const country = providers && path.length === 2 && path[0] === 'results';
+    const expanded = providers ? !(country && key !== 'US') && key !== 'rent' && key !== 'buy' : path.length < 2;
+    return '<details class="json-node"' + (expanded ? ' open' : '') + '><summary>' + label + (array ? '[' : '{') + ' ' + entries.length + (array ? ' items ]' : ' properties }') + '</summary><div class="json-children">' + entries.map(function (entry) { return jsonTree(entry[1], path.concat(entry[0]), providers); }).join('') + '</div></details>';
+  }
   function renderResponses() {
-    $('#movieDetailsResponse').textContent = responses.details ? JSON.stringify(responses.details, null, 2) : 'No response loaded yet.';
-    $('#movieProvidersResponse').textContent = responses.providers ? JSON.stringify(responses.providers, null, 2) : 'No response loaded yet.';
+    $('#movieDetailsResponse').innerHTML = responses.details ? jsonTree(responses.details, [], false) : 'No response loaded yet.';
+    $('#movieProvidersResponse').innerHTML = responses.providers ? jsonTree(responses.providers, [], true) : 'No response loaded yet.';
+  }
+  function dateFields() {
+    $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.parentElement.classList.toggle('is-empty', !input.value); });
   }
   async function loadResponses(force) {
     if (!draft?.tmdbId) { $('#movieResponseStatus').textContent = 'Choose a movie first.'; return; }
@@ -53,7 +64,13 @@
     form.elements.rating.readOnly = !!historical;
     if (historical) form.elements.rating.value = model.historicalRatings[historical];
     $("#movieRatingPreview").style.background = model.color($("#movieForm").elements.rating.value || 0, false);
-    $("#moviePriorityPreview").style.background = model.color($("#movieForm").elements.priority.value || 1, true);
+    document.querySelectorAll('[data-editor-priority]').forEach(function (button) {
+      const selected = button.dataset.editorPriority === form.elements.priority.value;
+      button.setAttribute('aria-pressed', String(selected));
+      button.style.background = selected ? model.color(Number(button.dataset.editorPriority), true) : '';
+      button.style.color = selected ? '#17231b' : '';
+    });
+    dateFields();
   }
   function metadata() {
     const v = draft || {};
@@ -77,6 +94,7 @@
     $('#movieDetails').open = false;
     $('#movieStreamingStatus').textContent = '';
     $("#tmdbCredentialStatus").textContent = App.tmdb.token() ? "TMDB token is configured in this browser." : "A TMDB API Read Access Token is required for lookup.";
+    $("#movieSubgenreOptions").textContent = "(" + (App.subgenres.vocabulary(saved()).join(", ") || "No subgenres defined") + ")";
     metadata(); statusFields();
     if (current && !current.how) fillEditorStreaming(current.tmdbId, generation);
     App.components.openDialog("#movieDialog", { trigger: trigger, focus: current ? "#movieTitle" : "#movieLookupQuery" });
@@ -313,8 +331,9 @@
   }
   function init() {
     initBulkPivots();
-    $('#movieLookupSettingsButton').addEventListener('click', function (event) { lookupSettings(event.currentTarget); });
-    document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); $('#movieForm').elements[button.dataset.editorState === 'watched' ? 'rating' : 'priority'].focus(); }); });
+    document.querySelectorAll('[data-editor-priority]').forEach(function (button) { button.addEventListener('click', function () { const input = $('#movieForm').elements.priority; input.value = input.value === button.dataset.editorPriority ? '' : button.dataset.editorPriority; statusFields(); }); });
+    $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.addEventListener('input', dateFields); input.addEventListener('change', dateFields); });
+    document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); if (button.dataset.editorState === 'watched') $('#movieForm').elements.rating.focus(); else $('[data-editor-priority]').focus(); }); });
     $("#wishlistStreamingButton").addEventListener("click", function () { fillStreaming(true); });
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });
     const sorts = [['title', 'Title'], ['rating', 'Rating'], ['priority', 'Priority'], ['watched', 'Watched Date'], ['review', 'Review/Notes'], ['how', 'How'], ['date', 'Date'], ['release', 'Release'], ['other', 'Other Pivots'], ['collections', 'Collections'], ['genres', 'Genres'], ['actors', 'Actors'], ['directors', 'Directors'], ['companies', 'Companies']];

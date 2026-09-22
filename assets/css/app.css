@@ -1067,3 +1067,23 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 #tmdbSettings .movie-remember { margin: 0; gap: .35rem; }
 #tmdbCredentialStatus { margin: .3rem 0 0; font-size: .7rem; }
 .tmdb-response { max-height: 360px; max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: .6rem; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; font-size: .72rem; user-select: text; }
+
+.movie-state-row > .segmented { flex-shrink: 0; }
+#movieForm .movie-subgenre-review { margin-left: .5rem; min-width: 0; align-items: flex-start; font-size: .75rem; }
+#movieSubgenreOptions { font-weight: 400; color: var(--muted); overflow-wrap: anywhere; }
+.movie-priority-field { display: grid; gap: .3rem; align-content: start; }
+.movie-priority-buttons { display: flex; }
+.movie-priority-buttons button { flex: 1; min-width: 0; }
+.movie-date-field { display: block; position: relative; }
+.movie-date-field input { width: 100%; }
+.movie-date-placeholder { display: none; position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); pointer-events: none; font-weight: 400; color: var(--muted); }
+.movie-date-field.is-empty:not(:focus-within) input { color: transparent; }
+.movie-date-field.is-empty:not(:focus-within) .movie-date-placeholder { display: block; }
+.tmdb-response { white-space: normal; font-family: ui-monospace, monospace; }
+.json-children { margin-left: .75rem; padding-left: .35rem; border-left: 1px solid var(--line); }
+.json-value { white-space: pre-wrap; }
+#movieDetails .json-node > summary { font: inherit; padding: .15rem 0; overflow-wrap: anywhere; }
+@media (max-width: 500px) {
+  .movie-state-row { flex-wrap: wrap; }
+  #movieForm .movie-subgenre-review { margin-left: 0; }
+}

@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.27.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.28.
 
 ## Workflows
 
@@ -119,3 +119,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.25: Need Subgenre Review exports all pending Wishlist/Watched movies, a case-insensitive vocabulary from active movies’ Subgenre tags, and LLM instructions as JSON. Results use top-shelf-subgenre-results v1 with reviews {id, tmdbId, reviewed, subgenres}. Preview validates IDs, vocabulary, duplicates, and size before additive updates and recovery. reviewed:false/omitted movies stay pending; reviewed:true with [] clears review without adding tags. Movie subgenreReviewed survives backups/sync; old local schema5 and cloud v1–v4 movies migrate as reviewed per the user’s completed baseline. New movies default false. Editor checkbox supports manual review/reopening. Local schema6 and cloud v5/schema9 prevent older clients dropping the flag; update all clients before sync.
 
 0.0.1.26: Movie Lookup Settings is compact and below Appearance. Saved credentials show a fixed masked indicator (not the token); saving it unchanged preserves the credential and updates session/device retention. TMDB Details displays full Details+Credits and Watch Providers JSON with authenticated fetches instead of links. Raw responses are editor-session-only, escaped via textContent, excluded from movie data/backups/sync, and cleared/aborted when switching movies or closing. Opening Details loads missing responses; Reload Returned Data refreshes without changing saved metadata.
+
+0.0.1.27: Movie form removes Lookup Settings, places Subgenres Reviewed with the comma-separated supported vocabulary in parentheses beside State (wraps on small screens), and uses priority toggle buttons 1–5 (repeat clears). Empty native dates show --/--/---- while unfocused. Notifications is below Appearance. TMDB responses use escaped collapsible object/array branches; Watch Providers defaults US open, other countries and rent/buy closed.
