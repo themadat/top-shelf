@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.40",
-      "buildId": "0.0.1.40",
+      "version": "0.0.1.42",
+      "buildId": "0.0.1.42",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,8 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.42", "date": "2026-09-22T12:00:00.000Z", "title": "Full-Height Notes", "summary": "Use the available vertical space for Notes.", "features": [], "improvements": ["Notes fills the viewport height with a small desktop margin", "The Notes editor stretches to fill the modal"], "fixes": ["Removed the shared dialog height cap from Notes"], "knownIssues": []},
+      {"version": "0.0.1.41", "date": "2026-09-22T12:00:00.000Z", "title": "Compact Adjustable Pivots", "summary": "Fit more pivot panels across the screen.", "features": ["Independent Other Pivots subsection sorting", "Drag first-column borders; double-click or Enter to fit"], "improvements": ["Quieter subsection headings and narrower panels"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.40", "date": "2026-09-22T12:00:00.000Z", "title": "Search Every Pivot", "summary": "Filter each pivot independently.", "features": ["Search fields above the sort buttons in all eight pivot panels"], "improvements": ["Live category filtering preserves counts, ratings and other panels"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.39", "date": "2026-09-22T12:00:00.000Z", "title": "Movie Names and Pivot Sections", "summary": "Copy movie titles and scan pivot subsections more easily.", "features": ["Movie Names list in Settings Info with Copy Names"], "improvements": ["Stronger pivot subsection bands, borders and headings"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.38", "date": "2026-09-22T12:00:00.000Z", "title": "How Provider Priorities", "summary": "Color and order streaming providers by your preferences.", "features": ["Green, yellow and red provider labels with priority sorting"], "improvements": ["Shortened provider aliases", "Larger Notes and Review/Notes editors", "Removed Movie Preferences from Info"], "fixes": [], "knownIssues": []},

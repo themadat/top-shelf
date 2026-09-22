@@ -80,5 +80,5 @@
       return (b.count - a.count) * order || (b.average ?? -1) - (a.average ?? -1) || byName();
     });
   }
-  App.pivots = { score: score, dimensions: dimensions, build: build, rows: rows };
+  App.pivots = { sections: sections, score: score, dimensions: dimensions, build: build, rows: rows };
 })();

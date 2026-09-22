@@ -382,7 +382,8 @@ dialog::backdrop { background: rgba(10, 16, 14, .56); backdrop-filter: blur(3px)
 .small-dialog { width: min(460px, calc(100vw - 2rem)); }
 .form-dialog { width: min(620px, calc(100vw - 2rem)); }
 .choice-dialog { width: min(560px, calc(100vw - 2rem)); }
-.notes-dialog { width: min(1200px, calc(100vw - 2rem)); height: min(90svh, 1000px); }
+.notes-dialog { width: min(1200px, calc(100vw - 2rem)); height: calc(100dvh - 2rem); max-height: calc(100dvh - 2rem); }
+.notes-dialog > .dialog-shell { height: 100%; }
 .notes-dialog-title { display: flex; align-items: center; gap: .45rem; }
 .notes-dialog-title-icon { display: inline-grid; place-items: center; color: var(--accent-strong); font-size: 1.05rem; }
 .notes-dialog-body { display: flex; min-height: 0; }
@@ -1112,3 +1113,23 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 
 .pivot-search { display: block; min-width: 0; margin: .2rem 0; }
 .pivot-search input { width: 100%; min-width: 0; min-height: 30px; padding: .25rem .4rem; font-size: .75rem; }
+
+/* Dense pivot panels with adjustable category columns. */
+.pivot-grid { gap: .15rem; }
+.pivot-grid .pivot-card { --pivot-name-width: 74px; width: var(--pivot-card-width, 170px); min-width: 0; max-width: none; flex: 0 0 auto; padding: .15rem; }
+.pivot-grid #pivot-ratings, .pivot-grid #pivot-years { --pivot-name-width: 48px; width: var(--pivot-card-width, 144px); }
+.pivot-card header { gap: .1rem; margin-bottom: .2rem; }
+.pivot-card h3 { font-size: .7rem; }
+.pivot-card table { table-layout: fixed; }
+.pivot-card th:first-child { width: var(--pivot-name-width); max-width: none; }
+.pivot-card td, .pivot-card th[data-sort-column] { padding: .1rem; }
+.pivot-card th[data-sort-column]:not(:first-child) { width: 30px; }
+.pivot-card .collection-star { width: 18px; padding: 1px; }
+.pivot-card .pivot-section-heading th { width: auto; font-size: .63rem; font-weight: 600; letter-spacing: 0; text-transform: none; background: var(--surface-2); border-left: 0; border-top: 1px solid var(--line-strong); padding: .25rem .15rem; white-space: normal; }
+.pivot-subsection-sorts { display: flex; gap: .1rem; margin-top: .15rem; }
+.pivot-subsection-sorts button { display: inline-flex; align-items: center; justify-content: center; flex: 1; min-width: 0; min-height: 24px; padding: .1rem; border: 1px solid transparent; border-radius: 3px; background: transparent; color: var(--muted); font-size: .6rem; cursor: pointer; }
+.pivot-subsection-sorts button[aria-pressed="true"] { color: var(--text); border-color: var(--line-strong); background: var(--surface); }
+.pivot-subsection-sorts .sf-symbol { width: 9px; height: 9px; }
+.pivot-card th[data-sort-column="category"] { position: sticky; overflow: visible; padding-right: 6px; }
+.pivot-resizer { position: absolute; right: -3px; top: 0; bottom: 0; width: 7px; cursor: col-resize; touch-action: none; z-index: 3; }
+.pivot-resizer:hover, .pivot-resizer:focus-visible { background: var(--accent-soft); outline: 1px solid var(--accent); }

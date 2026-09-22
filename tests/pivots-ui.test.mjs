@@ -47,4 +47,21 @@ test('opening populated pivots renders all eight tables without summary cards', 
   grid.listeners.input({ target: { dataset: { pivotSearch: 'ratings' }, value: '' } });
   assert.match(ratingBody.innerHTML, />3\.50<\/span>/);
 
+  assert.equal((grid.innerHTML.match(/data-pivot-resize=/g) || []).length, 8);
+  App.storage.getState = () => ({ workspace: { movies: [
+    App.movies.normalize({ id: 'a', tmdbId: 11, title: 'A', status: 'watched', rating: 5, other: 'Alpha, Subgenre Time Travel' }),
+    App.movies.normalize({ id: 'b', tmdbId: 12, title: 'B', status: 'watched', rating: 2, other: 'Beta, Subgenre Loop' })
+  ] } });
+  button.listeners.click();
+  const otherBody = nodes.get('#pivot-other').querySelector('tbody');
+  assert.match(otherBody.innerHTML, /data-subsection-sort="category"/);
+  const clickSort = (section, key) => grid.listeners.click({ target: { closest: selector => selector === '[data-subsection-sort]' ? { dataset: { subsection: section, subsectionSort: key } } : null } });
+  clickSort('Others', 'category');
+  assert.ok(otherBody.innerHTML.indexOf('title="Beta"') < otherBody.innerHTML.indexOf('title="Alpha"'));
+  assert.ok(otherBody.innerHTML.indexOf('title="Alpha"') < otherBody.innerHTML.indexOf('title="Time Travel"'));
+  assert.ok(otherBody.innerHTML.indexOf('title="Time Travel"') < otherBody.innerHTML.indexOf('title="Loop"'));
+  clickSort('Others', 'category');
+  assert.ok(otherBody.innerHTML.indexOf('title="Alpha"') < otherBody.innerHTML.indexOf('title="Beta"'));
+  assert.ok(otherBody.innerHTML.indexOf('title="Time Travel"') < otherBody.innerHTML.indexOf('title="Loop"'));
+
 });
