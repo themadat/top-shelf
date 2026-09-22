@@ -131,5 +131,14 @@
   }
   function searchable(movie) { return [movie.title, movie.tmdbId, movie.how, movie.other, movie.notes, movie.review, movie.historicalRating].concat(movie.genres, movie.productionCompanies, movie.directors, movie.actors, movie.collections).join(" ").toLowerCase(); }
   function incomplete(movie) { return !movie.incompleteOverride && (!movie.releaseDate || ["genres", "actors", "directors", "productionCompanies"].some(function (field) { return !movie[field]?.length; })); }
-  App.movies = { cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  function analysisText(movies) {
+    const entries = movies.filter(function (movie) { return !movie.deleted; }).map(normalize).sort(function (a, b) { return a.title.localeCompare(b.title, undefined, { numeric: true }) || a.tmdbId - b.tmdbId; });
+    return JSON.stringify({
+      description: 'All saved Wishlist and Watched movies, independent of search and filters. Empty fields mean unknown or not entered. Ratings use a 0–5 scale; priority 1 is highest. Legacy ratings map to numeric scores as listed below. Actor lists contain up to ten saved cast members.',
+      legacyRatings: historicalRatings,
+      movieCount: entries.length,
+      movies: entries
+    }, null, 2);
+  }
+  App.movies = { analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
 })();

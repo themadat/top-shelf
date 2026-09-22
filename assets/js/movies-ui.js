@@ -438,6 +438,17 @@
   function init() {
     initBulkPivots();
     $('#movieIncompleteButton').addEventListener('click', function () { incompleteOnly = !incompleteOnly; render(); });
+    $('#movieAnalysisButton').addEventListener('click', function (event) {
+      const movies = saved();
+      $('#movieAnalysisText').value = model.analysisText(movies);
+      $('#movieAnalysisSummary').textContent = movies.length + ' movies · All saved details · No list filters applied';
+      App.components.openDialog('#movieAnalysisDialog', { trigger: event.currentTarget, focus: '#movieAnalysisText' });
+    });
+    $('#movieAnalysisCopy').addEventListener('click', async function () {
+      const input = $('#movieAnalysisText');
+      try { await navigator.clipboard.writeText(input.value); App.components.toast('Movie database copied.', { title: 'Copied', kind: 'success' }); }
+      catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy All Movies' }); }
+    });
     $('#movieHowValuesButton').addEventListener('click', function (event) { $('#movieHowValuesText').value = howValues(); App.components.openDialog('#movieHowValuesDialog', { trigger: event.currentTarget, focus: '#movieHowValuesText' }); });
     $('#movieHowValuesCopy').addEventListener('click', async function () { const input = $('#movieHowValuesText'); input.value = howValues(); try { await navigator.clipboard.writeText(input.value); App.components.toast('How values copied.', { title: 'Copied', kind: 'success' }); } catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy List' }); } });
     document.querySelectorAll('[data-editor-priority]').forEach(function (button) { button.addEventListener('click', function () { const input = $('#movieForm').elements.priority; input.value = input.value === button.dataset.editorPriority ? '' : button.dataset.editorPriority; statusFields(); }); });

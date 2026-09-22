@@ -149,3 +149,14 @@ test('numeric and legacy rating buckets stay separate and legacy categories sort
   assert.equal(rows[1].section, 'Legacy Ratings');
   assert.equal(rows.reduce((sum,row)=>sum+row.count,0), 5);
 });
+
+test('analysis export includes both states and full movie details but excludes deleted records', () => {
+  const output = JSON.parse(App.movies.analysisText(data));
+  assert.equal(output.movieCount, 4);
+  assert.equal(output.movies.filter(movie=>movie.status==='wishlist').length, 1);
+  assert.equal(output.movies[0].review, 'Review');
+  assert.equal(output.movies[0].historicalRating, '100!');
+  assert.deepEqual(output.movies[0].actors, ['A','B']);
+  assert.equal(output.legacyRatings['100!'], 5);
+  assert.equal(JSON.parse(App.movies.analysisText([])).movieCount, 0);
+});
