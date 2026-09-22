@@ -69,7 +69,7 @@
         $('#pivotScoring').hidden = !active;
         $('#movieListView').hidden = active; $('#moviePivotsView').hidden = !active;
         $('#movieToolbar').classList.toggle('showing-pivots', active);
-        document.querySelectorAll('[data-list-control]').forEach(function (control) { control.hidden = active; });
+        document.querySelectorAll('[data-list-control]').forEach(function (control) { control.hidden = active || (control.id === "wishlistRatingsButton" && $('[data-movie-filter="wishlist"]').getAttribute("aria-pressed") !== "true"); });
         document.querySelectorAll('[data-movie-view]').forEach(function (control) { control.setAttribute('aria-pressed', String(control === button)); });
         render();
       });

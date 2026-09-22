@@ -65,6 +65,7 @@
       availableDate: date(v.availableDate), priority: number(v.priority), notes: u.cleanText(v.notes, 20000),
       watchedDate: date(v.watchedDate), historicalRating: historicalRating, rating: historicalRating ? historicalRatings[historicalRating] : number(v.rating), review: u.cleanText(v.review, 20000)
     };
+    if (v.tmdbAverage !== undefined) movie.tmdbAverage = typeof v.tmdbAverage === 'number' && Number.isFinite(v.tmdbAverage) && v.tmdbAverage >= 0 && v.tmdbAverage <= 10 ? v.tmdbAverage : null;
     const errors = validate(movie);
     if (errors.length) throw new Error(errors.join(" "));
     return movie;
@@ -91,6 +92,7 @@
   function fromTmdb(data) {
     if (!data || !Number.isSafeInteger(data.id) || !data.title || !Array.isArray(data.credits?.cast) || !Array.isArray(data.credits?.crew)) throw new Error("TMDB returned incomplete movie details. Please retry.");
     return {
+      tmdbAverage: data.vote_count > 0 && typeof data.vote_average === 'number' && data.vote_average >= 0 && data.vote_average <= 10 ? data.vote_average : null,
       tmdbId: data.id, title: data.title, releaseDate: date(data.release_date),
       genres: list((data.genres || []).map(function (v) { return v.name; })),
       productionCompanies: list((data.production_companies || []).map(function (v) { return v.name; })),
@@ -123,7 +125,7 @@
     });
     return { rows: rows, changes: rows.filter(function (row) { return row.additions?.length; }), valid: rows.every(function (row) { return !row.error; }) };
   }
-  const sortFields = ['rating', 'priority', 'title', 'review', 'how', 'date', 'release', 'other', 'collections', 'genres', 'actors', 'directors', 'companies', 'watched'];
+  const sortFields = ['tmdbAverage', 'rating', 'priority', 'title', 'review', 'how', 'date', 'release', 'other', 'collections', 'genres', 'actors', 'directors', 'companies', 'watched'];
   function sortPreference(value, tab) {
     const source = u.plainObject(value);
     return { key: sortFields.includes(source.key) ? source.key : tab === 'wishlist' ? 'priority' : tab === 'watched' ? 'watched' : 'rating', direction: ['asc', 'desc'].includes(source.direction) ? source.direction : tab === 'wishlist' ? 'asc' : 'desc' };

@@ -301,6 +301,7 @@
   }
   function render() {
     if (inlineEdit) return;
+    $('#wishlistRatingsButton').hidden = filter !== 'wishlist';
     $('#wishlistStreaming').hidden = filter !== 'wishlist' && !streamingBusy && !$('#wishlistStreamingStatus').textContent;
     const items = saved(), wishlist = items.filter(function (movie) { return movie.status === "wishlist"; }).length;
     document.querySelectorAll("[data-movie-filter]").forEach(function (button) { const value = button.dataset.movieFilter; button.setAttribute("aria-pressed", String(filter === value)); button.querySelector("small").textContent = value === "all" ? items.length : value === "wishlist" ? wishlist : items.length - wishlist; });
@@ -311,9 +312,10 @@
     $("#movieResultsCount").textContent = visible.length + " Shown";
     const cell = function (value, className) { return '<td class="' + (className || '') + '"><span class="movie-cell" title="' + esc(String(value || '')) + '">' + esc(String(value || '—')) + '</span></td>'; };
     const headers = [['#', 'score'], ['Title', 'title'], ['Review/Notes', 'review'], ['How', 'how'], ['Date', 'date'], ['Release', 'release'], ['Other Pivots', 'other'], ['Collections', 'collections'], ['Genres', 'genres'], ['Actors', 'actors'], ['Directors', 'directors'], ['Companies', 'companies']];
+    if (filter === 'wishlist') headers.splice(1, 0, ['TMDB Avg /10', 'tmdbAverage']);
     $("#movieList").innerHTML = visible.length ? '<div class="movie-table-scroll" tabindex="0" role="region" aria-label="Movie Spreadsheet"><table class="movie-table"><caption class="visually-hidden">Saved Movies. Wishlist rows are highlighted. Date is the watched date for watched movies and available date for wishlist movies.</caption><thead><tr>' + headers.map(function (column) { const key = column[1] === 'score' ? (filter === 'wishlist' ? 'priority' : 'rating') : column[1], selected = key === sort.key || (key === 'date' && sort.key === 'watched' && filter === 'watched'); return '<th scope="col" class="movie-col-' + column[1] + '" aria-sort="' + (selected ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none') + '"><button type="button" class="movie-column-sort" data-movie-column-sort="' + key + '" aria-label="Sort by ' + (column[1] === 'score' ? key : column[0]) + '">' + column[0] + (selected ? App.icons.markup(sort.direction === 'asc' ? 'sortUp' : 'sortDown') : '') + '</button></th>'; }).join('') + '</tr></thead><tbody>' + visible.map(function (movie) {
       const id = esc(movie.id), watched = movie.status === "watched";
-      return '<tr class="' + (watched ? 'movie-watched-row' : 'movie-wishlist-row') + '">' + editable(movie, watched ? 'rating' : 'priority', badge(movie), 'movie-col-score') + '<th scope="row" class="movie-col-title"><button type="button" class="movie-title-link" data-edit-movie="' + id + '" title="Edit ' + esc(movie.title) + '">' + esc(movie.title) + '</button><span class="visually-hidden">' + (watched ? 'Watched' : 'Wishlist') + '</span></th>' + editable(movie, watched ? 'review' : 'notes', esc((watched ? movie.review : movie.notes) || '—'), 'movie-col-review') + editable(movie, 'how', howMarkup(movie.how), 'movie-col-how') + editable(movie, watched ? 'watchedDate' : 'availableDate', esc((watched ? movie.watchedDate : movie.availableDate) || '—'), 'movie-col-date') + cell(movie.releaseDate, 'movie-col-release') + editable(movie, 'other', esc(movie.other || '—'), 'movie-col-other') + cell(movie.collections.join(', '), 'movie-col-collections') + cell(movie.genres.join(', '), 'movie-col-genres') + cell(movie.actors.join(', '), 'movie-col-actors') + cell(movie.directors.join(', '), 'movie-col-directors') + cell(movie.productionCompanies.join(', '), 'movie-col-companies') + '</tr>';
+      return '<tr class="' + (watched ? 'movie-watched-row' : 'movie-wishlist-row') + '">' + editable(movie, watched ? 'rating' : 'priority', badge(movie), 'movie-col-score') + (filter === 'wishlist' ? cell(movie.tmdbAverage == null ? '—' : movie.tmdbAverage.toFixed(1), 'movie-col-tmdbAverage') : '') + '<th scope="row" class="movie-col-title"><button type="button" class="movie-title-link" data-edit-movie="' + id + '" title="Edit ' + esc(movie.title) + '">' + esc(movie.title) + '</button><span class="visually-hidden">' + (watched ? 'Watched' : 'Wishlist') + '</span></th>' + editable(movie, watched ? 'review' : 'notes', esc((watched ? movie.review : movie.notes) || '—'), 'movie-col-review') + editable(movie, 'how', howMarkup(movie.how), 'movie-col-how') + editable(movie, watched ? 'watchedDate' : 'availableDate', esc((watched ? movie.watchedDate : movie.availableDate) || '—'), 'movie-col-date') + cell(movie.releaseDate, 'movie-col-release') + editable(movie, 'other', esc(movie.other || '—'), 'movie-col-other') + cell(movie.collections.join(', '), 'movie-col-collections') + cell(movie.genres.join(', '), 'movie-col-genres') + cell(movie.actors.join(', '), 'movie-col-actors') + cell(movie.directors.join(', '), 'movie-col-directors') + cell(movie.productionCompanies.join(', '), 'movie-col-companies') + '</tr>';
     }).join('') + '</tbody></table></div>' : '<div class="movie-empty"><h2>' + (items.length ? 'No Movies Match' : 'No Movies Yet') + '</h2><p>' + (items.length ? 'Try another search or movie state.' : 'Build your wishlist or add something you’ve watched.') + '</p></div>';
     resizeColumns();
     const tab = $('[data-shelf="movies"]');
@@ -340,6 +342,36 @@
     if (!App.storage.saveRecovery("Before deleting " + title)) { $("#movieError").textContent = "Could not save a recovery copy. The movie was kept."; return; }
     App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (movie) { return movie.id === id ? { id: id, deleted: true } : movie; }); }, { reason: "movie-delete" });
     App.storage.saveNow(); App.components.closeDialog("#movieDialog"); render();
+  }
+  async function updateWishlistRatings() {
+    if (streamingBusy) return;
+    const button = $('#wishlistRatingsButton'), status = $('#wishlistStreamingStatus');
+    if (!App.tmdb.token()) { lookupSettings(button); return; }
+    const targets = saved().filter(function (movie) { return movie.status === 'wishlist'; }).map(function (movie) { return u.clone(movie); });
+    $('#wishlistStreaming').hidden = false;
+    if (!targets.length) { status.textContent = 'No Wishlist movies to update.'; return; }
+    if (!App.storage.saveRecovery('Before updating Wishlist TMDB ratings')) { status.textContent = 'Could not save a recovery copy. No ratings were changed.'; return; }
+    streamingBusy = true; streamingController = new AbortController(); button.disabled = true; $('#wishlistStreamingButton').disabled = true; $('#wishlistStreamingCancel').hidden = false;
+    const controller = streamingController;
+    let updated = 0, checked = 0, failure = '';
+    try {
+      for (const target of targets) {
+        if (controller.signal.aborted) break;
+        status.textContent = 'Fetching TMDB ratings ' + (checked + 1) + '/' + targets.length + '…';
+        const details = await App.tmdb.details(target.tmdbId, controller.signal);
+        if (controller.signal.aborted) break;
+        checked++;
+        const current = saved().find(function (movie) { return movie.id === target.id; });
+        if (!current || JSON.stringify(current) !== JSON.stringify(target) || (draft?.id === target.id && $('#movieDialog').open) || inlineEdit?.id === target.id) continue;
+        App.storage.mutate(function (next) { next.workspace.movies.find(function (movie) { return movie.id === target.id; }).tmdbAverage = details.tmdbAverage; }, { reason: 'tmdb-ratings' });
+        updated++;
+        if (!App.storage.saveNow()) { failure = 'Storage unavailable; export a backup before closing.'; break; }
+      }
+    } catch (error) { if (!controller.signal.aborted) failure = error.message; }
+    finally {
+      streamingBusy = false; streamingController = null; button.disabled = false; $('#wishlistStreamingButton').disabled = false; $('#wishlistStreamingCancel').hidden = true;
+      status.textContent = 'TMDB ratings: ' + updated + ' updated; ' + checked + '/' + targets.length + ' checked.' + (failure ? ' Stopped: ' + failure : controller.signal.aborted ? ' Stopped; completed updates saved.' : ' Complete.');
+    }
   }
   async function fillStreaming() {
     if (streamingBusy) return;
@@ -444,6 +476,7 @@
   }
   function init() {
     initBulkPivots();
+    $('#wishlistRatingsButton').addEventListener('click', updateWishlistRatings);
     $('#movieIncompleteButton').addEventListener('click', function () { incompleteOnly = !incompleteOnly; render(); });
     $('#movieNamesButton').addEventListener('click', function (event) {
       $('#movieNamesText').value = saved().map(function (movie) { return movie.title; }).sort(function (a, b) { return a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }); }).join('\n');
@@ -480,7 +513,7 @@
       if (button.dataset.movieColumnSort) {
         const key = button.dataset.movieColumnSort, current = sortPreference();
         const selected = current.key === key || (key === 'date' && current.key === 'watched' && filter === 'watched');
-        setSort(key, selected ? (current.direction === 'asc' ? 'desc' : 'asc') : ['rating', 'date', 'release', 'watched'].includes(key) ? 'desc' : 'asc');
+        setSort(key, selected ? (current.direction === 'asc' ? 'desc' : 'asc') : ['tmdbAverage', 'rating', 'date', 'release', 'watched'].includes(key) ? 'desc' : 'asc');
         document.querySelector('[data-movie-column-sort="' + key + '"]')?.focus();
       }
       if (button.hasAttribute("data-movie-filter")) { filter = button.dataset.movieFilter; render(); }

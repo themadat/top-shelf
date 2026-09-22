@@ -122,3 +122,16 @@ test('local table widths migrate independently and pivot preferences survive nor
  assert.equal(reloaded.ui.pivotSubsectionSorts.Actors.sort,'count');
  assert.equal(reloaded.ui.pivotLocalSettings.other.sort,'score');
 });
+
+test('TMDB average is independent of personal rating and survives normalization',()=>{
+ const source={id:99,title:'Example',vote_average:7.35,vote_count:12,credits:{cast:[],crew:[]}};
+ const details=App.movies.fromTmdb(source);
+ assert.equal(details.tmdbAverage,7.35);
+ assert.equal(App.movies.fromTmdb({...source,vote_count:0}).tmdbAverage,null);
+ const movie=App.movies.normalize({...details,id:'test',status:'watched',rating:4});
+ assert.equal(movie.rating,4);assert.equal(movie.tmdbAverage,7.35);
+ assert.equal(App.movies.normalize({...movie,tmdbAverage:15}).tmdbAverage,null);
+ const state=App.stateModel.normalize({workspace:{movies:[movie]}});
+ assert.equal(App.stateModel.normalize(JSON.parse(JSON.stringify(state))).workspace.movies[0].tmdbAverage,7.35);
+ assert.ok(App.movies.compare({title:'A',tmdbAverage:7.3},{title:'B',tmdbAverage:8.1},{key:'tmdbAverage',direction:'desc'})>0);
+});

@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.46.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.48.
 
 ## Workflows
 
@@ -157,3 +157,7 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.44: Ratings/Years default to 208px cards/96px name columns; removed the high-specificity 1% column rule that overrode resizing. Notes buffers edits for 300ms before full state normalization, flushes pending text on blur/close/hidden/page exit, and cancels pending drafts on state replacement. Movie/pivot/subgenre views ignore edit-document state events to avoid library redraws while typing.
 
 0.0.1.45: ui.movieColumnWidths stores independent all/wishlist/watched maps, migrating prior flat widths into copies for each tab. ui.pivotColumnWidths, pivotLocalSettings and pivotSubsectionSorts persist device-local settings in full backups only; old workspace pivot preferences serve as fallback until locally overridden. Scoring baseline/weight remain shared. Reset preferences clears local overrides. Drag persists on release; fit/keyboard resize persist immediately. Pivot numeric columns reserve 30px Count and 40px Average/Score, panel width = name width + 116px.
+
+0.0.1.46: Optional movie.tmdbAverage stores TMDB vote_average on its native 0–10 scale, null if vote_count is zero/missing. Wishlist alone displays sortable/resizable TMDB Avg /10 after priority. New/editor lookups populate it; Wishlist Update Ratings refreshes existing entries sequentially with recovery, cancellation, stale-edit guards and partial-save error reporting. Personal rating and How remain unchanged. Update older clients before syncing to avoid dropping the new optional field.
+
+0.0.1.47: Compact pivot subsection headings use theme accent-strong text, accent-soft background and an accent top border.

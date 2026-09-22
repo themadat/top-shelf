@@ -30,7 +30,7 @@
     return Object.fromEntries(Object.entries(u.plainObject(value)).filter(function (entry) { return keys.includes(entry[0]) && Number.isFinite(entry[1]) && entry[1] >= 40 && entry[1] <= maximum; }).map(function (entry) { return [entry[0], Math.round(entry[1])]; }));
   }
   function movieWidths(value) {
-    const source = u.plainObject(value), keys = ['score', 'title', 'review', 'how', 'date', 'release', 'other', 'collections', 'genres', 'actors', 'directors', 'companies'];
+    const source = u.plainObject(value), keys = ['tmdbAverage', 'score', 'title', 'review', 'how', 'date', 'release', 'other', 'collections', 'genres', 'actors', 'directors', 'companies'];
     const legacy = columnWidths(source, keys, 100000);
     return Object.fromEntries(['all', 'wishlist', 'watched'].map(function (tab) { return [tab, columnWidths(source[tab] || legacy, keys, 100000)]; }));
   }

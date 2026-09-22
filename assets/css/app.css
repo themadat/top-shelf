@@ -1136,3 +1136,7 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 
 .pivot-card th[data-sort-column="average"]:not(:first-child), .pivot-card th[data-sort-column="score"]:not(:first-child) { width: 40px; }
 .pivot-card td:nth-child(3), .pivot-card td:nth-child(4) { padding-left: .2rem; padding-right: .2rem; }
+
+.movie-col-tmdbAverage .movie-cell { width: 88px; text-align: center; font-variant-numeric: tabular-nums; }
+
+.pivot-card .pivot-section-heading th { color: var(--accent-strong); background: var(--accent-soft); border-top-color: var(--accent); }

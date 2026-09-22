@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.45",
-      "buildId": "0.0.1.45",
+      "version": "0.0.1.47",
+      "buildId": "0.0.1.47",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,8 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.47", "date": "2026-09-22T12:00:00.000Z", "title": "Accent Pivot Headings", "summary": "Use the chosen accent color for pivot subsections.", "features": [], "improvements": ["Accent text, soft background and border on compact subsection headings"], "fixes": [], "knownIssues": []},
+      {"version": "0.0.1.46", "date": "2026-09-22T12:00:00.000Z", "title": "Wishlist TMDB Ratings", "summary": "See average audience ratings beside Wishlist priority.", "features": ["Wishlist-only TMDB Avg /10 column", "Update Ratings fetches scores for saved Wishlist movies"], "improvements": ["TMDB averages are sortable and saved independently of personal ratings"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.45", "date": "2026-09-22T12:00:00.000Z", "title": "Local Column and Pivot Preferences", "summary": "Remember widths and pivot sorting on this device.", "features": ["Independent All, Wishlist and Watched table widths", "Persistent local pivot widths and subsection sorting"], "improvements": ["More room for Average and Score"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.44", "date": "2026-09-22T12:00:00.000Z", "title": "Smoother Notes and Readable Pivots", "summary": "Reduce work during typing and fix narrow pivot columns.", "features": [], "improvements": ["Notes saves after a short pause and flushes when leaving the editor"], "fixes": ["Skip movie and pivot redraws for Notes edits", "Widen Ratings and Years and remove conflicting first-column sizing"], "knownIssues": []},
       {"version": "0.0.1.43", "date": "2026-09-22T12:00:00.000Z", "title": "Homesian Subgenre", "summary": "Add Homesian to the supported subgenres.", "features": ["Homesian is available in the editor vocabulary and future review requests"], "improvements": ["Existing review status stays unchanged for manual classification"], "fixes": [], "knownIssues": []},
