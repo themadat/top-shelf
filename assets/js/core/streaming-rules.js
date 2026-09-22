@@ -44,8 +44,8 @@
     return days.map(function (day) { return new Date(Date.parse(date) + day * 86400000).toISOString().slice(0, 10); });
   }
   function unresolved(movie, reason) {
-    const previous = (movie.how || '').trim().replace(/^\*+/, '');
-    return { status: 'UNKNOWN', how: previous && previous !== 'No US streaming listed; destination unknown' ? '*' + previous : 'No US streaming listed; destination unknown', windows: [], needsResearch: true, reason: reason };
+    const previous = App.movies.cleanHow(movie.how).replace(/^\*+\s*/, '');
+    return { status: 'UNKNOWN', how: previous ? '* ' + previous : '', windows: [], needsResearch: true, reason: reason };
   }
   function predict(movie, options) {
     const input = options || {}, title = input.titleRights || titleOverrides[movie.tmdbId];
@@ -75,7 +75,7 @@
     // Multiple compatible labels may have different timing. Use the union, not an arbitrary label.
     const dates = initial.flatMap(function (rule) { return rule.estimatedDates || []; }).sort();
     const estimate = dates.length ? dates[0] === dates[dates.length - 1] ? dates[0] : dates[0] + '–' + dates[dates.length - 1] : 'date unknown (no US theatrical date)';
-    return { status: 'ESTIMATE', how: 'Likely ' + Array.from(destinations)[0] + ' (US; estimated ' + estimate + '; ' + (distributor ? 'distributor' : 'company') + '-based)', windows: windows, needsResearch: !date, reason: date ? '' : 'US theatrical release date needed for timing.' };
+    return { status: 'ESTIMATE', how: App.movies.cleanHow('Likely ' + Array.from(destinations)[0] + ' (US; estimated ' + estimate + '; ' + (distributor ? 'distributor' : 'company') + '-based)'), windows: windows, needsResearch: !date, reason: date ? '' : 'US theatrical release date needed for timing.' };
   }
   function describe(movie, available, today, usTheatricalDate) { return predict(movie, { available: available, today: today, usTheatricalDate: usTheatricalDate }).how; }
   App.streamingRules = { reviewedOn: reviewedOn, rules: rules, titleOverrides: titleOverrides, predict: predict, describe: describe };

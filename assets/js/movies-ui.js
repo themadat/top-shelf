@@ -54,7 +54,7 @@
   let filter = "all", query = "", incompleteOnly = false;
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
-  function fields() { const form = $("#movieForm"); return Object.assign(Object.fromEntries(new FormData(form).entries()), { subgenreReviewed: form.elements.subgenreReviewed.checked }); }
+  function fields() { const form = $("#movieForm"); return Object.assign(Object.fromEntries(new FormData(form).entries()), { subgenreReviewed: form.elements.subgenreReviewed.checked, incompleteOverride: form.elements.incompleteOverride.checked }); }
   function statusFields() {
     const watched = $("#movieStatus").value === "watched";
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.editorState === (watched ? 'watched' : 'wishlist'))); });
@@ -86,6 +86,7 @@
     $("#movieForm").reset();
     Object.entries(draft).forEach(function (entry) { const field = $("#movieForm").elements[entry[0]]; if (field) field.value = entry[1] == null ? "" : entry[1]; });
     $("#movieForm").elements.subgenreReviewed.checked = draft.subgenreReviewed === true;
+    $("#movieForm").elements.incompleteOverride.checked = draft.incompleteOverride === true;
     $("#movieDialogTitle").textContent = current ? "Edit Movie" : "Add Movie";
     $("#movieLookupQuery").value = current ? String(current.tmdbId) : "";
     $("#movieLookupResults").innerHTML = ""; $("#movieError").textContent = "";
@@ -176,7 +177,7 @@
     input.setAttribute('aria-label', button.getAttribute('aria-label'));
     input.value = score && field === 'rating' && movie.historicalRating ? movie.historicalRating : movie[field] ?? '';
     if (score) { input.placeholder = field === 'rating' ? '0–5 or 100!, YES, MEH, NO, RUN' : '1–5'; }
-    else input.maxLength = field === 'other' ? 4000 : field === 'how' ? 301 : 20000;
+    else input.maxLength = field === 'other' ? 4000 : field === 'how' ? 302 : 20000;
     function restoreFocus() {
       const target = Array.from(document.querySelectorAll('[data-inline-id]')).find(function (item) { return item.dataset.inlineId === movie.id && item.dataset.inlineField === field; });
       (target || $('#movieSearch')).focus();
@@ -218,7 +219,6 @@
     $("#movieIncompleteButton").setAttribute("aria-pressed", String(incompleteOnly));
     const sort = sortPreference();
     visible.sort(function (a, b) { return model.compare(a, b, sort); });
-    $('#movieSort').value = sort.key + ':' + sort.direction;
     $("#movieResultsCount").textContent = visible.length + " Shown";
     const cell = function (value, className) { return '<td class="' + (className || '') + '"><span class="movie-cell" title="' + esc(String(value || '')) + '">' + esc(String(value || '—')) + '</span></td>'; };
     const headers = [['#', 'score'], ['Title', 'title'], ['Review/Notes', 'review'], ['How', 'how'], ['Date', 'date'], ['Release', 'release'], ['Other Pivots', 'other'], ['Collections', 'collections'], ['Genres', 'genres'], ['Actors', 'actors'], ['Directors', 'directors'], ['Companies', 'companies']];
@@ -365,9 +365,6 @@
     $('#wishlistStreamingCancel').addEventListener('click', function () { streamingController?.abort(); });
     $("#wishlistStreamingButton").addEventListener("click", function () { fillStreaming(); });
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });
-    const sorts = [['title', 'Title'], ['rating', 'Rating'], ['priority', 'Priority'], ['watched', 'Watched Date'], ['review', 'Review/Notes'], ['how', 'How'], ['date', 'Date'], ['release', 'Release'], ['other', 'Other Pivots'], ['collections', 'Collections'], ['genres', 'Genres'], ['actors', 'Actors'], ['directors', 'Directors'], ['companies', 'Companies']];
-    $('#movieSort').innerHTML = sorts.map(function (entry) { return ['asc', 'desc'].map(function (direction) { return '<option value="' + entry[0] + ':' + direction + '">' + entry[1] + ' ' + (direction === 'asc' ? 'Ascending' : 'Descending') + '</option>'; }).join(''); }).join('');
-    $("#movieSort").addEventListener("change", function (event) { const parts = event.target.value.split(':'); setSort(parts[0], parts[1]); });
     $("#moviesWorkspace").addEventListener("click", function (event) {
       const button = event.target.closest("button"); if (!button) return;
       if (button.dataset.movieColumnSort) {

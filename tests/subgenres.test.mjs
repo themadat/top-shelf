@@ -45,3 +45,12 @@ test('old local/cloud libraries become reviewed; new movies stay pending through
  const roundtrip=A.stateModel.prepareSync(A.stateModel.syncPayload(state)).state;
  for(const copy of [backup,roundtrip])assert.deepEqual(Array.from(copy.workspace.movies,m=>m.subgenreReviewed),[true,false,false]);
 });
+
+test('Incomplete override survives backups and cloud, and defaults off',()=>{
+ const state=A.stateModel.createDefaultState({demo:false});state.workspace.movies=data();
+ state.workspace.movies[0].incompleteOverride=true;
+ for(const copy of [A.stateModel.prepare(A.stateModel.exportEnvelope(state)).state,A.stateModel.prepareSync(A.stateModel.syncPayload(state)).state]){
+   assert.equal(copy.workspace.movies[0].incompleteOverride,true);
+   assert.equal(copy.workspace.movies[1].incompleteOverride,false);
+ }
+});

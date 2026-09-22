@@ -2,6 +2,25 @@
   "use strict";
   const App = window.LocalApp, u = App.utils;
   const historicalRatings = Object.freeze({ "100!": 5, YES: 4, MEH: 3, NO: 2, RUN: 1 });
+  // Normalize known provider labels while preserving personal How notes.
+  const howAliases = {"amazon prime video": "Prime", "amazon prime video with ads": "Prime", "amazon prime video free with ads": "Prime", "prime video": "Prime", "kanopy": "Kanopy", "hoopla": "Hoopla", "youtube free": "YouTube", "tubi tv": "Tubi", "amc plus apple tv channel": "AMC+", "amc+ amazon channel": "AMC+", "amc+ roku premium channel": "AMC+", "starz apple tv channel": "Starz", "starz amazon channel": "Starz", "apple tv amazon channel": "Apple TV", "cinemax amazon channel": "Cinemax", "cinemax apple tv channel": "Cinemax", "fawesome": "Fawesome", "plex": "Plex", "plex channel": "Plex", "mgm+ amazon channel": "MGM+", "mgm plus roku premium channel": "MGM+", "mgm plus": "MGM+", "the roku channel": "Roku", "hbo max amazon channel": "HBO Max", "lionsgate+ amazon channels": "Lionsgate+", "moviesphere+ amazon channel": "MovieSphere+", "vix": "VIX", "netflix standard with ads": "Netflix", "paramount plus premium": "Paramount+", "paramount plus essential": "Paramount+", "paramount+ amazon channel": "Paramount+", "paramount+ roku premium channel": "Paramount+", "peacock premium": "Peacock", "peacock premium plus": "Peacock"};
+  function cleanHow(value) {
+    let text = u.cleanLine(value, 2000);
+    if (text.replace(/^\*\s*/, '') === 'No US streaming listed; destination unknown') return '';
+    text = text.replace(/\(US; estimated (.*?); (?:company|distributor)-based\)/g, '(~ $1)')
+      .replace(/(\d{4}-\d{2}-\d{2})–(\d{4}-\d{2}-\d{2})/g, function (_, start, end) { return start + ' to ' + (start.slice(0, 4) === end.slice(0, 4) ? end.slice(5) : end); })
+      .replace('date unknown (no US theatrical date)', 'date unknown');
+    const marker = /^\*/.test(text) ? '* ' : '';
+    text = text.replace(/^\*+\s*/, '');
+    const seen = new Set();
+    return marker + text.split(',').map(function (part) {
+      return part.trim().split(' / ').map(function (item) {
+        const match = /^(Likely )?(.*?)( \(~ .*\))?$/.exec(item);
+        const name = match[2].replace(/ \((?:free|ads)\)$/, '');
+        return (match[1] || '') + (Object.prototype.hasOwnProperty.call(howAliases, name.toLowerCase()) ? howAliases[name.toLowerCase()] : match[2]) + (match[3] || '');
+      }).join(' / ');
+    }).filter(function (part) { const key = part.toLowerCase(); if (!part || seen.has(key)) return false; seen.add(key); return true; }).join(', ');
+  }
   function date(value) {
     const text = u.cleanLine(value, 10);
     return /^\d{4}-\d{2}-\d{2}$/.test(text) && !Number.isNaN(Date.parse(text)) && new Date(text).toISOString().slice(0, 10) === text ? text : "";
@@ -22,7 +41,8 @@
     const movie = {
       id: id, tmdbId: Number(v.tmdbId), title: u.cleanLine(v.title, 200), releaseDate: date(v.releaseDate),
       subgenreReviewed: v.subgenreReviewed === true,
-      how: u.cleanLine(v.how, 301), other: u.cleanText(v.other, 4000),
+      incompleteOverride: v.incompleteOverride === true,
+      how: u.cleanLine(cleanHow(v.how), 302), other: u.cleanText(v.other, 4000),
       genres: list(v.genres), productionCompanies: list(v.productionCompanies), directors: list(v.directors), actors: list(v.actors).slice(0, 10), collections: list(v.collections), starredCollections: list(v.starredCollections).filter(function (name) { return list(v.collections).includes(name); }),
       status: v.status === "watched" ? "watched" : "wishlist",
       availableDate: date(v.availableDate), priority: number(v.priority), notes: u.cleanText(v.notes, 20000),
@@ -107,6 +127,6 @@
     return "hsl(" + Math.round(Math.max(0, Math.min(1, fraction)) * 120) + " 52% " + (priority ? "88%" : "25%") + ")";
   }
   function searchable(movie) { return [movie.title, movie.tmdbId, movie.how, movie.other, movie.notes, movie.review, movie.historicalRating].concat(movie.genres, movie.productionCompanies, movie.directors, movie.actors, movie.collections).join(" ").toLowerCase(); }
-  function incomplete(movie) { return !movie.releaseDate || ["genres", "actors", "directors", "productionCompanies"].some(function (field) { return !movie[field]?.length; }); }
-  App.movies = { incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  function incomplete(movie) { return !movie.incompleteOverride && (!movie.releaseDate || ["genres", "actors", "directors", "productionCompanies"].some(function (field) { return !movie[field]?.length; })); }
+  App.movies = { cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
 })();

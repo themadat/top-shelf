@@ -11,7 +11,7 @@ test('live providers override deals, missing dates, and older catalog',()=>{
  assert.equal(model.describe(movie([],''),'Tubi (ads)','2026-09-21'),'Tubi (ads)');
 });
 test('supplied labels inherit initial destinations without converting Pay-2 or split windows into first destinations',()=>{
- for(const [company,service]of [['Universal Pictures','Peacock'],['Focus Features','Peacock'],['DreamWorks Animation','Peacock'],['Illumination','Peacock'],['Columbia Pictures','Netflix'],['TriStar Pictures','Netflix'],['Screen Gems','Netflix'],['Sony Pictures Animation','Netflix'],['Paramount Pictures','Paramount+'],['A24','HBO Max'],['Lionsgate','Starz'],['Summit Entertainment','Starz'],['DC Studios','HBO Max'],['New Line Cinema','HBO Max'],['Pixar Animation Studios','Disney+'],['Marvel Studios','Disney+'],['Lucasfilm','Disney+'],['Walt Disney Animation Studios','Disney+'],['Walt Disney Pictures','Disney+'],['20th Century Studios','Hulu / Disney+'],['Searchlight Pictures','Hulu / Disney+'],['NEON','Hulu'],['MGM','Prime Video'],['Apple Original Films','Apple TV']]) {
+ for(const [company,service]of [['Universal Pictures','Peacock'],['Focus Features','Peacock'],['DreamWorks Animation','Peacock'],['Illumination','Peacock'],['Columbia Pictures','Netflix'],['TriStar Pictures','Netflix'],['Screen Gems','Netflix'],['Sony Pictures Animation','Netflix'],['Paramount Pictures','Paramount+'],['A24','HBO Max'],['Lionsgate','Starz'],['Summit Entertainment','Starz'],['DC Studios','HBO Max'],['New Line Cinema','HBO Max'],['Pixar Animation Studios','Disney+'],['Marvel Studios','Disney+'],['Lucasfilm','Disney+'],['Walt Disney Animation Studios','Disney+'],['Walt Disney Pictures','Disney+'],['20th Century Studios','Hulu / Disney+'],['Searchlight Pictures','Hulu / Disney+'],['NEON','Hulu'],['MGM','Prime'],['Apple Original Films','Apple TV']]) {
    const result=model.predict(movie([company]),{usTheatricalDate:'2026-06-01',today:'2026-09-22'});
    assert.equal(result.status,'ESTIMATE',company); assert.ok(result.how.startsWith('Likely '+service+' ('),company);
  }
@@ -27,7 +27,7 @@ test('date estimates preserve ranges and separate sequential windows',()=>{
  assert.equal(universal.windows[2].estimatedDates,null);
  const warner=model.predict(movie(['New Line Cinema']),options);
  assert.equal(warner.windows[0].estimatedDates.join(','),'2026-08-10,2026-08-30');
- assert.match(warner.how,/2026-08-10–2026-08-30/);
+ assert.match(warner.how,/2026-08-10 to 08-30/);
  assert.equal(model.predict(movie(['Columbia Pictures']),options).windows[1].window,'Pay-2');
  assert.equal(model.predict(movie(['Columbia Pictures']),{...options,usTheatricalDate:'2027-01-01'}).windows.length,1);
  assert.equal(model.predict(movie(['Universal Pictures'])).windows[0].estimatedDates,null);
@@ -47,8 +47,8 @@ test('verified title dates, rights and distributor precede company clues; rental
 
 test('unresolved checks keep previous How with one marker, successful checks replace it',()=>{
  const input={...movie([]),how:'Cinema'};
- assert.equal(model.describe(input,'','2026-09-22'),'*Cinema');
- input.how='*Cinema';assert.equal(model.describe(input,'','2026-09-22'),'*Cinema');
+ assert.equal(model.describe(input,'','2026-09-22'),'* Cinema');
+ input.how='*Cinema';assert.equal(model.describe(input,'','2026-09-22'),'* Cinema');
  assert.equal(model.describe(input,'Netflix','2026-09-22'),'Netflix');
  input.productionCompanies=['Universal Pictures'];assert.match(model.describe(input,'','2026-09-22'),/^Likely Peacock/);
 });
@@ -57,5 +57,19 @@ test('incomplete metadata detects any requested gap and ignores optional fields'
  const complete={releaseDate:'2026-01-01',genres:['Drama'],actors:['Actor'],directors:['Director'],productionCompanies:['Studio']};
  assert.equal(api.incomplete(complete),false);
  for(const field of Object.keys(complete))assert.equal(api.incomplete({...complete,[field]:field==='releaseDate'?'':[]}),true);
- const normalized=api.normalize({id:'1',tmdbId:1,title:'Long How',status:'wishlist',how:'*'+'x'.repeat(300)});assert.equal(normalized.how.length,301);
+ const normalized=api.normalize({id:'1',tmdbId:1,title:'Long How',status:'wishlist',how:'*'+'x'.repeat(300)});assert.equal(normalized.how.length,302);
+});
+
+test('How normalization shortens providers and estimates without losing personal notes',()=>{
+ const api=context.window.LocalApp.movies;
+ assert.equal(api.cleanHow('Amazon Prime Video, Amazon Prime Video with Ads, Kanopy (free), Plex Channel (ads), Plex (ads)'), 'Prime, Kanopy, Plex');
+ assert.equal(api.cleanHow('Likely Hulu / Disney+ (US; estimated 2032-02-17–2032-04-17; company-based)'), 'Likely Hulu / Disney+ (~ 2032-02-17 to 04-17)');
+ assert.equal(api.cleanHow('Likely Netflix (US; estimated 2032-12-17–2033-04-17; distributor-based)'), 'Likely Netflix (~ 2032-12-17 to 2033-04-17)');
+ assert.equal(api.cleanHow('No US streaming listed; destination unknown'), '');
+ assert.equal(model.describe({...movie([]),how:'03-05 Disney+'},'', '2026-09-22'), '* 03-05 Disney+');
+ assert.equal(model.describe({...movie([]),how:'* 03-05 Disney+'},'', '2026-09-22'), '* 03-05 Disney+');
+ assert.equal(model.describe(movie([]),'', '2026-09-22'), '');
+ assert.equal(api.cleanHow('constructor'), 'constructor');
+ assert.equal(api.incomplete({...movie([]),incompleteOverride:true}), false);
+ assert.equal(api.normalize({id:'1',tmdbId:1,status:'wishlist',title:'Example',incompleteOverride:true}).incompleteOverride,true);
 });

@@ -58,7 +58,7 @@
         if (!seen.has(key)) { seen.add(key); names.push(name + entry[1]); }
       });
     });
-    const value = names.join(', ');
+    const value = App.movies.cleanHow(names.join(', '));
     if (value.length > 300) throw new Error('Provider list exceeds the How field limit. Enter providers manually.');
     return value;
   }
