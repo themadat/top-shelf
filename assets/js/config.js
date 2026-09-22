@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.34",
-      "buildId": "0.0.1.34",
+      "version": "0.0.1.35",
+      "buildId": "0.0.1.35",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "0.0.1.35", "date": "2026-09-22T12:00:00.000Z", "title": "Starred People and Legacy Ratings", "summary": "Star actors, directors, and companies into Other Pivots.", "features": ["Stars for actors, directors, and companies", "Separate numeric and legacy sections in Ratings"], "improvements": [], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.34", "date": "2026-09-22T12:00:00.000Z", "title": "Refresh Existing How Values", "summary": "Explicit movie lookups check existing How text and mark unresolved values.", "features": [], "improvements": ["Editor refresh uses the same streaming predictions as Update How"], "fixes": ["Existing How no longer skips explicit streaming checks", "Preserve How edits made while a lookup is running"], "knownIssues": []},
       {"version": "0.0.1.33", "date": "2026-09-22T12:00:00.000Z", "title": "Movie Toolbar Symbols", "summary": "Use standard symbol-over-label action buttons in the movie toolbar.", "features": ["Custom symbols for Incomplete, Subgenre Review, and Update How"], "improvements": ["Movie actions follow the Icons, Text, and Icons + Text preference"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.32", "date": "2026-09-22T12:00:00.000Z", "title": "Resizable Movie Columns", "summary": "Drag column edges or double-click to fit the widest displayed content.", "features": ["Saved movie column widths", "Keyboard resizing with arrow keys and Enter to fit"], "improvements": [], "fixes": [], "knownIssues": []},

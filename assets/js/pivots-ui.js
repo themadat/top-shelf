@@ -12,6 +12,7 @@
     if (!App.storage.saveNow()) App.components.toast('Kept for this session. Export a backup before closing.', { title: 'Storage unavailable', kind: 'warning' });
     render();
   }
+  const starFields = { collections: 'starredCollections', actors: 'starredActors', directors: 'starredDirectors', productionCompanies: 'starredCompanies' };
   let active = false;
   function average(value) { return value === null ? "—" : value.toFixed(2); }
   function render() {
@@ -39,10 +40,10 @@
       const maximum = all.reduce(function (max, row) { return Math.max(max, row.count); }, 1);
       let previousSection = '';
       section.querySelector('tbody').innerHTML = rows.length ? rows.map(function (row) {
-        const members = dimension.id === 'collections' && !row.missing ? App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted && movie.collections.includes(row.name); }) : [];
-        const starred = members.length > 0 && members.every(function (movie) { return (movie.starredCollections || []).includes(row.name); });
-        const star = members.length ? '<button type="button" class="collection-star" data-star-collection="' + esc(row.name) + '" aria-pressed="' + starred + '" aria-label="' + (starred ? 'Unstar ' : 'Star ') + esc(row.name) + '" title="Include collection in Other Pivots">' + App.icons.markup('star') + '</button>' : '';
-        const heading = dimension.id === 'other' && row.section && row.section !== previousSection ? '<tr class="pivot-section-heading"><th colspan="4" scope="rowgroup">' + esc(row.section) + '</th></tr>' : '';
+        const members = starFields[dimension.id] && !row.missing ? App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted && movie[dimension.id].includes(row.name); }) : [];
+        const starred = members.length > 0 && members.every(function (movie) { return (movie[starFields[dimension.id]] || []).includes(row.name); });
+        const star = members.length ? '<button type="button" class="collection-star" data-star-dimension="' + dimension.id + '" data-star-collection="' + esc(row.name) + '" aria-pressed="' + starred + '" aria-label="' + (starred ? 'Unstar ' : 'Star ') + esc(row.name) + '" title="Include in Other Pivots">' + App.icons.markup('star') + '</button>' : '';
+        const heading = ['other', 'ratings'].includes(dimension.id) && row.section && row.section !== previousSection ? '<tr class="pivot-section-heading"><th colspan="4" scope="rowgroup">' + esc(row.section) + '</th></tr>' : '';
         previousSection = row.section;
         return heading + '<tr><th scope="row" title="' + esc(row.name) + '">' + star + esc(row.name) + '</th><td><span class="pivot-count-bar" style="--share:' + (row.count / maximum * 100).toFixed(2) + '%">' + row.count + '</span></td><td>' + (row.average === null ? '—' : '<span class="movie-score" style="background:' + App.movies.color(row.average, false) + '">' + average(row.average) + '</span>') + '</td><td>' + (row.score === null ? '—' : '<span class="movie-score" style="background:' + App.movies.color(row.score, false) + '">' + average(row.score) + '</span>') + '</td></tr>';
       }).join('') : '<tr><td colspan="4">No matching groups.</td></tr>';
@@ -66,16 +67,18 @@
     $('#pivotGrid').addEventListener('click', function (event) {
       const star = event.target.closest('[data-star-collection]');
       if (star) {
+        const dimension = star.dataset.starDimension, field = starFields[dimension];
+        if (!field) return;
         const name = star.dataset.starCollection, remove = star.getAttribute('aria-pressed') === 'true';
         App.storage.mutate(function (next) {
           next.workspace.movies.forEach(function (movie) {
-            if (movie.deleted || !movie.collections.includes(name)) return;
-            movie.starredCollections = (movie.starredCollections || []).filter(function (value) { return value !== name; });
-            if (!remove) movie.starredCollections.push(name);
+            if (movie.deleted || !movie[dimension].includes(name)) return;
+            movie[field] = (movie[field] || []).filter(function (value) { return value !== name; });
+            if (!remove) movie[field].push(name);
           });
         }, { reason: 'collection-star' });
         const persisted = App.storage.saveNow();
-        const target = Array.from(document.querySelectorAll('[data-star-collection]')).find(function (button) { return button.dataset.starCollection === name; });
+        const target = Array.from(document.querySelectorAll('[data-star-collection]')).find(function (button) { return button.dataset.starCollection === name && button.dataset.starDimension === dimension; });
         target?.focus();
         if (!persisted) App.components.toast('Kept for this session. Export a backup before closing.', { title: 'Storage unavailable', kind: 'warning' });
         return;

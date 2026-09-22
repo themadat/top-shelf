@@ -11,7 +11,7 @@
     { id: "directors", title: "Directors", missing: "No Director Listed" },
     { id: "productionCompanies", title: "Companies", missing: "No Company Listed" }
   ];
-  const sections = ["Others", "Subgenres", "Collections"];
+  const sections = ["Numeric Ratings", "Legacy Ratings", "Others", "Subgenres", "Collections", "Actors", "Directors", "Companies"];
   function otherTags(movie) {
     return (movie.other || '').split(/\n/).filter(function (line) { return !line.trim().startsWith('Original availability note:'); }).join(',').split(',').map(function (value) {
       const tag = value.trim(), match = /^Subgenre(?:\s*:\s*|\s+)(.+)$/i.exec(tag);
@@ -32,13 +32,19 @@
       const buckets = new Map(), otherNames = new Map();
       watched.forEach(function (movie) {
         let values;
-        if (dimension.id === "ratings") values = Number.isFinite(movie.rating) ? [String(movie.rating)] : [];
+        if (dimension.id === "ratings") {
+          const legacy = movie.historicalRating && Object.hasOwn(App.movies.historicalRatings, movie.historicalRating);
+          const name = legacy ? movie.historicalRating : String(movie.rating);
+          const key = (legacy ? 'legacy:' : 'numeric:') + name;
+          values = Number.isFinite(movie.rating) ? [key] : [];
+          otherNames.set(key, { name: name, section: legacy ? 'Legacy Ratings' : 'Numeric Ratings' });
+        }
         else if (dimension.id === "years") { const date = movie[yearBasis !== "release" ? "watchedDate" : "releaseDate"]; values = date ? [date.slice(0, 4)] : []; }
         else if (dimension.id === "other" || dimension.id === "genres") {
           const tags = otherTags(movie);
           const entries = dimension.id === "genres"
             ? (movie.genres || []).map(function (name) { return { name: name, section: '' }; }).concat(tags.filter(function (tag) { return tag.section === 'Subgenres'; }).map(function (tag) { return { name: tag.name + ' *', section: '' }; }))
-            : tags.concat((movie.starredCollections || []).map(function (name) { return { name: name, section: 'Collections' }; }));
+            : tags.concat([['starredCollections', 'Collections'], ['starredActors', 'Actors'], ['starredDirectors', 'Directors'], ['starredCompanies', 'Companies']].flatMap(function (entry) { return (movie[entry[0]] || []).map(function (name) { return { name: name, section: entry[1] }; }); }));
           values = Array.from(new Set(entries.map(function (tag) {
             const name = tag.name.trim(), section = tag.section === 'Others' && collectionNames.has(name.toLocaleLowerCase()) ? 'Collections' : tag.section;
             const key = section + ':' + name.toLocaleLowerCase();
@@ -55,7 +61,7 @@
           if (Number.isFinite(movie.rating)) { row.rated += 1; row.sum += movie.rating; }
         });
       });
-      groups[dimension.id] = Array.from(buckets.values(), function (row) { return { name: row.name, section: row.section, missing: row.missing, value: !row.missing && ["ratings", "years"].includes(dimension.id) ? Number(row.name) : null, count: row.count, average: row.rated ? row.sum / row.rated : null, score: score(row.count, row.rated ? row.sum / row.rated : null, scoring) }; });
+      groups[dimension.id] = Array.from(buckets.values(), function (row) { return { name: row.name, section: row.section, missing: row.missing, value: !row.missing && ["ratings", "years"].includes(dimension.id) ? (row.section === "Legacy Ratings" ? App.movies.historicalRatings[row.name] : Number(row.name)) : null, count: row.count, average: row.rated ? row.sum / row.rated : null, score: score(row.count, row.rated ? row.sum / row.rated : null, scoring) }; });
     });
     return { count: watched.length, average: ratings.length ? ratings.reduce(function (sum, value) { return sum + value; }, 0) / ratings.length : null, unknownDates: watched.filter(function (movie) { return !movie.watchedDate; }).length, groups: groups };
   }

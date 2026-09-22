@@ -130,3 +130,22 @@ test('adjusted score rewards supported high averages without rewarding volume al
   assert.deepEqual(Array.from(App.pivots.rows(groups, 1, 'score', 'desc'), row => row.name), ['4', '2']);
   assert.deepEqual(Array.from(App.pivots.rows(groups, 1, 'score', 'asc'), row => row.name), ['2', '4']);
 });
+
+test('starred people and companies appear in distinct Other Pivots sections', () => {
+  const entry = movie(80, { actors: ['Shared'], directors: ['Shared'], productionCompanies: ['Studio'], starredActors: ['Shared', 'Absent'], starredDirectors: ['Shared'], starredCompanies: ['Studio'] });
+  assert.equal(entry.starredActors.join(','), 'Shared');
+  const rows = App.pivots.build([entry], 'watched').groups.other;
+  assert.equal(rows.find(row => row.section === 'Actors').name, 'Shared');
+  assert.equal(rows.find(row => row.section === 'Directors').name, 'Shared');
+  assert.equal(rows.find(row => row.section === 'Companies').name, 'Studio');
+  assert.ok(rows.every(row => row.count === 1));
+});
+
+test('numeric and legacy rating buckets stay separate and legacy categories sort by score', () => {
+  const entries = [movie(90, {rating:5}), ...['NO','YES','100!','MEH'].map((label,i)=>movie(91+i,{historicalRating:label}))];
+  const rows = App.pivots.rows(App.pivots.build(entries).groups.ratings, 1, 'category', 'desc');
+  assert.equal(rows.map(row=>row.name).join(','), '5,100!,YES,MEH,NO');
+  assert.equal(rows[0].section, 'Numeric Ratings');
+  assert.equal(rows[1].section, 'Legacy Ratings');
+  assert.equal(rows.reduce((sum,row)=>sum+row.count,0), 5);
+});
