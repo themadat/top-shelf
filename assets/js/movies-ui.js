@@ -50,7 +50,7 @@
     $('#movieResponseStatus').textContent = errors.length ? errors.join(' ') : 'Full TMDB responses shown below.';
   }
   let inlineEdit = null;
-  let streamingBusy = false, streamingAttempted = false;
+  let streamingBusy = false, streamingController = null;
   let filter = "all", query = "";
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
@@ -250,35 +250,37 @@
     App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (movie) { return movie.id === id ? { id: id, deleted: true } : movie; }); }, { reason: "movie-delete" });
     App.storage.saveNow(); App.components.closeDialog("#movieDialog"); render();
   }
-  async function fillStreaming(manual) {
+  async function fillStreaming() {
     if (streamingBusy) return;
-    if (!App.tmdb.token()) {
-      if (manual) lookupSettings($('#wishlistStreamingButton'));
-      return;
-    }
-    const targets = saved().filter(function (movie) { return movie.status === 'wishlist' && !movie.how.trim(); });
+    if (!App.tmdb.token()) { lookupSettings($('#wishlistStreamingButton')); return; }
+    const targets = saved().filter(function (movie) { return movie.status === 'wishlist'; }).map(function (movie) { return u.clone(movie); });
     const status = $('#wishlistStreamingStatus'), button = $('#wishlistStreamingButton');
-    if (!targets.length) { status.textContent = 'No Wishlist movies with an empty How.'; return; }
-    streamingBusy = true; streamingAttempted = true; button.disabled = true;
-    let updated = 0, unavailable = 0, checked = 0, failure = '';
+    if (!targets.length) { status.textContent = 'No Wishlist movies to check.'; return; }
+    if (!App.storage.saveRecovery('Before updating Wishlist How')) { status.textContent = 'Could not save a recovery copy. No movies were changed.'; return; }
+    streamingBusy = true; streamingController = new AbortController(); button.disabled = true; $('#wishlistStreamingCancel').hidden = false;
+    const controller = streamingController;
+    let updated = 0, checked = 0, estimated = 0, unknown = 0, skipped = 0, failure = '';
     try {
       for (const target of targets) {
-        status.textContent = 'Checking US availability ' + (++checked) + '/' + targets.length + '…';
-        const how = await App.tmdb.streaming(target.tmdbId);
-        if (!how) { unavailable++; continue; }
+        if (controller.signal.aborted) break;
+        status.textContent = 'Checking US availability ' + (checked + 1) + '/' + targets.length + '…';
+        const available = await App.tmdb.streaming(target.tmdbId, controller.signal);
+        if (controller.signal.aborted) break;
+        checked++;
         const current = saved().find(function (movie) { return movie.id === target.id; });
-        if (!current || current.status !== 'wishlist' || current.how.trim() || current.tmdbId !== target.tmdbId) continue;
-        App.storage.mutate(function (next) {
-          const movie = next.workspace.movies.find(function (item) { return item.id === current.id; });
-          movie.how = how;
-        }, { reason: 'wishlist-streaming' });
+        if (!current || current.status !== 'wishlist' || JSON.stringify(current) !== JSON.stringify(target) || (draft?.id === target.id && $('#movieDialog').open) || inlineEdit?.id === target.id) { skipped++; continue; }
+        const how = App.streamingRules.describe(current, available);
+        if (how.startsWith('Likely ')) estimated++;
+        else if (!available) unknown++;
+        if (current.how === how) continue;
+        App.storage.mutate(function (next) { next.workspace.movies.find(function (movie) { return movie.id === target.id; }).how = how; }, { reason: 'wishlist-streaming' });
         updated++;
         if (!App.storage.saveNow()) { failure = 'Storage unavailable; export a backup before closing.'; break; }
       }
-    } catch (error) { failure = error.message; }
+    } catch (error) { if (!controller.signal.aborted) failure = error.message; }
     finally {
-      streamingBusy = false; button.disabled = false;
-      status.textContent = updated + ' updated; ' + unavailable + ' without US streaming listed.' + (failure ? ' Stopped: ' + failure : ' Checked ' + checked + ' movies.');
+      streamingBusy = false; streamingController = null; button.disabled = false; $('#wishlistStreamingCancel').hidden = true;
+      status.textContent = 'Checked ' + checked + '/' + targets.length + '; ' + updated + ' updated; ' + estimated + ' estimates; ' + unknown + ' unknown; ' + skipped + ' changed or being edited, skipped.' + (failure ? ' Stopped: ' + failure : controller.signal.aborted ? ' Stopped. Completed updates are saved.' : ' Complete.');
     }
   }
   function initBulkPivots() {
@@ -334,7 +336,10 @@
     document.querySelectorAll('[data-editor-priority]').forEach(function (button) { button.addEventListener('click', function () { const input = $('#movieForm').elements.priority; input.value = input.value === button.dataset.editorPriority ? '' : button.dataset.editorPriority; statusFields(); }); });
     $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.addEventListener('input', dateFields); input.addEventListener('change', dateFields); });
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); if (button.dataset.editorState === 'watched') $('#movieForm').elements.rating.focus(); else $('[data-editor-priority]').focus(); }); });
-    $("#wishlistStreamingButton").addEventListener("click", function () { fillStreaming(true); });
+    $('#wishlistRulesDate').textContent = 'Research snapshot: ' + App.streamingRules.reviewedOn + '. Rules are bundled with the app; no LLM or web research runs during a check. First-window predictions apply only within one year of release and the listed release years.';
+    $('#wishlistRulesList').innerHTML = App.streamingRules.rules.map(function (rule) { return '<li>' + esc(rule.studio) + ' → ' + esc(rule.service) + ' (' + rule.from + '–' + rule.through + ') · <a href="' + esc(rule.source) + '" target="_blank" rel="noopener noreferrer">Source</a></li>'; }).join('');
+    $('#wishlistStreamingCancel').addEventListener('click', function () { streamingController?.abort(); });
+    $("#wishlistStreamingButton").addEventListener("click", function () { fillStreaming(); });
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });
     const sorts = [['title', 'Title'], ['rating', 'Rating'], ['priority', 'Priority'], ['watched', 'Watched Date'], ['review', 'Review/Notes'], ['how', 'How'], ['date', 'Date'], ['release', 'Release'], ['other', 'Other Pivots'], ['collections', 'Collections'], ['genres', 'Genres'], ['actors', 'Actors'], ['directors', 'Directors'], ['companies', 'Companies']];
     $('#movieSort').innerHTML = sorts.map(function (entry) { return ['asc', 'desc'].map(function (direction) { return '<option value="' + entry[0] + ':' + direction + '">' + entry[1] + ' ' + (direction === 'asc' ? 'Ascending' : 'Descending') + '</option>'; }).join(''); }).join('');
@@ -347,7 +352,7 @@
         setSort(key, selected ? (current.direction === 'asc' ? 'desc' : 'asc') : ['rating', 'date', 'release', 'watched'].includes(key) ? 'desc' : 'asc');
         document.querySelector('[data-movie-column-sort="' + key + '"]')?.focus();
       }
-      if (button.hasAttribute("data-movie-filter")) { filter = button.dataset.movieFilter; render(); if (filter === "wishlist" && !streamingAttempted) fillStreaming(false); }
+      if (button.hasAttribute("data-movie-filter")) { filter = button.dataset.movieFilter; render(); }
       if (button.hasAttribute("data-add-movie")) open(null, button, button.dataset.addStatus);
       if (button.dataset.inlineId) editCell(button);
       if (button.dataset.editMovie) open(button.dataset.editMovie, button);

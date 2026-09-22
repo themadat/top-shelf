@@ -24,7 +24,7 @@ All interface SVGs are self-contained in assets/js/icons.js. The supplied star-a
 - Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
 - GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
 - Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.28.
+- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.29.
 
 ## Workflows
 
@@ -121,3 +121,5 @@ Spreadsheet import preparation: original `Movies - Movies.csv` and `import-prepa
 0.0.1.26: Movie Lookup Settings is compact and below Appearance. Saved credentials show a fixed masked indicator (not the token); saving it unchanged preserves the credential and updates session/device retention. TMDB Details displays full Details+Credits and Watch Providers JSON with authenticated fetches instead of links. Raw responses are editor-session-only, escaped via textContent, excluded from movie data/backups/sync, and cleared/aborted when switching movies or closing. Opening Details loads missing responses; Reload Returned Data refreshes without changing saved metadata.
 
 0.0.1.27: Movie form removes Lookup Settings, places Subgenres Reviewed with the comma-separated supported vocabulary in parentheses beside State (wraps on small screens), and uses priority toggle buttons 1–5 (repeat clears). Empty native dates show --/--/---- while unfocused. Notifications is below Appearance. TMDB responses use escaped collapsible object/array branches; Watch Providers defaults US open, other countries and rent/buy closed.
+
+0.0.1.28: Wishlist → Update Wishlist How explicitly checks all Wishlist movies independent of search and existing How. Recovery precedes the batch; sequential live US provider requests override static first-window company estimates in core/streaming-rules.js (dated/source-linked). Unknown/no-date/old catalog/conflicting studios remain unknown; no inferred date is saved. Existing How is replaced by this explicit action; entering Wishlist no longer auto-runs. Concurrent edits/open editors/status/ID changes are skipped. Stop cancels the request; completed updates persist, API/storage failures stop with progress. Built-in rules currently cover Universal, Sony, Paramount, A24 and Lionsgate; these are company-based clues, not confirmed rights.

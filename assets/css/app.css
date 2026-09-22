@@ -1087,3 +1087,6 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
   .movie-state-row { flex-wrap: wrap; }
   #movieForm .movie-subgenre-review { margin-left: 0; }
 }
+.wishlist-streaming-rules { flex-basis: 100%; font-size: .75rem; }
+.wishlist-streaming-rules p { margin: .4rem 0; }
+.wishlist-streaming-rules li { overflow-wrap: anywhere; }
