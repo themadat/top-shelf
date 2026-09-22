@@ -107,16 +107,22 @@
     $('#tmdbCredentialStatus').textContent = App.tmdb.token() ? 'TMDB token is configured in this browser.' : 'Add your TMDB API Read Access Token to enable lookups.';
     requestAnimationFrame(function () { $('#tmdbToken').focus(); $('#tmdbSettings').scrollIntoView({ block: 'center' }); });
   }
-  async function fillEditorStreaming(id, sequence) {
-    if (!App.tmdb.token() || $('#movieForm').elements.how.value.trim()) return;
+  async function fillEditorStreaming(id, sequence, refresh) {
+    const input = $('#movieForm').elements.how, previous = input.value;
+    if (!App.tmdb.token() || (!refresh && previous.trim())) return;
     $('#movieStreamingStatus').textContent = 'Checking US streaming availability…';
     try {
       const result = await App.tmdb.streamingResponse(id, lookupController?.signal);
-      const how = result.how;
+      if (sequence !== generation || draft?.tmdbId !== id) return;
+      let how = result.how;
+      if (refresh && !how) {
+        const usTheatricalDate = await App.tmdb.theatricalDate(id, lookupController?.signal);
+        how = App.streamingRules.predict(Object.assign({}, draft, { how: previous }), { usTheatricalDate: usTheatricalDate }).how;
+      }
       if (sequence !== generation || draft?.tmdbId !== id) return;
       responses.providers = result.raw; renderResponses();
-      if (!$('#movieForm').elements.how.value.trim()) $('#movieForm').elements.how.value = how;
-      $('#movieStreamingStatus').textContent = how ? 'US streaming from JustWatch via TMDB. Edit How as needed.' : 'No US subscription, free, or ad-supported streaming listed.';
+      if (input.value === previous) input.value = how;
+      $('#movieStreamingStatus').textContent = result.how ? 'US streaming from JustWatch via TMDB. Edit How as needed.' : 'No US streaming listed. Existing How is marked * when no estimate is available. Save Movie to keep changes.';
     } catch (error) { if (sequence === generation) $('#movieStreamingStatus').textContent = error.message; }
   }
   async function lookup(id) {
@@ -141,7 +147,7 @@
         if (!keepTitle) $("#movieForm").elements.title.value = data.title;
         $("#movieLookupResults").innerHTML = '<p class="inline-status">Movie details loaded from TMDB.</p>';
         metadata();
-        await fillEditorStreaming(data.tmdbId, sequence);
+        await fillEditorStreaming(data.tmdbId, sequence, true);
       } else {
         const results = await App.tmdb.search(queryValue, lookupController.signal);
         if (sequence !== generation) return;
