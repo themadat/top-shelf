@@ -349,9 +349,10 @@
         runtime.remoteMissing = true;
       }
       // Equal content establishes a baseline even after an upgrade or first check.
-      // An unchanged legacy SHA also identifies the old baseline's actual content.
+      // An unchanged GitHub blob SHA proves the remote bytes still match the baseline.
+      // Recompute its fingerprint after upgrades normalize fields differently.
       if (remote && (localHash() === runtime.remoteHash
-        || (cloud.baselineTarget === target(cloud) && cloud.baselineSha === remote.sha && !cloud.baselineHash.startsWith("data-v1:")))) {
+        || (cloud.baselineTarget === target(cloud) && cloud.baselineSha && cloud.baselineSha === remote.sha))) {
         if (cloud.baselineTarget !== target(cloud) || cloud.baselineHash !== runtime.remoteHash || cloud.baselineSha !== remote.sha) rememberBaseline(remote.sha, runtime.remoteHash);
       }
       runtime.checkedAt = checkedAt;

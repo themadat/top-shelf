@@ -45,7 +45,8 @@ function harness({ token = 'test-token', online = true } = {}) {
   vm.runInContext(readFileSync(new URL('../assets/js/core/sync.js', import.meta.url), 'utf8'), context);
   h.sync = App.sync;
   h.remote = structuredClone(state);
-  h.file = () => response(200, { type: 'file', sha: 'remote-sha', content: Buffer.from(JSON.stringify(h.legacy ? h.remote : App.stateModel.syncPayload(h.remote))).toString('base64') });
+  h.remoteSha = () => 'remote-' + App.stateModel.syncHash(h.remote);
+  h.file = () => response(200, { type: 'file', sha: h.remoteSha(), content: Buffer.from(JSON.stringify(h.legacy ? h.remote : App.stateModel.syncPayload(h.remote))).toString('base64') });
   h.respond = h.file;
   h.setBaseline = () => Object.assign(state.modules.cloudSync, {
     baselineTarget: 'themadat/app-data/main/data/top-shelf.json', baselineHash: App.stateModel.syncHash(state), baselineSha: 'base-sha'
@@ -308,7 +309,7 @@ test('legacy whole-state files migrate without false conflicts and compact on ex
 
 test('unchanged legacy SHA migrates the baseline even when local content changed', async () => {
   const h = harness(); h.legacy = true; h.setBaseline();
-  h.state.modules.cloudSync.baselineHash = 'old-hash'; h.state.modules.cloudSync.baselineSha = 'remote-sha';
+  h.state.modules.cloudSync.baselineHash = 'old-hash'; h.state.modules.cloudSync.baselineSha = h.remoteSha();
   changeNotes(h.state, 'unsynced note');
   await h.sync.check(true);
   assert.equal(h.sync.getInfo().change, 'local');
@@ -615,5 +616,35 @@ test('score parameters and sorting survive sync and reject invalid values', () =
   for (const scoring of [{ baseline: -1, weight: 5 }, { baseline: 3, weight: -1 }, { baseline: 6, weight: 5 }]) {
     const invalid = structuredClone(payload); invalid.data.pivotSettings.scoring = scoring;
     assert.throws(() => model.prepareSync(invalid), /invalid pivot settings/);
+  }
+});
+
+
+test('unchanged remote revision rebases a current-format fingerprint after an upgrade', async () => {
+  const h = harness(); h.setBaseline();
+  h.state.modules.cloudSync.baselineSha = h.remoteSha();
+  h.state.modules.cloudSync.baselineHash = 'data-v1:before-normalization-upgrade';
+  changeNotes(h.state, 'local work waiting for upload');
+  const localBefore = JSON.stringify(h.App.stateModel.syncPayload(h.state));
+  await h.sync.check(true);
+  assert.equal(h.sync.getInfo().change, 'local');
+  assert.equal(h.state.modules.cloudSync.baselineHash, h.App.stateModel.syncHash(h.remote));
+  assert.equal(JSON.stringify(h.App.stateModel.syncPayload(h.state)), localBefore);
+  assert.equal(h.choices.length, 0);
+  assert.ok(h.requests.every(request => !request.options.method || request.options.method === 'GET'));
+});
+
+test('upgrade baseline repair never trusts a changed revision or different target', async () => {
+  for (const mismatch of ['revision', 'target']) {
+    const h = harness(); h.setBaseline();
+    h.state.modules.cloudSync.baselineHash = 'data-v1:before-normalization-upgrade';
+    h.state.modules.cloudSync.baselineSha = mismatch === 'revision' ? 'older-remote-revision' : h.remoteSha();
+    if (mismatch === 'target') h.state.modules.cloudSync.baselineTarget = 'different/repository/main/data.json';
+    changeNotes(h.state, 'local edit');
+    changeNotes(h.remote, 'remote edit');
+    if (mismatch === 'target') h.state.modules.cloudSync.baselineSha = h.remoteSha();
+    await h.sync.check(true);
+    assert.equal(h.sync.getInfo().change, mismatch === 'target' ? 'first-sync' : 'conflict');
+    assert.equal(h.state.modules.cloudSync.baselineHash, 'data-v1:before-normalization-upgrade');
   }
 });
