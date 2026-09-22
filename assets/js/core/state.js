@@ -26,6 +26,17 @@
     ];
   }
 
+  function columnWidths(value, keys, maximum) {
+    return Object.fromEntries(Object.entries(u.plainObject(value)).filter(function (entry) { return keys.includes(entry[0]) && Number.isFinite(entry[1]) && entry[1] >= 40 && entry[1] <= maximum; }).map(function (entry) { return [entry[0], Math.round(entry[1])]; }));
+  }
+  function movieWidths(value) {
+    const source = u.plainObject(value), keys = ['score', 'title', 'review', 'how', 'date', 'release', 'other', 'collections', 'genres', 'actors', 'directors', 'companies'];
+    const legacy = columnWidths(source, keys, 100000);
+    return Object.fromEntries(['all', 'wishlist', 'watched'].map(function (tab) { return [tab, columnWidths(source[tab] || legacy, keys, 100000)]; }));
+  }
+  function subsectionSorts(value) {
+    return Object.fromEntries(Object.entries(u.plainObject(value)).filter(function (entry) { return ['Others','Subgenres','Collections','Actors','Directors','Companies'].includes(entry[0]) && ['category','count','average','score'].includes(entry[1]?.sort) && ['asc','desc'].includes(entry[1]?.direction); }).map(function (entry) { return [entry[0], {sort: entry[1].sort, direction: entry[1].direction}]; }));
+  }
   function normalizePivotSettings(value) {
     const source = u.plainObject(value), result = {};
     if (Object.hasOwn(source, 'scoring')) {
@@ -104,7 +115,8 @@
         selectedDocumentId: documents[0] ? documents[0].id : "",
         selectedShelf: config.shelves[0].id,
         movieSorts: {},
-        movieColumnWidths: {},
+        movieColumnWidths: { all: {}, wishlist: {}, watched: {} },
+        pivotColumnWidths: {}, pivotLocalSettings: {}, pivotSubsectionSorts: {},
         search: "",
         records: {
           statusFilter: "all",
@@ -463,7 +475,10 @@
         selectedDocumentId: documentIds.has(sourceUi.selectedDocumentId) ? sourceUi.selectedDocumentId : (documents[0] ? documents[0].id : ""),
         selectedShelf: config.shelves.some(function (shelf) { return shelf.id === sourceUi.selectedShelf; }) ? sourceUi.selectedShelf : config.shelves[0].id,
         search: u.cleanLine(sourceUi.search, 200),
-        movieColumnWidths: Object.fromEntries(Object.entries(u.plainObject(sourceUi.movieColumnWidths)).filter(function (entry) { return ['score', 'title', 'review', 'how', 'date', 'release', 'other', 'collections', 'genres', 'actors', 'directors', 'companies'].includes(entry[0]) && Number.isFinite(entry[1]) && entry[1] >= 40 && entry[1] <= 100000; }).map(function (entry) { return [entry[0], Math.round(entry[1])]; })),
+        movieColumnWidths: movieWidths(sourceUi.movieColumnWidths),
+        pivotColumnWidths: columnWidths(sourceUi.pivotColumnWidths, ['ratings','years','genres','other','collections','actors','directors','productionCompanies'], 1200),
+        pivotLocalSettings: normalizePivotSettings(sourceUi.pivotLocalSettings),
+        pivotSubsectionSorts: subsectionSorts(sourceUi.pivotSubsectionSorts),
         movieSorts: Object.fromEntries(['all', 'wishlist', 'watched'].map(function (tab) { return [tab, App.movies.sortPreference(u.plainObject(sourceUi.movieSorts)[tab], tab)]; })),
         records: {
           statusFilter: sourceRecordUi.statusFilter === "all" || STATUS_IDS.has(sourceRecordUi.statusFilter) ? (sourceRecordUi.statusFilter || "all") : "all",
@@ -562,6 +577,7 @@
     next.ui.records = defaults.ui.records;
     next.ui.movieSorts = defaults.ui.movieSorts;
     next.ui.movieColumnWidths = defaults.ui.movieColumnWidths;
+    next.ui.pivotColumnWidths = {}; next.ui.pivotLocalSettings = {}; next.ui.pivotSubsectionSorts = {};
     next.ui.documents = defaults.ui.documents;
     next.ui.panels = defaults.ui.panels;
     next.ui.navigation = defaults.ui.navigation;

@@ -3,21 +3,28 @@
   const App = window.LocalApp, model = App.pivots, esc = App.utils.escapeHtml;
   const $ = function (selector) { return document.querySelector(selector); };
   function preference(id) {
-    return App.storage.getState().workspace.pivotSettings?.[id] || { minimum: 1, sort: ["ratings", "years"].includes(id) ? "category" : "count", direction: "desc" };
+    return App.storage.getState().ui?.pivotLocalSettings?.[id] || App.storage.getState().workspace.pivotSettings?.[id] || { minimum: 1, sort: ["ratings", "years"].includes(id) ? "category" : "count", direction: "desc" };
   }
   function savePreference(id, value) {
     App.storage.mutate(function (next) {
-      next.workspace.pivotSettings = Object.assign({}, next.workspace.pivotSettings, { [id]: value });
+      if (id === 'scoring') next.workspace.pivotSettings = Object.assign({}, next.workspace.pivotSettings, { [id]: value });
+      else next.ui.pivotLocalSettings = Object.assign({}, next.ui.pivotLocalSettings, { [id]: value });
     }, { reason: 'pivot-settings' });
     if (!App.storage.saveNow()) App.components.toast('Kept for this session. Export a backup before closing.', { title: 'Storage unavailable', kind: 'warning' });
     render();
   }
   const starFields = { collections: 'starredCollections', actors: 'starredActors', directors: 'starredDirectors', productionCompanies: 'starredCompanies' };
   let active = false;
-  const searches = {}, subsectionSorts = {};
+  const searches = {};
+  let subsectionSorts = {};
+  function saveSubsections() {
+    App.storage.mutate(function (state) { state.ui.pivotSubsectionSorts = Object.assign({}, subsectionSorts); }, { reason: 'pivot-local', touch: false });
+    App.storage.saveNow();
+  }
   function average(value) { return value === null ? "—" : value.toFixed(2); }
   function render() {
     if (!active) return;
+    subsectionSorts = Object.assign({}, App.storage.getState().ui?.pivotSubsectionSorts || {});
     const scoring = App.storage.getState().workspace.pivotSettings?.scoring || { baseline: 3, weight: 5 };
     $('#pivotBaseline').value = scoring.baseline;
     $('#pivotWeight').value = scoring.weight;
@@ -27,6 +34,8 @@
     model.dimensions.forEach(function (dimension) {
       const pref = preference(dimension.id), all = result.groups[dimension.id].filter(function (row) { return !row.missing || !["other", "collections"].includes(dimension.id); }), rows = Array.from(new Set(all.map(function (row) { return row.section; }))).flatMap(function (name) { const order = dimension.id === 'other' && subsectionSorts[name] || pref; return model.rows(all.filter(function (row) { return row.section === name; }), pref.minimum, order.sort, order.direction); }).sort(function (a, b) { return model.sections.indexOf(a.section) - model.sections.indexOf(b.section); }).filter(function (row) { return row.name.toLocaleLowerCase().includes(searches[dimension.id] || ''); });
       const section = $('#pivot-' + dimension.id);
+      const width = App.storage.getState().ui?.pivotColumnWidths?.[dimension.id];
+      if (section.style) { section.style.setProperty('--pivot-name-width', width ? width + 'px' : ''); section.style.setProperty('--pivot-card-width', width ? (width + 116) + 'px' : ''); }
       section.querySelector('[data-pivot-min]').value = pref.minimum;
       section.querySelectorAll('[data-pivot-sort]').forEach(function (button) {
         const selected = button.dataset.pivotSort === pref.sort;
@@ -71,11 +80,12 @@
       searches[id] = event.target.value.toLocaleLowerCase().trim();
       render();
     });
-    function resize(id, width) {
+    function resize(id, width, persist = true) {
       const card = $('#pivot-' + id), value = Math.round(Math.max(40, Math.min(1200, width)));
       card.style.setProperty('--pivot-name-width', value + 'px');
-      card.style.setProperty('--pivot-card-width', (value + 96) + 'px');
+      card.style.setProperty('--pivot-card-width', (value + 116) + 'px');
       card.querySelector('[data-pivot-resize]').setAttribute('aria-valuenow', value);
+      if (persist) { App.storage.mutate(function (state) { state.ui.pivotColumnWidths[id] = value; }, { reason: 'pivot-width', touch: false }); App.storage.saveNow(); }
     }
     function fit(id) {
       const card = $('#pivot-' + id);
@@ -97,13 +107,13 @@
       event.preventDefault(); handle.focus();
       const start = event.clientX, width = handle.parentElement.getBoundingClientRect().width;
       handle.setPointerCapture(event.pointerId);
-      const move = function (next) { resize(handle.dataset.pivotResize, width + next.clientX - start); };
-      const stop = function () { handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', stop); handle.removeEventListener('pointercancel', stop); handle.removeEventListener('lostpointercapture', stop); };
+      const move = function (next) { resize(handle.dataset.pivotResize, width + next.clientX - start, false); };
+      const stop = function () { resize(handle.dataset.pivotResize, parseFloat($('#pivot-' + handle.dataset.pivotResize).style.getPropertyValue('--pivot-name-width')) || width); handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', stop); handle.removeEventListener('pointercancel', stop); handle.removeEventListener('lostpointercapture', stop); };
       handle.addEventListener('pointermove', move); handle.addEventListener('pointerup', stop); handle.addEventListener('pointercancel', stop); handle.addEventListener('lostpointercapture', stop);
     });
     $('#pivotGrid').addEventListener('click', function (event) {
       const subsection = event.target.closest('[data-subsection-sort]');
-      if (subsection) { const name = subsection.dataset.subsection, key = subsection.dataset.subsectionSort, previous = subsectionSorts[name] || preference('other'); subsectionSorts[name] = { sort: key, direction: previous.sort === key && previous.direction === 'desc' ? 'asc' : 'desc' }; render(); Array.from($('#pivot-other').querySelectorAll('[data-subsection-sort]')).find(function (button) { return button.dataset.subsection === name && button.dataset.subsectionSort === key; })?.focus(); return; }
+      if (subsection) { const name = subsection.dataset.subsection, key = subsection.dataset.subsectionSort, previous = subsectionSorts[name] || preference('other'); subsectionSorts[name] = { sort: key, direction: previous.sort === key && previous.direction === 'desc' ? 'asc' : 'desc' }; saveSubsections(); render(); Array.from($('#pivot-other').querySelectorAll('[data-subsection-sort]')).find(function (button) { return button.dataset.subsection === name && button.dataset.subsectionSort === key; })?.focus(); return; }
       const star = event.target.closest('[data-star-collection]');
       if (star) {
         const dimension = star.dataset.starDimension, field = starFields[dimension];
@@ -125,7 +135,7 @@
       const button = event.target.closest('[data-pivot-sort]'); if (!button) return;
       const pref = Object.assign({}, preference(button.dataset.pivotId));
       pref.direction = pref.sort === button.dataset.pivotSort && pref.direction === 'desc' ? 'asc' : 'desc';
-      pref.sort = button.dataset.pivotSort; if (button.dataset.pivotId === 'other') Object.keys(subsectionSorts).forEach(function (key) { delete subsectionSorts[key]; }); savePreference(button.dataset.pivotId, pref);
+      pref.sort = button.dataset.pivotSort; if (button.dataset.pivotId === 'other') { subsectionSorts = {}; saveSubsections(); } savePreference(button.dataset.pivotId, pref);
     });
     ['#pivotBaseline', '#pivotWeight'].forEach(function (selector) {
       $(selector).addEventListener('change', function (event) {
@@ -143,7 +153,7 @@
       }
       render();
     });
-    window.addEventListener('app:statechange', function (event) { if (event.detail?.reason !== 'edit-document') render(); });
+    window.addEventListener('app:statechange', function (event) { if (!['edit-document', 'pivot-width'].includes(event.detail?.reason)) render(); });
   }
   App.pivotsUI = { init: init };
 })();

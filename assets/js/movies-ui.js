@@ -227,7 +227,7 @@
     const table = $('#movieList .movie-table');
     if (!table) return;
     const headings = Array.from(table.tHead.rows[0].cells);
-    const stored = App.storage.getState().ui.movieColumnWidths || {};
+    const stored = App.storage.getState().ui.movieColumnWidths?.[filter] || {};
     const keys = headings.map(function (cell) { return cell.className.replace('movie-col-', ''); });
     const widths = headings.map(function (cell, index) { return stored[keys[index]] || Math.ceil(cell.getBoundingClientRect().width); });
     const group = document.createElement('colgroup');
@@ -241,7 +241,7 @@
       headings[index].querySelector('.movie-column-resize')?.setAttribute('aria-valuenow', widths[index]);
     }
     function save(index) {
-      App.storage.mutate(function (state) { state.ui.movieColumnWidths[keys[index]] = widths[index]; }, { reason: 'movie-column-width', touch: false });
+      App.storage.mutate(function (state) { state.ui.movieColumnWidths[filter][keys[index]] = widths[index]; }, { reason: 'movie-column-width', touch: false });
       App.storage.saveNow();
     }
     function fit(index) {
@@ -511,7 +511,7 @@
       catch (error) { $("#tmdbCredentialStatus").textContent = error.message; }
     });
     $("#forgetTmdbToken").addEventListener("click", function () { cancelLookup(); try { App.tmdb.forget(); tokenSettings(); $("#tmdbCredentialStatus").textContent = "TMDB token forgotten."; } catch (error) { $("#tmdbCredentialStatus").textContent = error.message; } });
-    window.addEventListener("app:statechange", function (event) { if (!["movie-column-width", "edit-document"].includes(event.detail?.reason)) render(); });
+    window.addEventListener("app:statechange", function (event) { if (!["movie-column-width", "edit-document", "pivot-width", "pivot-local"].includes(event.detail?.reason)) render(); });
     const measure = function () {
       document.documentElement.style.setProperty('--app-header-height', $('.app-header').getBoundingClientRect().height + 'px');
       document.documentElement.style.setProperty('--movie-toolbar-height', $('#movieToolbar').getBoundingClientRect().height + 'px');

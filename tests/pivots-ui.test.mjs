@@ -55,6 +55,11 @@ test('opening populated pivots renders all eight tables without summary cards', 
   button.listeners.click();
   const otherBody = nodes.get('#pivot-other').querySelector('tbody');
   assert.match(otherBody.innerHTML, /data-subsection-sort="category"/);
+  const localUi = {};
+  const getState = App.storage.getState;
+  App.storage.getState = () => ({...getState(), ui: localUi});
+  App.storage.mutate = callback => callback(App.storage.getState());
+  App.storage.saveNow = () => true;
   const clickSort = (section, key) => grid.listeners.click({ target: { closest: selector => selector === '[data-subsection-sort]' ? { dataset: { subsection: section, subsectionSort: key } } : null } });
   clickSort('Others', 'category');
   assert.ok(otherBody.innerHTML.indexOf('title="Beta"') < otherBody.innerHTML.indexOf('title="Alpha"'));

@@ -1116,8 +1116,8 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 
 /* Dense pivot panels with adjustable category columns. */
 .pivot-grid { gap: .15rem; }
-.pivot-grid .pivot-card { --pivot-name-width: 74px; width: var(--pivot-card-width, 170px); min-width: 0; max-width: none; flex: 0 0 auto; padding: .15rem; }
-.pivot-grid #pivot-ratings, .pivot-grid #pivot-years { --pivot-name-width: 96px; width: var(--pivot-card-width, 208px); }
+.pivot-grid .pivot-card { --pivot-name-width: 74px; width: var(--pivot-card-width, 190px); min-width: 0; max-width: none; flex: 0 0 auto; padding: .15rem; }
+.pivot-grid #pivot-ratings, .pivot-grid #pivot-years { --pivot-name-width: 96px; width: var(--pivot-card-width, 212px); }
 .pivot-card header { gap: .1rem; margin-bottom: .2rem; }
 .pivot-card h3 { font-size: .7rem; }
 .pivot-card table { table-layout: fixed; }
@@ -1133,3 +1133,6 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 .pivot-card th[data-sort-column="category"] { position: sticky; overflow: visible; padding-right: 6px; }
 .pivot-resizer { position: absolute; right: -3px; top: 0; bottom: 0; width: 7px; cursor: col-resize; touch-action: none; z-index: 3; }
 .pivot-resizer:hover, .pivot-resizer:focus-visible { background: var(--accent-soft); outline: 1px solid var(--accent); }
+
+.pivot-card th[data-sort-column="average"]:not(:first-child), .pivot-card th[data-sort-column="score"]:not(:first-child) { width: 40px; }
+.pivot-card td:nth-child(3), .pivot-card td:nth-child(4) { padding-left: .2rem; padding-right: .2rem; }

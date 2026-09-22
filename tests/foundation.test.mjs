@@ -107,3 +107,18 @@ test('banner timing defaults, bounds, backups, and sync isolation', () => {
     assert.equal(model.prepare(model.exportEnvelope(normalized)).state.preferences.controls.whatsNewDismissSeconds, expected);
   }
 });
+
+test('local table widths migrate independently and pivot preferences survive normalization', () => {
+ const model=App.stateModel;
+ const state=model.normalize({ui:{movieColumnWidths:{title:260},pivotColumnWidths:{ratings:110},pivotLocalSettings:{other:{minimum:1,sort:'score',direction:'asc'}},pivotSubsectionSorts:{Actors:{sort:'count',direction:'desc'}}}});
+ assert.equal(state.ui.movieColumnWidths.all.title,260);
+ assert.equal(state.ui.movieColumnWidths.wishlist.title,260);
+ state.ui.movieColumnWidths.all.title=300;
+ const reloaded=model.normalize(JSON.parse(JSON.stringify(state)));
+ assert.equal(reloaded.ui.movieColumnWidths.all.title,300);
+ assert.equal(reloaded.ui.movieColumnWidths.wishlist.title,260);
+ assert.equal(reloaded.ui.movieColumnWidths.watched.title,260);
+ assert.equal(reloaded.ui.pivotColumnWidths.ratings,110);
+ assert.equal(reloaded.ui.pivotSubsectionSorts.Actors.sort,'count');
+ assert.equal(reloaded.ui.pivotLocalSettings.other.sort,'score');
+});
