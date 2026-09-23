@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "0.0.1.51",
-      "buildId": "0.0.1.51",
+      "version": "1.0.0.1",
+      "buildId": "1.0.0.1",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -152,6 +152,7 @@
       "danger": "#a74747"
     },
     "releases": [
+      {"version": "1.0.0.1", "date": "2026-09-22T12:00:00.000Z", "title": "Top Shelf 1.0", "summary": "Promote the movie library and pivot workspace to version 1.0.", "features": [], "improvements": ["Concise current-state handoff and updated documentation", "Shared clipboard handlers reduce repeated code"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.51", "date": "2026-09-22T12:00:00.000Z", "title": "Wishlist Spacing and Average Bands", "summary": "Tighten Wishlist spacing and use available search width.", "features": [], "improvements": ["Ave bands span 3–10 with lower scores clamped to purple", "Search fills remaining desktop toolbar space", "Compact Wishlist details above the table"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.50", "date": "2026-09-22T12:00:00.000Z", "title": "Clearer Scores and Faster Priority Editing", "summary": "Make score colors clearer and simplify priority changes.", "features": [], "improvements": ["Priority selects its existing value when opened for inline editing", "Stronger priority, rating and average colors", "Watched How values use plain text without provider highlights"], "fixes": [], "knownIssues": []},
       {"version": "0.0.1.49", "date": "2026-09-22T12:00:00.000Z", "title": "Average Rating Bands", "summary": "Seven rating bands and a tighter movie toolbar.", "features": [], "improvements": ["Seven equal Ave ranges from purple at 0 to dark green at 10", "Custom Update Ratings icon", "Narrower desktop search and single-row actions"], "fixes": [], "knownIssues": []},

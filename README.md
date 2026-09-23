@@ -1,57 +1,41 @@
-# Top Shelf
+# Top Shelf 1.0
 
-Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the first planned areas.
+**Version 1.0.0.1.** A static, local-first movie library with Wishlist, Watched, Notes and eight pivot views. The remaining shelves are starter views. No build step, backend, account or runtime dependency.
 
-Version **0.0.1.11** includes the Movies shelf with Wishlist and Watched states, TMDB lookup, local editing, filtering, sorting, and teal/coral accents. Other shelves retain their starter views. The shell keeps Notes, Settings, backup/recovery, optional GitHub Sync, and offline support.
+## Use
 
-## Movies
+Serve the repository with `python3 -m http.server 8000`, then open `http://localhost:8000`. Stop with Control-C. Ordinary static hosting works; installation and offline caching require HTTPS or localhost.
 
-Choose **Add movie**, search by title and select the correct match, or enter a numeric TMDB ID. Lookup fills release date, TMDB ID, genres, production companies, directors, the top ten cast members, and collection. Title can be edited; How and Other are free text. TMDB sometimes has no release date or collection, which is shown explicitly.
+- Add movies by title or TMDB ID; select the correct result explicitly.
+- Click table cells to edit priority/rating, notes, How, dates and Other Pivots. Enter saves; Escape cancels.
+- Wishlist shows TMDB average ratings beside Priority. Update Ratings refreshes scores; Update How checks US availability and bundled streaming estimates.
+- Pivots summarize watched movies. Search each panel, adjust minimums, sort, resize columns and star people/companies/collections into Other Pivots.
+- Notes autosaves. Settings offers backup/recovery, appearance, sync, movie-name/details exports and How values.
+- Subgenre Review exports a request for an LLM and previews additive result imports before applying them.
 
-- **Wishlist:** optional available date, whole-number priority 1–5, and Notes.
-- **Watched:** optional watched date (blank means unknown), required decimal rating 0–5 or mapped historical rating, and optional review.
-- Add in either state, edit existing movies, or use Mark watched. One active entry per TMDB movie is allowed. Original Wishlist extras remain stored when you change state.
-- Ratings use dark colors from red at 0 to green at 5; entry accepts 0–5. Priorities use light colors from green at 1 to red at 5. Labels and numbers keep the meaning available without color.
+Personal ratings use 0–5; priority 1 is highest. Ave uses TMDB's 0–10 scale with seven bands spanning 3–10. Unknown values remain blank/neutral. Streaming estimates are labelled and do not set Available Date. See [bundled rules](docs/STREAMING-RULES.md).
 
-In **Add movie → Movie lookup settings**, enter your **TMDB API Read Access Token** once per browser and choose device or tab storage. Tokens never appear in source, backups, diagnostics, or cloud content. Lookup needs internet; existing movies can be read and edited offline. The provided read token was verified in a temporary test browser; configure it in your own app browser before lookup.
+## TMDB
 
-TMDB search deliberately requires selecting a result instead of guessing the first title. Credits are fetched with details using [append_to_response](https://developer.themoviedb.org/docs/append-to-response). The checked-in logo comes from [TMDB’s attribution page](https://www.themoviedb.org/about/logos-attribution). This product uses the TMDB API but is not endorsed or certified by TMDB.
+Enter your **TMDB API Read Access Token** in **Settings → Movie Lookup Settings**, choosing device or session storage. Lookup needs internet; saved movies remain usable offline. Tokens never enter source, backups, diagnostics or cloud content. Raw responses are available in the movie editor's collapsible TMDB Details.
 
-## Run locally
+This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability comes from JustWatch through TMDB; rentals/purchases are excluded from subscription predictions.
 
-This is static HTML, CSS, and JavaScript with no build step or runtime dependency. Serve this directory with `python3 -m http.server 8000`, then open http://localhost:8000. Stop the server with Control-C. An ordinary static host also works. Install and service-worker features need HTTPS or localhost.
+## Storage and sync
 
-## Data and GitHub Sync
+Browser storage holds movies, Notes and local preferences. Export regular full JSON backups in Settings. Recovery copies precede destructive replacements. Local schema is 6; cloud format is top-shelf-app-data v5/schema 9. Prior formats remain readable. Update all devices before syncing so older clients do not drop newer optional movie fields.
 
-Movies and Notes save in browser storage under a Top Shelf namespace. Export full JSON backups in Settings; import and recovery preserve a copy before replacing local data. Credentials stay outside backups, sync payloads, and diagnostics. Cloud data carries movies (including deletion markers), Notes, and any nonempty legacy record content; settings remain on each device.
+GitHub Sync targets `themadat/app-data/main/data/top-shelf.json`. To provision it:
 
-GitHub Sync is enabled and fixed to `themadat/app-data/main/data/top-shelf.json`. The external file and token still need user setup:
+1. Create `data/top-shelf.json` containing `{}` in [the app-data repository](https://github.com/themadat/app-data/tree/main/data).
+2. Create a [fine-grained token](https://github.com/settings/personal-access-tokens) restricted to app-data with **Contents: Read and write**.
+3. Enter it only in **Settings → Data Sync**, then Test and Save. Configure each browser separately.
+4. Verify a Notes upload/download round trip. Divergent edits require an explicit choice; timestamps do not choose winners.
 
-1. In [app-data/data](https://github.com/themadat/app-data/tree/main/data), create `top-shelf.json` on `main` containing `{}` and commit it.
-2. Create a [fine-grained token](https://github.com/settings/personal-access-tokens) named Top Shelf, resource owner `themadat`, **Only select repositories → app-data**, **Contents → Read and write**.
-3. Enter the token only in **Settings → Data Sync**, select whether to remember it, then **Test** and **Save**. Never paste the token into chat or source.
-4. Use **Sync Now**, configure another browser, and confirm a Notes upload/download round trip. Configure credentials separately on each device.
+Movie column widths are independent per All/Wishlist/Watched. Pivot widths and local sorting stay on each device, appear in full backups, and are excluded from content sync. Credentials are always excluded. More setup detail: [RESET](docs/RESET.md).
 
-The target is configured locally; file existence, token permissions, and a real round trip remain unverified until this checklist is completed. See [reset/setup checklist](docs/RESET.md).
+## Development
 
-Update all app copies to **0.0.1.4** before syncing movies. Local state/backups now use schema v5, cloud content uses format v3/schema v7, and prior local/cloud content remains readable. Older builds reject the new format. A merge combines disjoint movies but requires a choice for differing edits or deletion conflicts. Full replacement/import saves recovery first.
+Run `node --test tests/*.test.mjs`; see [testing](docs/TESTING.md) for release checks. Preserve the static architecture and use the shared inline SVG catalog for controls. GitHub Pages deploys through the checked-in Actions workflow.
 
-## Artwork and hosting
-
-`assets/icons/top-shelf.svg` is the supplied editable star-and-shelf artwork. Light and dark variants share that source. Maskable assets scale the complete foreground to 70% on a full-bleed blue canvas for circular crop safety. Install, touch, favicon, and splash assets are checked in.
-
-The [repository](https://github.com/themadat/top-shelf) retains its GitHub Pages Actions workflow. Set Pages Source to GitHub Actions for a single deployment path. No repository creation, commits, push, or deployment is part of this reset.
-
-See [architecture](docs/ARCHITECTURE.md), [components](docs/COMPONENTS.md), [customization](docs/CUSTOMIZATION.md), [testing](docs/TESTING.md), and [two-laptop Git setup](docs/GIT-SETUP.md). Agent lifecycle contracts live in [the handoff](context/LLM_HANDOFF.md).
-
-Historical ratings preserve their labels and map to numeric scores: 100! = 5, YES = 4, MEH = 3, NO = 2, RUN = 1. Leave a watched date blank when unknown. Settings includes the original movie database background, favorites, and reference links; Roadmap and What’s New retain its backlog and spreadsheet history.
-
-### Movie pivots
-
-Choose **Movies → Pivots** for counts and average ratings across genres, ratings, years, collections, actors, directors, and production companies. All watched movies are included, regardless of list filters. Each table has a minimum movie count and Count/Average buttons that reverse direction when clicked again. Switch years between release year and watched year. Unknown dates and missing metadata get their own groups. Historical scores are included; averages display two decimal places. A movie can count in several groups, once per group. Actor pivots use the saved cast (up to ten actors per movie). Dashboard controls last for the current session; results update automatically and work offline.
-
-The top bar includes combined storage/cloud-sync status and an Update button. Update checks for a new worker, saves current data, and force-refreshes; ready updates change its icon to red without an availability pop-up. Settings → Notifications controls What’s New dismissal from 1–300 seconds (default 20), stored in local preferences and full backups, excluded from content sync.
-
-Movies uses a compact spreadsheet-style table across the full workspace width. The sticky toolbar combines Movie List/Pivots, state filters, search with shown count, sorting, and Add Movie. Click a title to edit; scroll horizontally for additional metadata. Shift–Control–Option–R activates the top-bar Update button.
-
-Pivots includes Other Pivots for comma-separated Other tags (case-insensitive, excluding preserved availability notes). Compact Min, Count, and Average controls share one line; arrows show the current direction. L and P switch the Movie List/Pivots views, and underlined 1–8 shortcuts identify the category tabs.
+Start with [the concise agent handoff](context/LLM_HANDOFF.md). Read [architecture](docs/ARCHITECTURE.md), [components](docs/COMPONENTS.md), [customization](docs/CUSTOMIZATION.md) or [Git setup](docs/GIT-SETUP.md) only as needed. Release history stays in Settings → What's New and Git.

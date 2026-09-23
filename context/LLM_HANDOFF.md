@@ -1,171 +1,83 @@
-# Agent handoff
+# Top Shelf — Current Handoff
 
-Read AGENTS.md, this handoff, and context/WISHES.md before working. Preserve existing/manual edits. Run git status --short at session start. If work is in flight, inspect recent commits, the current diff, and its plan’s Resume block.
+Read this file, AGENTS.md and context/WISHES.md at session start. Search for relevant code before reading whole files. Historical releases remain in assets/js/config.js and Git; do not append per-build history here.
 
-Top Shelf is a collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and future domains. Movies and TV are the initial direction. Version 0.0.1.12 implements Movies with Wishlist/Watched state, TMDB lookup, editing, deletion, search, filters, sorting, and real movie counts. Other shelves are starter views. Supplied artwork, numeric navigation (1–8), and remembered ui.selectedShelf remain. The app accents are teal #008080 and coral #ff7f50; old default colors migrate while custom colors survive.
+## Product and invariants
 
-Movie fields: id (local), tmdbId, title, releaseDate, how, other, genres, productionCompanies, directors, actors (top ten), collections, status, availableDate, priority, notes, watchedDate, historicalRating, rating, review. Wishlist extras are optional; Watched requires a rating; review is optional; an empty watchedDate means unknown. Optional historicalRating stores 100!, YES, MEH, NO, or RUN and determines the numeric score 5, 4, 3, 2, or 1. Ratings accept decimals 0–5 with a dark red(0)→green(5) scale; priorities are integers 1–5 with a light green(1)→red(5) scale. Preserve optional prior-state fields when switching. One active movie per TMDB ID; deletion stores {id, deleted:true} after recovery. No inferred timestamp winner for conflicts.
+Top Shelf 1.0.0.1 is a static, local-first HTML/CSS/JavaScript app with no build step, runtime dependency, backend or sign-in. Movies is implemented; the other seven shelves are starter views. Keep one plain-text Notes modal, Settings Roadmap, local recovery and optional GitHub Sync. Do not restore Records, multi-note editing or rich-text UI without an explicit request. Legacy data remains readable.
 
-assets/js/core/movies.js owns validation/normalization and TMDB mapping; core/tmdb.js owns credential separation and abortable timed fetches; movies-ui.js owns the list/editor. TMDB metadata is fetched by chosen search result or ID, with credits appended. Tokens are never in config or state. The supplied credential passed live verification but users must configure their own browser using Settings → Movie Lookup Settings. The official logo and attribution are included.
+Use semantic HTML, labelled controls, escaped text, safe URLs, visible focus and shared SVG symbols. Preserve keyboard shortcuts, mobile safe areas, reduced motion and offline behavior. Interface headings use Title Case. Default accents are teal #008080 and coral #ff7f50; preserve custom preferences.
 
-Retained shell: app icon/theme and hold-for-Developer controls, name/version/Beta badges, centered search across Notes and support, one blank-on-first-run plain-text Notes modal, vertical Settings, appearance/backup/reset, dedicated Data Sync with JSON preview, generic Help, release history, Roadmap with the spreadsheet backlog, Shortcuts, and Developer diagnostics. Local persistence/recovery, JSON portability, optional GitHub Sync, accessible shared components, PWA updates, and offline assets remain.
+## File map — read only what the task needs
 
-Identity and configuration live in assets/js/config.js. Storage uses topShelf.state.v5 with topShelf.state.v4 as a migration source; other keys use topShelf, the cache uses top-shelf-shell, the manifest id is ./top-shelf, full backups use top-shelf-backup, and content sync uses top-shelf-app-data v5/schema v9. Local state schema v6 retains legacy record/document compatibility without exposing their old interfaces. Cloud schema v9 excludes device settings, credentials, timestamps, and empty collections. Only the previous Top Shelf namespace is migrated. v1–v4 cloud envelopes remain readable and compact into v5; old builds reject new cloud data. Update all copies to 0.0.1.4 before syncing movies.
+| Concern | Files |
+|---|---|
+| Identity, versions, releases, defaults, help | assets/js/config.js |
+| Markup and styles | index.html, assets/css/app.css |
+| Notes, settings, shell, shortcuts | assets/js/app.js |
+| Movie normalization, sorting, colors, aliases | assets/js/core/movies.js |
+| Movie table, editor, resizing, batch checks, exports | assets/js/movies-ui.js |
+| Pivot calculations and dashboard | assets/js/core/pivots.js, assets/js/pivots-ui.js |
+| Subgenre review/import | assets/js/core/subgenres.js, assets/js/subgenres-ui.js |
+| TMDB and bundled streaming rules | assets/js/core/tmdb.js, assets/js/core/streaming-rules.js |
+| State/schema, persistence, sync, portability | assets/js/core/{state,storage,sync,portability}.js |
+| Shared dialogs, icons, PWA | assets/js/core/components.js, assets/js/icons.js, assets/js/core/pwa.js, sw.js |
 
-GitHub Sync is enabled and fixed to themadat/app-data/main/data/top-shelf.json. Imports cannot redirect it. The local target is configured; external file existence, a narrowly scoped token, and real Test/Save plus upload/download verification remain pending user setup. Follow the links and checklist in docs/RESET.md; never request a token in chat. Do not write to the separate app-data repository without explicit authorization.
+SVG geometry in icons.js is large: search by symbol name, avoid reading the whole catalog. Tests are dependency-free Node tests. docs/ARCHITECTURE.md, COMPONENTS.md, CUSTOMIZATION.md and TESTING.md provide task-specific detail.
 
-All interface SVGs are self-contained in assets/js/icons.js. The supplied star-and-shelf artwork is assets/icons/top-shelf.svg; light/dark assets share it, with 70% foreground scaling for maskable crops. Preserve every icon/touch/install/splash variant when updating artwork.
+## Movie behavior
 
-## Invariants
+One active movie per TMDB ID. Deletion is `{id, deleted:true}` after recovery. Watched requires a rating; reviews and watched dates are optional. Preserve Wishlist fields when switching state.
 
-- Keep static, dependency-free runtime code and ordinary static hosting.
-- Keep a single Notes modal and Settings Roadmap. Do not add Records, multiple notes, rich-text editing, or an app-space Roadmap without an explicit request.
-- Preserve accessible native controls, focus restoration, safe URLs, escaped user text, responsive safe areas, and reduced motion.
-- Use inline SVG interface symbols; the helper must resolve every retained consumer independently.
-- GitHub Pages uses the checked-in Actions workflow only; do not also enable branch deployment.
-- Keep origin git@github.com:themadat/top-shelf.git. Machine-specific SSH selection belongs in user Git/SSH configuration, as described in docs/GIT-SETUP.md.
-- Versions are major.minor.patch.build. Keep the full version equal across identity, build id, dated release, HTML/manifest queries, service-worker cache/asset version, and deployment workflow name. The next ordinary application update is 0.0.1.52.
+Fields: id, tmdbId, title, releaseDate, status, how, other, genres, productionCompanies, directors, actors (top ten), collections, starredCollections/Actors/Directors/Companies, subgenreReviewed, incompleteOverride, availableDate, priority, notes, watchedDate, historicalRating, rating, review, optional tmdbAverage.
 
-## Workflows
+- Personal rating 0–5 accepts decimals. Legacy 100!/YES/MEH/NO/RUN maps to 5/4/3/2/1. Priority is integer 1–5, with 1 highest.
+- Wishlist alone shows sortable Ave beside Priority. TMDB vote_average stays on 0–10; missing/no votes displays neutral. Bands: <4 purple, 4–<5 red, 5–<6 orange, 6–<7 yellow, 7–<8 yellow-green, 8–<9 green, 9–10 dark green. Values below 3 share the bottom band; numeric values are unchanged.
+- Inline score, review/notes, How, Date and Other editing: Enter saves, Shift+Enter adds newline, Escape cancels. Priority selects its current text. Title opens full editor.
+- Table Date means availableDate for Wishlist, watchedDate for Watched. Native empty editor dates show --/--/----. Priority editor uses toggles.
+- Incomplete matches missing releaseDate/genres/actors/directors/companies unless incompleteOverride is set. Search and state filters intersect.
+- How aliases/order/colors are in core/movies.js. Preserve personal text, estimate suffixes and unresolved `* ` markers. Sort by highest-priority provider, then text; blanks last. Only Wishlist rows have provider colors, including in All.
+- Settings Info offers Movie Names (one title per line), all movie details as analysis JSON, and distinct How values. All ignore filters and exclude deleted records. Clipboard failure selects text for manual copying.
 
-### `reset`
+## Pivots
 
-Reset only an explicitly requested copied checkout, following docs/RESET.md completely. Confirm identity/icon from the request; inspect path, remote, and cleanliness. Preserve the reusable shell, bake its symbols before removing product data, replace artwork and identity throughout, reset the blank state and documentation, and set 0.0.1.1. Reset alone never changes Git history, remotes, repositories, commits, pushes, or deployment. Keep the user-facing GitHub file/token setup checklist when sync is enabled.
+Watched movies only, independent of movie-list filters. Order: Ratings, Years, Genres, Other, Collections, Actors, Directors, Companies. Years defaults to watched year; unknown is ????. Ratings keeps Numeric/Legacy subsections. Other has Others/Subgenres/Collections/Actors/Directors/Companies sections, with independent sorts and a fixed section order. Main Other sort resets subsection overrides.
 
-### `wish`
+Per-panel category search is session-only. Counts/averages use all matching movies, not just displayed rows. Minimum filters groups. Score = (count × average + weight × baseline)/(count + weight), defaults baseline 3 and weight 5. Sort using unrounded values. Stars apply to current saved members; new movies are not automatically starred.
 
-Record an idea in `context/WISHES.md` without planning or implementing it.
+Compact accent subsection headers. First-column separators support dragging, arrows, double-click/Enter fitting visible names. Subsections share their panel's width. Numeric columns reserve 30px Count and 40px Average/Score. Panel width = name width + 116px. Panels wrap on narrow screens.
 
-- Check for duplicates and use the next `WISH-###` id.
-- Capture behavior, rationale, priority, effort, acceptance criteria, constraints, affected files, and material open questions.
-- Set the status to `Proposed`.
+## Local preferences and data contracts
 
-### `plan`
+Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 6. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v5/schema 9 and accepts earlier v1–v4 cloud envelopes. Keep namespace compatibility. Optional fields added after schema 9 require all clients to update so older clients do not drop them.
 
-Investigate a wish without implementing it.
+Device-local ui fields (full backups, excluded from content sync): movieSorts by all/wishlist/watched; movieColumnWidths with separate maps per tab; pivotColumnWidths; pivotLocalSettings; pivotSubsectionSorts. Old flat movie widths migrate to independent copies. Old workspace.pivotSettings is a fallback until locally overridden; scoring baseline/weight remain shared. Reset preferences clears local overrides.
 
-- Create or revise `context/WISH-###-slug-PLAN.md`.
-- Put a `## Resume` section first, followed by decisions, scope, non-goals, file map, accessibility/responsive considerations, tests, and open questions.
-- Link it from the wish and set the status to `Planned`.
-- Do not change runtime files, build ids, or cache ids.
+GitHub target is fixed: themadat/app-data/main/data/top-shelf.json. Imports cannot redirect it. Never write that separate repo without explicit authorization. Tokens are browser-only and excluded from config, exports, diagnostics and content sync. Provisioning instructions: docs/RESET.md. Never request tokens in chat. Keep origin git@github.com:themadat/top-shelf.git; machine SSH setup belongs in user configuration.
 
-### `start`
+Sync repairs baselineHash only when baselineTarget and nonempty baselineSha match the freshly fetched remote blob. Different revisions still require normal conflict handling. No timestamp-winner guessing. Recovery precedes destructive replacements/batches; concurrent edits must not be overwritten.
 
-Implement an approved plan.
+Notes buffers typing 300ms before normalization; flush on blur/close/hidden/page exit, cancel pending drafts on state replacement. Movie/pivot/subgenre views ignore edit-document redraws. Notes fills desktop height minus 2rem and is full-screen on mobile.
 
-- Read the wish and plan, set the wish to `Active`, and keep the Resume section current.
-- Add only the architecture the real feature needs. Do not reintroduce the former Records interface, rich-text editor, or a speculative framework.
-- Use `major.minor.patch.build` versions. For every completed application update, increment the fourth `build` component. When the user chooses a new major, minor, or patch value, reset `build` to `1` unless they specify it. Keep `identity.buildId` equal to the full version, add or update the matching dated release entry, update the build queries in `index.html`, update `CACHE_NAME` plus `ASSET_VERSION` in `sw.js`, and update the version in `.github/workflows/deploy-pages.yml`'s workflow `name` together.
-- Verify the affected desktop, mobile, accessibility, and offline behavior.
+## TMDB and review workflows
 
-### `cut`
+TMDB search requires explicit result selection. Details append credits. Settings → Movie Lookup Settings holds masked token presence, with device/tab retention. Raw details/provider JSON is session-only, escaped, collapsible; US starts open, other countries/rent/buy closed. Abort stale lookups on close/switch. User edits win over asynchronous results.
 
-Finalize an active line as a release.
+Update How explicitly checks every Wishlist movie, ignoring list filters. Live US flatrate/free/ads beats generic rules; rental/purchase is excluded. Bundled September 2026 rules: docs/STREAMING-RULES.md. Source-backed titleOverrides (currently empty) support official subscription dates/rights/distributor precedence. Sequential windows and ranges remain distinct; no estimate writes Available Date. US theatrical dates use earliest type3 then type2, never digital. Generic releaseDate only rejects old catalog. Unknown/conflicting/old titles retain existing How with one spaced star; empty stays empty. No repeated automated web research; unresolved titles get manual research links.
 
-- Confirm the semantic version and update `identity.version`.
-- Confirm the major, minor, and patch values, set the fourth build component to `1` unless another value is requested, and use that full version for the build and service-worker cache ids.
-- Update the manifests and README when public identity or behavior changed.
-- Mark the wish `Shipped`, record its version/date, and archive its plan when useful.
-- Run the complete verification baseline below.
+Update Ratings fetches all Wishlist scores with recovery, abort, stale-edit guards and partial-save error reporting. It changes only tmdbAverage. Editor lookups also populate it; merely opening a populated editor does not refresh existing How.
 
-Do not silently move from one lifecycle stage to another.
+Subgenre tags are `Subgenre: Name` in Other. Vocabulary derives from active movies plus built-in Homesian. Existing library is not reopened for Homesian; user classifies it manually. Old pre-review movies migrate reviewed; new movies default pending. Request exports contain pending IDs, metadata and vocabulary, no personal notes. Results use top-shelf-subgenre-results v1. Preview rejects unknown names, bad/duplicate IDs, oversize or changed batches. Apply appends unique tags with recovery; uncertain/omitted remain pending. Already-reviewed movies require reopening before import additions.
 
-## Repository and verification
+## Workflows and releases
 
-See docs/ARCHITECTURE.md for the file map and data contracts, docs/COMPONENTS.md for retained UI, docs/CUSTOMIZATION.md for changes, and docs/TESTING.md for the verification baseline. Syntax-check every runtime script, run dependency-free tests, parse manifests, validate local asset paths and symbols, and run git diff --check. Verify desktop/mobile Notes, Settings, search, appearance, backup/recovery, sync presentation, focus, reduced motion, and offline/update workflows. Stop local servers before the final response.
+User shorthands do not imply the next lifecycle stage:
+- wish: record Proposed in WISHES.md, no implementation.
+- plan: investigate and write WISH-###-slug-PLAN.md with Resume first; mark Planned, no runtime edits.
+- start: implement approved plan, keep Resume current, bump build and verify.
+- cut: finalize release, update version surfaces/README, close wish and run full checks.
+- reset: destructive copied-app workflow only. Obtain app name and replacement icon first; follow docs/RESET.md, verify target checkout and reset to 0.0.1.1. Never silently reset canonical source or alter Git history/remotes.
 
-## End of turn
+Versions are major.minor.patch.build. Explicit major/minor/patch promotions reset build to 1; normal updates increment build. Next ordinary version: 1.0.0.2. Keep identity.version/buildId, dated release entry, index/manifest queries, SW cache/asset version and deploy-pages workflow name identical. Docs-only changes do not bump versions. Preserve all artwork/install variants. GitHub Pages uses Actions, not branch deployment.
 
-After file changes, give one concise outcome/verification summary followed by exactly one copy-paste command that stages only task files, commits with the exact subject shape `Version - Text`, and pushes the current branch. Use `git add .` when `git status --short` confirms all changes belong to the task; otherwise name the task files explicitly. Do not run it unless explicitly requested.
-
-Movie reference content: Settings → Info (below Data Sync, using the supplied infoSquare symbol) contains original spreadsheet name/description, personal favorites, rating mapping, and manual links. Roadmap preserves two unimplemented spreadsheet backlog items. What’s New keeps the 2023–2024 spreadsheet history separate from Top Shelf releases.
-
-Movies → Pivots computes eight tables from every non-deleted watched movie, independent of movie-list search/filters. core/pivots.js owns grouping/sorting; pivots-ui.js owns the dashboard. Counts are per distinct membership per movie; historical ratings use mapped scores. Missing values get explicit groups. Years switch release/watched date. Per-table minimum count and sorting are saved in workspace.pivotSettings and synced. Actors use the existing saved top-ten cast.
-
-The top bar includes combined storage/cloud-sync status and an Update button. Update checks for a new worker, saves current data, and force-refreshes; ready updates change its icon to red without an availability pop-up. Settings → Notifications controls What’s New dismissal from 1–300 seconds (default 20), stored in local preferences and full backups, excluded from content sync.
-
-Spreadsheet import preparation: original `Movies - Movies.csv` and `import-preparation/` are personal files ignored by Git. The generated 0.0.1.9 backup contains 739 movies (638 watched, 101 wishlist); one invalid-ID Community row is held separately. It uses the existing full replacement import, with blank Notes/default preferences; do not imply it merges current browser data. Reviews are optional and numeric ratings accept 0–5; update all clients before syncing such data.
-
-0.0.1.10: Movies uses a full-width compact table with sticky column headers/title and a combined sticky toolbar (view, state, shown-count search, equal-width sort, Add Movie). Header/toolbar sizes are observed to adapt sticky positions. Shift–Control–Option–R clicks the top-bar Update control outside dialogs, including from main-page inputs. Interface headings/labels use Title Case; saved movie text is preserved.
-
-0.0.1.11: Pivot order is Ratings, Years, Genres, Other Pivots, Collections, Actors, Directors, Companies. Count/Average buttons select descending initially and reverse direction on repeat clicks, with inline Min. Other Pivots splits Other on commas/newlines, deduplicates case-insensitively, and excludes generated Original availability note lines. Dense tall tables auto-fit across full width. L/P switch Movie List/Pivots outside editors while on Movies; underlined numeric 1–8 shelf shortcuts remain.
-
-0.0.1.12: Movie table columns are #, Title, Review/Notes, How, Date, Release, Other, Collections, Genres, Actors, Directors, Companies. Date displays watchedDate for Watched and availableDate for Wishlist. No State or Actions columns; title opens the full editor. Scores retain accessible Rating/Priority labels but omit those words visually. Wishlist rows are subtly tinted; review is wide and Other/Collections use intrinsic content width.
-
-0.0.1.13: Click score, Review/Notes, How, Date, or Other Pivots cells to edit with Save/Cancel (Escape cancels). Score accepts numeric or historical ratings, or Wishlist priority. Other Pivots has A–Z list sorting. Pivot cards use content widths and stacked icon/arrow controls, Category sorting, header Min, and Years Group By. Ratings/Years default Category descending; Years defaults Watched with ???? for missing years.
-
-0.0.1.14: Narrow Ratings/Years, compact Group/Count/Average controls and first-line counts. Collection stars are stored per movie as starredCollections and included as whole, deduplicated names in Other Pivots, separately from manual Other text. Stars apply to current saved members (new movies must be starred separately). Refresh all clients before syncing starred collections. Period focuses Search Movies or the Ratings Min control; its search hint is always visible. Inline Enter saves (Shift+Enter inserts a newline); Escape cancels. Missing markers sort last A–Z. Shown count sits right of Search Movies.
-
-0.0.1.15: Removed the visible pivot heading, summary cards, and explanatory paragraphs. Pivot tables start directly below the toolbar; the section retains an accessible name and the empty state.
-
-0.0.1.16: Restored the average formatter still required by pivot rows after the summary removal. Populated pivot UI rendering has regression coverage.
-
-0.0.1.17: Pivot Min, sort key, and direction persist in workspace.pivotSettings, full backups, and cloud v4/schema v8. Cloud v1–v3 remain readable; update all clients before syncing. Conflicting settings for the same pivot require choosing a copy; disjoint pivot settings merge. Missing Other/Collection groups are hidden. Headers use # and x̄ with accessible names; Min is centered, totals right-aligned, and the Ratings Min period hint is inline.
-
-0.0.1.18: Other tags beginning with Subgenre (optional colon) classify the remaining text up to the comma as a subgenre. Genres includes those names with an asterisk. Other Pivots sorts within fixed Others/Subgenres/Collections sections; starred collection names classify matching manual tags as Collections. Pivot height follows remaining viewport space, with reduced toolbar gap. Period shortcut/hint is removed from Pivots; Movie List uses an in-field key hint matching global search.
-
-0.0.1.19: Movie sort key/direction persist per All/Wishlist/Watched in local ui.movieSorts and full backups, excluded from cloud content. Defaults are Rating desc, Priority asc, watched date desc. Every column header sorts displayed values and reverses on repeat click; missing values stay last. A/I/W switch movie states outside text editing/dialogs. Cell text selection and editor focus use stronger contrast.
-
-0.0.1.20: Bulk Pivots in the movie toolbar opens a review/apply dialog. Tags are comma/newline separated; targets are exact case-insensitive titles or TMDB IDs, one per line, across saved states. Unmatched/ambiguous/oversize entries block applying. Existing Other text is retained with new unique tags appended on a new line; duplicate targets/tags are skipped. Revalidate current data before atomic mutation and save recovery first. Existing movie persistence and cloud sync carry the additions.
-
-0.0.1.21: Every pivot has a ∑ score column and Score sort using (count × average + weight × baseline) / (count + weight). Defaults baseline 3, weight 5; toolbar controls allow baseline 0–5 and weight 0–1000 (zero uses the raw average). Shared settings live in workspace.pivotSettings.scoring and sync with existing preference conflict handling. Older clients reject these new preference values; update clients before syncing. Scores sort at full precision; display is two decimals.
-
-0.0.1.22: Bulk Pivot preview leads with a focused error summary and Needs Attention section; NOT FOUND/MULTIPLE MATCHES/CANNOT APPLY labels distinguish unresolved rows. Matched rows collapse while issues exist. Apply stays blocked until resolved.
-
-0.0.1.23: Shelf count and underlined shortcut number share a right-aligned second line. Entering Wishlist starts one session lookup when a browser TMDB token exists; Find US Streaming retries explicitly. Sequential movie/{id}/watch/providers requests use US flatrate/free/ads; rent/buy-only leaves How empty. Recheck movie ID, Wishlist status, and empty How before filling; persist each result and stop with progress on failure. Attribution links to JustWatch/TMDB are visible on Wishlist. No credentials leave the browser except authenticated TMDB requests.
-
-0.0.1.24: Compact movie editor uses a Wishlist/Watched toggle, Title/How/Other Pivots row, Priority-first Wishlist, Rating/Legacy/Date row, and Review/Notes labels. TMDB credentials live in Settings. Empty How is filled after detail lookup (and opening existing entries) from US streaming; user input wins over asynchronous results. Expandable TMDB Details contains movie, detail+credits JSON, availability JSON, and US watch-page links without tokens. Desktop minimizes scrolling; mobile and expanded details retain scrolling for access.
-
-0.0.1.25: Need Subgenre Review exports all pending Wishlist/Watched movies, a case-insensitive vocabulary from active movies’ Subgenre tags, and LLM instructions as JSON. Results use top-shelf-subgenre-results v1 with reviews {id, tmdbId, reviewed, subgenres}. Preview validates IDs, vocabulary, duplicates, and size before additive updates and recovery. reviewed:false/omitted movies stay pending; reviewed:true with [] clears review without adding tags. Movie subgenreReviewed survives backups/sync; old local schema5 and cloud v1–v4 movies migrate as reviewed per the user’s completed baseline. New movies default false. Editor checkbox supports manual review/reopening. Local schema6 and cloud v5/schema9 prevent older clients dropping the flag; update all clients before sync.
-
-0.0.1.26: Movie Lookup Settings is compact and below Appearance. Saved credentials show a fixed masked indicator (not the token); saving it unchanged preserves the credential and updates session/device retention. TMDB Details displays full Details+Credits and Watch Providers JSON with authenticated fetches instead of links. Raw responses are editor-session-only, escaped via textContent, excluded from movie data/backups/sync, and cleared/aborted when switching movies or closing. Opening Details loads missing responses; Reload Returned Data refreshes without changing saved metadata.
-
-0.0.1.27: Movie form removes Lookup Settings, places Subgenres Reviewed with the comma-separated supported vocabulary in parentheses beside State (wraps on small screens), and uses priority toggle buttons 1–5 (repeat clears). Empty native dates show --/--/---- while unfocused. Notifications is below Appearance. TMDB responses use escaped collapsible object/array branches; Watch Providers defaults US open, other countries and rent/buy closed.
-
-0.0.1.28: Wishlist → Update Wishlist How explicitly checks all Wishlist movies independent of search and existing How. Recovery precedes the batch; sequential live US provider requests override static first-window company estimates in core/streaming-rules.js (dated/source-linked). Unknown/no-date/old catalog/conflicting studios remain unknown; no inferred date is saved. Existing How is replaced by this explicit action; entering Wishlist no longer auto-runs. Concurrent edits/open editors/status/ID changes are skipped. Stop cancels the request; completed updates persist, API/storage failures stop with progress. Built-in rules currently cover Universal, Sony, Paramount, A24 and Lionsgate; these are company-based clues, not confirmed rights.
-
-0.0.1.29: Unresolved Wishlist streaming checks retain existing How with one leading *; subsequent provider/likely results replace it. Blank or old generated unknown values remain unknown. How accepts 301 characters to retain a 300-character value plus marker. Incomplete is a session filter intersecting state/search and matches any missing releaseDate/genres/actors/directors/productionCompanies. Update Wishlist How is in the toolbar. How Values opens a copyable sorted unique list from all active movies, independent of filters.
-
-0.0.1.30: User-supplied September 2026 US rules replace the five-studio snapshot (30 window rows). core/streaming-rules.js retains min/typical/max day ranges, confidence, notes, label inheritance and sequential Pay-1A/B/C plus Sony Pay-2 (2022–2026 only). predict returns structured windows; How shows initial destination with estimated date/range. No predicted date is written to availableDate. Current providers still override generic rules. Source-backed titleOverrides keyed by TMDB ID support official subscription dates, rights, and US distributor precedence; currently empty. Never treat movie production credits as verified distribution. Unknown/conflicting/Legendary/older-than-one-year catalog stays unresolved with existing * behavior. Missing US date allows destination only, flags timing research. Checks fetch TMDB release_dates when no live provider; choose earliest US type3, then type2, excluding premieres/digital/physical. Generic releaseDate is used only to reject old catalog, never for date estimation. Check Results shows session-only windows/research links, not automated web research. The supplied rule text is preserved in docs/STREAMING-RULES.md.
-
-0.0.1.31: Movie sort dropdown removed; header sorting retained. How Values is in Settings Info. incompleteOverride is a saved movie boolean, edited via Exclude from Incomplete, and bypasses missing-metadata filtering. cleanHow normalizes known provider aliases and deduplicates comma-separated values on load/save and lookup, shortens estimate dates, and clears the old unknown sentinel. Unresolved checks retain existing text with one spaced star. How limit is 302 to allow the marker plus 300 characters; column is 280px.
-
-0.0.1.32: Movie table headers have pointer resize separators; double-click or Enter fits the widest currently displayed cell/header, including clipped text. Arrow keys resize by 10px. ui.movieColumnWidths stores per-column device widths shared across movie tabs, normalized and reset with preferences; excluded from content sync. Fixed colgroup sizing prevents content forcing widths. Width-only changes skip movie render to preserve drag/focus/scroll.
-
-0.0.1.33: Movie toolbar actions use the shared action-button symbol-over-label style and button presentation preference. User SVGs are in the symbol catalog as incomplete, subgenreReview, updateHow. Subgenre queue updates only button-label and accessible name to preserve the symbol.
-
-0.0.1.34: Explicit editor lookup/refresh now checks existing How, using live providers then streamingRules.predict with US theatrical date. Unresolved text becomes * text, idempotently. Generation/ID guards and an exact input snapshot prevent stale responses overwriting typing. Merely opening a populated editor does not run the check. Editor changes require Save Movie.
-
-0.0.1.35: Actors/directors/companies can be starred like collections, storing normalized starredActors/starredDirectors/starredCompanies arrays on matching movies. Other Pivots has distinct Actors, Directors, Companies sections. Ratings separates numeric movies from historicalRating labels under Legacy Ratings; category sorting uses mapped scores (100!, YES, MEH, NO, RUN). All other pivot averages still use mapped numeric ratings.
-
-0.0.1.36: Settings Info → Movies for Analysis previews/copies alphabetical JSON of all active movies (Wishlist and Watched), with all normalized movie fields, count, rating scale and legacy mapping. Ignores filters, excludes deleted records and app settings/credentials. Clipboard failure selects text for manual copy.
-
-0.0.1.37: Sync check repairs baselineHash from the freshly read/normalized remote when baselineTarget and nonempty baselineSha match the remote blob SHA, regardless of fingerprint prefix. This preserves local-only direction after normalization upgrades. Different remote revisions/targets still require ordinary reconciliation; checks do not upload or replace local content. Test remote revisions vary with content to model GitHub blob identity.
-
-0.0.1.38: Removed static Movie Preferences from Info. Notes dialog grows to 1200px/90svh; movie Review/Notes fields have six rows and 9rem minimum height. core/movies.js owns ordered green/yellow/red How providers and aliases. Normalization sorts known providers in user order, preserves unknown relative order, markers and estimates. How header sorts by highest-priority provider, then text, with blanks last. Each provider is independently colored in the editable table cell; unknown text is neutral. Existing state normalization handles saved/backup/cloud values consistently.
-
-0.0.1.39: Settings Info → Movie Names previews/copies all active Wishlist/Watched titles alphabetically, one per line, ignoring filters. Same-title separate movies retain separate lines. Clipboard failure selects the list. Pivot subsection headings use accent bands, strong top/left borders and uppercase bold labels.
-
-0.0.1.40: All eight pivot panels have labelled search inputs between header and sort buttons. Session-only independent case-insensitive category-name filters intersect Min, retain sort, and leave aggregates unchanged. Searches survive view switches during the session; clearing restores groups.
-
-0.0.1.41: Compact 170px pivot panels (Ratings/Years 144px), quieter subsection headers. Other Pivots subsections have independent session-only Name/Count/Average/Score controls; main sort resets subsection overrides. First-column header separators support pointer drag, Arrow keys, and double-click/Enter fitting current visible category rows. Width changes resize the panel; all its subsections share alignment. Widths last for the session and small screens wrap panels.
-
-0.0.1.42: Notes overrides the shared dialog maximum with 100dvh minus 2rem on desktop, and its flex shell fills the modal so the textarea uses all remaining height. Existing mobile full-screen/safe-area styles still apply.
-
-0.0.1.43: Homesian is a built-in supported subgenre, merged case-insensitively with movie-derived vocabulary. Existing movies are not reopened for review or automatically tagged; the user is manually classifying the existing library. New pending reviews include Homesian.
-
-0.0.1.44: Ratings/Years default to 208px cards/96px name columns; removed the high-specificity 1% column rule that overrode resizing. Notes buffers edits for 300ms before full state normalization, flushes pending text on blur/close/hidden/page exit, and cancels pending drafts on state replacement. Movie/pivot/subgenre views ignore edit-document state events to avoid library redraws while typing.
-
-0.0.1.45: ui.movieColumnWidths stores independent all/wishlist/watched maps, migrating prior flat widths into copies for each tab. ui.pivotColumnWidths, pivotLocalSettings and pivotSubsectionSorts persist device-local settings in full backups only; old workspace pivot preferences serve as fallback until locally overridden. Scoring baseline/weight remain shared. Reset preferences clears local overrides. Drag persists on release; fit/keyboard resize persist immediately. Pivot numeric columns reserve 30px Count and 40px Average/Score, panel width = name width + 116px.
-
-0.0.1.46: Optional movie.tmdbAverage stores TMDB vote_average on its native 0–10 scale, null if vote_count is zero/missing. Wishlist alone displays sortable/resizable TMDB Avg /10 after priority. New/editor lookups populate it; Wishlist Update Ratings refreshes existing entries sequentially with recovery, cancellation, stale-edit guards and partial-save error reporting. Personal rating and How remain unchanged. Update older clients before syncing to avoid dropping the new optional field.
-
-0.0.1.47: Compact pivot subsection headings use theme accent-strong text, accent-soft background and an accent top border.
-
-0.0.1.48: Wishlist average column is labelled Ave. TMDB scores use the shared red-to-green badge mapped from 0–10, retain numeric text and an out-of-10 accessible label, with missing values neutral.
-
-0.0.1.49: Ave uses seven equal 10/7-wide bands, low-to-high purple/red/orange/yellow/yellow-green/green/dark-green; 10 stays in the top band. Custom user SVG is updateRatings. Desktop movie search caps at 190px and actions stay on one row at >=1100px.
-
-0.0.1.50: Inline Priority selects the current text and requests numeric input. Priority/rating scales use stronger saturation; Ave retains seven equal bands with more distinct colors. Watched How cells render escaped plain text in both All and Watched; Wishlist retains provider highlights.
-
-0.0.1.51: Ave bands floor at 3: <4 purple, 4–<5 red, 5–<6 orange, 6–<7 yellow, 7–<8 yellow-green, 8–<9 green, 9–10 dark-green. Numeric values remain unchanged. Desktop search fills remaining width between toggles/actions. Wishlist collapsed details share rows when space permits; reduced padding/gaps bring table closer to toolbar.
+Verify proportionally: all JS syntax, node --test tests/*.test.mjs, manifest JSON, asset/symbol references, git diff --check and affected desktop/mobile/offline flows. Stop preview servers. No live GitHub writes or token-based tests unless authorized. Preserve existing edits. End with outcome/checks and exactly one staging/commit/push command, subject `Version - Text`; do not execute without request. Stage only task files, or `git add .` when every change belongs to completed requests.

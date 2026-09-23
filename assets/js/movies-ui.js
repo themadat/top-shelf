@@ -475,6 +475,14 @@
       } catch (error) { $('#bulkPivotError').textContent = error.message; }
     });
   }
+  function bindCopy(button, text, message, refresh) {
+    $(button).addEventListener('click', async function () {
+      const input = $(text);
+      if (refresh) input.value = refresh();
+      try { await navigator.clipboard.writeText(input.value); App.components.toast(message, { title: 'Copied', kind: 'success' }); }
+      catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy List' }); }
+    });
+  }
   function init() {
     initBulkPivots();
     $('#wishlistRatingsButton').addEventListener('click', updateWishlistRatings);
@@ -483,24 +491,16 @@
       $('#movieNamesText').value = saved().map(function (movie) { return movie.title; }).sort(function (a, b) { return a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }); }).join('\n');
       App.components.openDialog('#movieNamesDialog', { trigger: event.currentTarget, focus: '#movieNamesText' });
     });
-    $('#movieNamesCopy').addEventListener('click', async function () {
-      const input = $('#movieNamesText');
-      try { await navigator.clipboard.writeText(input.value); App.components.toast('Movie names copied.', { title: 'Copied', kind: 'success' }); }
-      catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy Names' }); }
-    });
+    bindCopy('#movieNamesCopy', '#movieNamesText', 'Movie names copied.');
     $('#movieAnalysisButton').addEventListener('click', function (event) {
       const movies = saved();
       $('#movieAnalysisText').value = model.analysisText(movies);
       $('#movieAnalysisSummary').textContent = movies.length + ' movies · All saved details · No list filters applied';
       App.components.openDialog('#movieAnalysisDialog', { trigger: event.currentTarget, focus: '#movieAnalysisText' });
     });
-    $('#movieAnalysisCopy').addEventListener('click', async function () {
-      const input = $('#movieAnalysisText');
-      try { await navigator.clipboard.writeText(input.value); App.components.toast('Movie database copied.', { title: 'Copied', kind: 'success' }); }
-      catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy All Movies' }); }
-    });
+    bindCopy('#movieAnalysisCopy', '#movieAnalysisText', 'Movie database copied.');
     $('#movieHowValuesButton').addEventListener('click', function (event) { $('#movieHowValuesText').value = howValues(); App.components.openDialog('#movieHowValuesDialog', { trigger: event.currentTarget, focus: '#movieHowValuesText' }); });
-    $('#movieHowValuesCopy').addEventListener('click', async function () { const input = $('#movieHowValuesText'); input.value = howValues(); try { await navigator.clipboard.writeText(input.value); App.components.toast('How values copied.', { title: 'Copied', kind: 'success' }); } catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy List' }); } });
+    bindCopy('#movieHowValuesCopy', '#movieHowValuesText', 'How values copied.', howValues);
     document.querySelectorAll('[data-editor-priority]').forEach(function (button) { button.addEventListener('click', function () { const input = $('#movieForm').elements.priority; input.value = input.value === button.dataset.editorPriority ? '' : button.dataset.editorPriority; statusFields(); }); });
     $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.addEventListener('input', dateFields); input.addEventListener('change', dateFields); });
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); if (button.dataset.editorState === 'watched') $('#movieForm').elements.rating.focus(); else $('[data-editor-priority]').focus(); }); });

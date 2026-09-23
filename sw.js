@@ -1,7 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "top-shelf-shell-0.0.1.51";
-const ASSET_VERSION = "0.0.1.51";
+const CACHE_NAME = "top-shelf-shell-1.0.0.1";
+const ASSET_VERSION = "1.0.0.1";
 const versioned = function (path) { return path + "?v=" + ASSET_VERSION; };
 const SHELL = [
   "./",
