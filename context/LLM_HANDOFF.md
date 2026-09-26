@@ -4,7 +4,7 @@ Read this file, AGENTS.md and context/WISHES.md at session start. Search for rel
 
 ## Product and invariants
 
-Top Shelf 1.0.0.1 is a static, local-first HTML/CSS/JavaScript app with no build step, runtime dependency, backend or sign-in. Movies is implemented; the other seven shelves are starter views. Keep one plain-text Notes modal, Settings Roadmap, local recovery and optional GitHub Sync. Do not restore Records, multi-note editing or rich-text UI without an explicit request. Legacy data remains readable.
+Top Shelf 1.0.0.2 is a static, local-first HTML/CSS/JavaScript app with no build step, runtime dependency, backend or sign-in. Movies is implemented; the other seven shelves are starter views. Keep one plain-text Notes modal, Settings Roadmap, local recovery and optional GitHub Sync. Do not restore Records, multi-note editing or rich-text UI without an explicit request. Legacy data remains readable.
 
 Use semantic HTML, labelled controls, escaped text, safe URLs, visible focus and shared SVG symbols. Preserve keyboard shortcuts, mobile safe areas, reduced motion and offline behavior. Interface headings use Title Case. Default accents are teal #008080 and coral #ff7f50; preserve custom preferences.
 
@@ -67,7 +67,9 @@ Update How explicitly checks every Wishlist movie, ignoring list filters. Live U
 
 Update Ratings fetches all Wishlist scores with recovery, abort, stale-edit guards and partial-save error reporting. It changes only tmdbAverage. Editor lookups also populate it; merely opening a populated editor does not refresh existing How.
 
-Subgenre tags are `Subgenre: Name` in Other. Vocabulary derives from active movies plus built-in Homesian. Existing library is not reopened for Homesian; user classifies it manually. Old pre-review movies migrate reviewed; new movies default pending. Request exports contain pending IDs, metadata and vocabulary, no personal notes. Results use top-shelf-subgenre-results v1. Preview rejects unknown names, bad/duplicate IDs, oversize or changed batches. Apply appends unique tags with recovery; uncertain/omitted remain pending. Already-reviewed movies require reopening before import additions.
+Movie normalization corrects Homesian subgenre tags to Holmesian and removes duplicate Holmesian tags without changing review status. Personal ratings, legacy labels, tmdbAverage, and How are included in content sync and its change fingerprint.
+
+Subgenre tags are `Subgenre: Name` in Other. Vocabulary derives from active movies plus built-in Holmesian. Existing library is not reopened for Holmesian; user classifies it manually. Old pre-review movies migrate reviewed; new movies default pending. Request exports contain pending IDs, metadata and vocabulary, no personal notes. Results use top-shelf-subgenre-results v1. Preview rejects unknown names, bad/duplicate IDs, oversize or changed batches. Apply appends unique tags with recovery; uncertain/omitted remain pending. Already-reviewed movies require reopening before import additions.
 
 ## Workflows and releases
 
@@ -78,6 +80,6 @@ User shorthands do not imply the next lifecycle stage:
 - cut: finalize release, update version surfaces/README, close wish and run full checks.
 - reset: destructive copied-app workflow only. Obtain app name and replacement icon first; follow docs/RESET.md, verify target checkout and reset to 0.0.1.1. Never silently reset canonical source or alter Git history/remotes.
 
-Versions are major.minor.patch.build. Explicit major/minor/patch promotions reset build to 1; normal updates increment build. Next ordinary version: 1.0.0.2. Keep identity.version/buildId, dated release entry, index/manifest queries, SW cache/asset version and deploy-pages workflow name identical. Docs-only changes do not bump versions. Preserve all artwork/install variants. GitHub Pages uses Actions, not branch deployment.
+Versions are major.minor.patch.build. Explicit major/minor/patch promotions reset build to 1; normal updates increment build. Next ordinary version: 1.0.0.3. Keep identity.version/buildId, dated release entry, index/manifest queries, SW cache/asset version and deploy-pages workflow name identical. Docs-only changes do not bump versions. Preserve all artwork/install variants. GitHub Pages uses Actions, not branch deployment.
 
 Verify proportionally: all JS syntax, node --test tests/*.test.mjs, manifest JSON, asset/symbol references, git diff --check and affected desktop/mobile/offline flows. Stop preview servers. No live GitHub writes or token-based tests unless authorized. Preserve existing edits. End with outcome/checks and exactly one staging/commit/push command, subject `Version - Text`; do not execute without request. Stage only task files, or `git add .` when every change belongs to completed requests.

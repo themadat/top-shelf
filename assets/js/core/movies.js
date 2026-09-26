@@ -35,6 +35,18 @@
       }).sort(function (a, b) { return howRank(a) - howRank(b); }).join(' / ');
     }).filter(function (part) { const key = part.toLowerCase(); if (!part || seen.has(key)) return false; seen.add(key); return true; }).sort(function (a, b) { return howRank(a) - howRank(b); }).join(', ') + suffix;
   }
+  function cleanOther(value) {
+    const parts = u.cleanText(value, 4000).split(/([,\n])/), result = [];
+    let found = false;
+    for (let i = 0; i < parts.length; i += 2) {
+      const isHolmesian = /^\s*Subgenre(?:\s*:\s*|\s+)(?:Homesian|Holmesian)\s*$/i.test(parts[i]);
+      if (isHolmesian && found) continue;
+      if (result.length && i > 0) result.push(parts[i - 1]);
+      result.push(isHolmesian ? parts[i].replace(/Homesian|Holmesian/i, 'Holmesian') : parts[i]);
+      if (isHolmesian) found = true;
+    }
+    return result.join('');
+  }
   function date(value) {
     const text = u.cleanLine(value, 10);
     return /^\d{4}-\d{2}-\d{2}$/.test(text) && !Number.isNaN(Date.parse(text)) && new Date(text).toISOString().slice(0, 10) === text ? text : "";
@@ -56,7 +68,7 @@
       id: id, tmdbId: Number(v.tmdbId), title: u.cleanLine(v.title, 200), releaseDate: date(v.releaseDate),
       subgenreReviewed: v.subgenreReviewed === true,
       incompleteOverride: v.incompleteOverride === true,
-      how: u.cleanLine(cleanHow(v.how), 302), other: u.cleanText(v.other, 4000),
+      how: u.cleanLine(cleanHow(v.how), 302), other: cleanOther(v.other),
       starredActors: list(v.starredActors).filter(function (name) { return list(v.actors).slice(0, 10).includes(name); }),
       starredDirectors: list(v.starredDirectors).filter(function (name) { return list(v.directors).includes(name); }),
       starredCompanies: list(v.starredCompanies).filter(function (name) { return list(v.productionCompanies).includes(name); }),
@@ -160,5 +172,5 @@
       movies: entries
     }, null, 2);
   }
-  App.movies = { averageBand: averageBand, howProvider: howProvider, howRank: howRank, analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  App.movies = { cleanOther: cleanOther, averageBand: averageBand, howProvider: howProvider, howRank: howRank, analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
 })();

@@ -2,10 +2,10 @@
   'use strict';
   const App = window.LocalApp;
   function tags(movie) {
-    return (movie.other || '').split(/[,\n]/).map(function (tag) { const match = /^Subgenre(?:\s*:\s*|\s+)(.+)$/i.exec(tag.trim()); return match ? match[1].trim() : ''; }).filter(Boolean);
+    return App.movies.cleanOther(movie.other).split(/[,\n]/).map(function (tag) { const match = /^Subgenre(?:\s*:\s*|\s+)(.+)$/i.exec(tag.trim()); return match ? match[1].trim() : ''; }).filter(Boolean);
   }
   function vocabulary(movies) {
-    const names = new Map([['homesian', 'Homesian']]);
+    const names = new Map([['holmesian', 'Holmesian']]);
     movies.filter(function (movie) { return !movie.deleted; }).forEach(function (movie) { tags(movie).forEach(function (name) { const key = name.toLowerCase(); if (!names.has(key)) names.set(key, name); }); });
     return Array.from(names.values()).sort(function (a, b) { return a.localeCompare(b); });
   }
