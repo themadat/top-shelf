@@ -1,6 +1,6 @@
 # Top Shelf 1.0
 
-**Version 1.0.0.1.** A static, local-first movie library with Wishlist, Watched, Notes and eight pivot views. The remaining shelves are starter views. No build step, backend, account or runtime dependency.
+A static, local-first movie library with Wishlist, Watched, Notes and eight pivot views. The remaining shelves are starter views. No build step, backend, account or runtime dependency.
 
 ## Use
 
@@ -36,6 +36,8 @@ Movie column widths are independent per All/Wishlist/Watched. Pivot widths and l
 
 ## Development
 
-Run `node --test tests/*.test.mjs`; see [testing](docs/TESTING.md) for release checks. Preserve the static architecture and use the shared inline SVG catalog for controls. GitHub Pages deploys through the checked-in Actions workflow.
+Run `node scripts/check.mjs` for tests, syntax, versions, manifests, assets, offline cache coverage and diff checks. It prints one summary on success and details on failure. See [testing](docs/TESTING.md) for focused browser checks.
 
-Start with [the concise agent handoff](context/LLM_HANDOFF.md). Read [architecture](docs/ARCHITECTURE.md), [components](docs/COMPONENTS.md), [customization](docs/CUSTOMIZATION.md) or [Git setup](docs/GIT-SETUP.md) only as needed. Release history stays in Settings → What's New and Git.
+Batch related edits, then run `node scripts/release.mjs --title "Release title" --summary "User-facing result"`. Add `--version 1.1.0` for a promotion or `--dry-run` to preview. The script updates version surfaces and preserves release history; it never commits or pushes. No version bump is needed for documentation/tooling-only changes.
+
+[AGENTS.md](AGENTS.md) contains the short default instructions. The [reference index](context/LLM_HANDOFF.md) points to topic docs to read only when relevant. Historical release data is separate from config; movie styles and movie batch/column/tools code have focused files. Use a fresh task for unrelated work to avoid carrying completed conversation history.

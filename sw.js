@@ -1,7 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "top-shelf-shell-1.0.0.2";
-const ASSET_VERSION = "1.0.0.2";
+const CACHE_NAME = "top-shelf-shell-1.0.0.3";
+const ASSET_VERSION = "1.0.0.3";
 const versioned = function (path) { return path + "?v=" + ASSET_VERSION; };
 const SHELL = [
   "./",
@@ -10,6 +10,11 @@ const SHELL = [
   versioned("./manifest-dark.webmanifest"),
   versioned("./assets/css/app.css"),
   versioned("./assets/js/config.js"),
+  versioned("./assets/js/release-history.js"),
+  versioned("./assets/js/movie-columns.js"),
+  versioned("./assets/js/movie-batches.js"),
+  versioned("./assets/js/movie-tools.js"),
+  versioned("./assets/css/movies.css"),
   versioned("./assets/js/icons.js"),
   versioned("./assets/js/core/utils.js"),
   versioned("./assets/js/core/movies.js"),

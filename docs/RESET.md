@@ -42,7 +42,7 @@ The external data file and token are user-facing setup steps. Configure the targ
 - No removed product identifiers or files remain in runtime, docs, tests, or examples; no unintentional file exceeds 20 MB.
 - All identity, version, cache, storage, manifests, downloads, and sync surfaces agree.
 - All app-artwork variants use the supplied source and every retained interface symbol resolves without product data.
-- Notes is blank, Roadmap empty, releases contain only 0.0.1.1, Help/shortcuts are accurate, and the wish ledger starts at WISH-001.
+- Notes is blank, Roadmap empty, config releases contain only 0.0.1.1 and release-history.js appends an empty array, Help/shortcuts are accurate, and the wish ledger starts at WISH-001.
 - Syntax-check all JavaScript, run surviving tests, parse manifests, validate referenced paths, and run git diff --check.
 - Serve locally and exercise desktop/mobile startup, no console errors/overflow, Notes autosave/reload, every Settings page, appearance, empty states, search, shortcuts/hints, backup/import/recovery, sync states, PWA registration/update/offline, visible focus, and reduced motion.
 - Stop preview servers and review status/deletions. Report verified results and any external setup still pending.

@@ -1,14 +1,12 @@
 # Verification
 
-Run from the repository root with Node and Python available:
+Run from the repository root with Node available:
 
 ```sh
-for file in assets/js/*.js assets/js/core/*.js sw.js; do node --check "$file" || exit 1; done
-node --test tests/*.test.mjs
-node -e "const fs=require('fs'); for (const f of ['manifest.webmanifest','manifest-dark.webmanifest']) JSON.parse(fs.readFileSync(f,'utf8'));"
-git diff --check
-python3 -m http.server 8000
+node scripts/check.mjs
 ```
+
+This runs all dependency-free tests, JS syntax checks, version/manifest/asset/symbol checks, offline shell coverage and `git diff --check`, reporting only a summary unless something fails. Use targeted browser checks for the changed behavior; full desktop/mobile/offline checks are for releases and changes to relevant infrastructure. Start a preview with `python3 -m http.server 8000` when needed.
 
 Open localhost:8000 at desktop and mobile sizes. Check startup without console errors, Movies plus the other starter views, centered search, Notes autosave/reload, keyboard search selection, every Settings tab, Help no-match recovery, the movie backlog in Roadmap, release history, appearance controls, hints/shortcuts, Developer Mode, and all interface SVGs. Check focus visibility, dialog focus restoration, touch reachability, reduced motion, and no horizontal overflow.
 

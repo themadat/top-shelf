@@ -50,7 +50,7 @@
     $('#movieResponseStatus').textContent = errors.length ? errors.join(' ') : 'Full TMDB responses shown below.';
   }
   let inlineEdit = null;
-  let streamingBusy = false, streamingController = null;
+  const batches = App.createMovieBatches({ saved: saved, lookupSettings: lookupSettings, isEditing: function (id) { return (draft?.id === id && $('#movieDialog').open) || inlineEdit?.id === id; } });
   let filter = "all", query = "", incompleteOnly = false;
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
@@ -224,86 +224,10 @@
     App.storage.saveNow();
     render();
   }
-  function resizeColumns() {
-    const table = $('#movieList .movie-table');
-    if (!table) return;
-    const headings = Array.from(table.tHead.rows[0].cells);
-    const stored = App.storage.getState().ui.movieColumnWidths?.[filter] || {};
-    const keys = headings.map(function (cell) { return cell.className.replace('movie-col-', ''); });
-    const widths = headings.map(function (cell, index) { return stored[keys[index]] || Math.ceil(cell.getBoundingClientRect().width); });
-    const group = document.createElement('colgroup');
-    widths.forEach(function () { group.appendChild(document.createElement('col')); });
-    table.insertBefore(group, table.tHead);
-    table.classList.add('movie-table-resizable');
-    function apply(index, width) {
-      widths[index] = Math.max(40, Math.min(100000, Math.ceil(width)));
-      Array.from(group.children).forEach(function (col, i) { col.style.width = widths[i] + 'px'; });
-      table.style.width = widths.reduce(function (sum, value) { return sum + value; }, 0) + 'px';
-      headings[index].querySelector('.movie-column-resize')?.setAttribute('aria-valuenow', widths[index]);
-    }
-    function save(index) {
-      App.storage.mutate(function (state) { state.ui.movieColumnWidths[filter][keys[index]] = widths[index]; }, { reason: 'movie-column-width', touch: false });
-      App.storage.saveNow();
-    }
-    function fit(index) {
-      let width = 40;
-      // Measure natural content independently of clipping and the current column width.
-      Array.from(table.rows).forEach(function (row) {
-        const cell = row.cells[index], content = cell.querySelector('.movie-cell, .movie-title-link, .movie-column-sort');
-        if (!content) return;
-        const copy = content.cloneNode(true);
-        copy.style.cssText = 'position:fixed;left:-200000px;top:0;width:max-content;min-width:0;max-width:none;white-space:pre;overflow:visible;pointer-events:none';
-        cell.appendChild(copy);
-        const style = getComputedStyle(cell);
-        width = Math.max(width, copy.getBoundingClientRect().width + parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + 14);
-        copy.remove();
-      });
-      apply(index, width); save(index);
-    }
-    headings.forEach(function (cell, index) {
-      const handle = document.createElement('span');
-      handle.className = 'movie-column-resize';
-      handle.tabIndex = 0;
-      handle.setAttribute('role', 'separator');
-      handle.setAttribute('aria-orientation', 'vertical');
-      handle.setAttribute('aria-label', 'Resize ' + cell.textContent.trim() + ' column');
-      handle.setAttribute('aria-valuemin', '40');
-      handle.setAttribute('aria-valuemax', '100000');
-      handle.title = 'Drag to resize; double-click to fit content. Arrow keys resize; Enter fits.';
-      cell.appendChild(handle);
-      handle.addEventListener('click', function (event) { event.stopPropagation(); });
-      handle.addEventListener('dblclick', function (event) { event.preventDefault(); event.stopPropagation(); fit(index); });
-      handle.addEventListener('keydown', function (event) {
-        if (!['ArrowLeft', 'ArrowRight', 'Enter'].includes(event.key)) return;
-        event.preventDefault(); event.stopPropagation();
-        if (event.key === 'Enter') fit(index);
-        else { apply(index, widths[index] + (event.key === 'ArrowLeft' ? -10 : 10)); save(index); }
-      });
-      handle.addEventListener('pointerdown', function (event) {
-        if (event.button !== 0) return;
-        event.preventDefault(); event.stopPropagation();
-        const start = event.clientX, initial = widths[index];
-        handle.setPointerCapture(event.pointerId);
-        function move(e) { apply(index, initial + e.clientX - start); }
-        function finish(e) {
-          handle.removeEventListener('pointermove', move);
-          handle.removeEventListener('pointerup', finish);
-          handle.removeEventListener('pointercancel', cancel);
-          if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId);
-          if (widths[index] !== initial) save(index);
-        }
-        function cancel(e) { apply(index, initial); finish(e); }
-        handle.addEventListener('pointermove', move);
-        handle.addEventListener('pointerup', finish);
-        handle.addEventListener('pointercancel', cancel);
-      });
-      apply(index, widths[index]);
-    });
-  }
   function render() {
     if (inlineEdit) return;
     $('#wishlistRatingsButton').hidden = filter !== 'wishlist';
-    $('#wishlistStreaming').hidden = filter !== 'wishlist' && !streamingBusy && !$('#wishlistStreamingStatus').textContent;
+    $('#wishlistStreaming').hidden = filter !== 'wishlist' && !batches.busy() && !$('#wishlistStreamingStatus').textContent;
     const items = saved(), wishlist = items.filter(function (movie) { return movie.status === "wishlist"; }).length;
     document.querySelectorAll("[data-movie-filter]").forEach(function (button) { const value = button.dataset.movieFilter; button.setAttribute("aria-pressed", String(filter === value)); button.querySelector("small").textContent = value === "all" ? items.length : value === "wishlist" ? wishlist : items.length - wishlist; });
     const visible = items.filter(function (movie) { return (filter === "all" || movie.status === filter) && (!incompleteOnly || model.incomplete(movie)) && model.searchable(movie).includes(query.toLowerCase().trim()); });
@@ -318,7 +242,7 @@
       const id = esc(movie.id), watched = movie.status === "watched";
       return '<tr class="' + (watched ? 'movie-watched-row' : 'movie-wishlist-row') + '">' + editable(movie, watched ? 'rating' : 'priority', badge(movie), 'movie-col-score') + (filter === 'wishlist' ? '<td class="movie-col-tmdbAverage"><span class="movie-cell">' + (movie.tmdbAverage == null ? '—' : '<span class="movie-score ave-' + model.averageBand(movie.tmdbAverage) + '" title="TMDB average: ' + movie.tmdbAverage.toFixed(1) + ' out of 10" aria-label="TMDB average: ' + movie.tmdbAverage.toFixed(1) + ' out of 10">' + movie.tmdbAverage.toFixed(1) + '</span>') + '</span></td>' : '') + '<th scope="row" class="movie-col-title"><button type="button" class="movie-title-link" data-edit-movie="' + id + '" title="Edit ' + esc(movie.title) + '">' + esc(movie.title) + '</button><span class="visually-hidden">' + (watched ? 'Watched' : 'Wishlist') + '</span></th>' + editable(movie, watched ? 'review' : 'notes', esc((watched ? movie.review : movie.notes) || '—'), 'movie-col-review') + editable(movie, 'how', watched ? esc(movie.how || '—') : howMarkup(movie.how), 'movie-col-how') + editable(movie, watched ? 'watchedDate' : 'availableDate', esc((watched ? movie.watchedDate : movie.availableDate) || '—'), 'movie-col-date') + cell(movie.releaseDate, 'movie-col-release') + editable(movie, 'other', esc(movie.other || '—'), 'movie-col-other') + cell(movie.collections.join(', '), 'movie-col-collections') + cell(movie.genres.join(', '), 'movie-col-genres') + cell(movie.actors.join(', '), 'movie-col-actors') + cell(movie.directors.join(', '), 'movie-col-directors') + cell(movie.productionCompanies.join(', '), 'movie-col-companies') + '</tr>';
     }).join('') + '</tbody></table></div>' : '<div class="movie-empty"><h2>' + (items.length ? 'No Movies Match' : 'No Movies Yet') + '</h2><p>' + (items.length ? 'Try another search or movie state.' : 'Build your wishlist or add something you’ve watched.') + '</p></div>';
-    resizeColumns();
+    App.movieColumns.resize(filter);
     const tab = $('[data-shelf="movies"]');
     tab.querySelector("small").textContent = items.length;
     tab.setAttribute("aria-label", "Movies, " + items.length + " movies");
@@ -344,170 +268,17 @@
     App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (movie) { return movie.id === id ? { id: id, deleted: true } : movie; }); }, { reason: "movie-delete" });
     App.storage.saveNow(); App.components.closeDialog("#movieDialog"); render();
   }
-  async function updateWishlistRatings() {
-    if (streamingBusy) return;
-    const button = $('#wishlistRatingsButton'), status = $('#wishlistStreamingStatus');
-    if (!App.tmdb.token()) { lookupSettings(button); return; }
-    const targets = saved().filter(function (movie) { return movie.status === 'wishlist'; }).map(function (movie) { return u.clone(movie); });
-    $('#wishlistStreaming').hidden = false;
-    if (!targets.length) { status.textContent = 'No Wishlist movies to update.'; return; }
-    if (!App.storage.saveRecovery('Before updating Wishlist TMDB ratings')) { status.textContent = 'Could not save a recovery copy. No ratings were changed.'; return; }
-    streamingBusy = true; streamingController = new AbortController(); button.disabled = true; $('#wishlistStreamingButton').disabled = true; $('#wishlistStreamingCancel').hidden = false;
-    const controller = streamingController;
-    let updated = 0, checked = 0, failure = '';
-    try {
-      for (const target of targets) {
-        if (controller.signal.aborted) break;
-        status.textContent = 'Fetching TMDB ratings ' + (checked + 1) + '/' + targets.length + '…';
-        const details = await App.tmdb.details(target.tmdbId, controller.signal);
-        if (controller.signal.aborted) break;
-        checked++;
-        const current = saved().find(function (movie) { return movie.id === target.id; });
-        if (!current || JSON.stringify(current) !== JSON.stringify(target) || (draft?.id === target.id && $('#movieDialog').open) || inlineEdit?.id === target.id) continue;
-        App.storage.mutate(function (next) { next.workspace.movies.find(function (movie) { return movie.id === target.id; }).tmdbAverage = details.tmdbAverage; }, { reason: 'tmdb-ratings' });
-        updated++;
-        if (!App.storage.saveNow()) { failure = 'Storage unavailable; export a backup before closing.'; break; }
-      }
-    } catch (error) { if (!controller.signal.aborted) failure = error.message; }
-    finally {
-      streamingBusy = false; streamingController = null; button.disabled = false; $('#wishlistStreamingButton').disabled = false; $('#wishlistStreamingCancel').hidden = true;
-      status.textContent = 'TMDB ratings: ' + updated + ' updated; ' + checked + '/' + targets.length + ' checked.' + (failure ? ' Stopped: ' + failure : controller.signal.aborted ? ' Stopped; completed updates saved.' : ' Complete.');
-    }
-  }
-  async function fillStreaming() {
-    if (streamingBusy) return;
-    if (!App.tmdb.token()) { lookupSettings($('#wishlistStreamingButton')); return; }
-    const targets = saved().filter(function (movie) { return movie.status === 'wishlist'; }).map(function (movie) { return u.clone(movie); });
-    const status = $('#wishlistStreamingStatus'), button = $('#wishlistStreamingButton');
-    $('#wishlistStreaming').hidden = false;
-    if (!targets.length) { status.textContent = 'No Wishlist movies to check.'; return; }
-    if (!App.storage.saveRecovery('Before updating Wishlist How')) { status.textContent = 'Could not save a recovery copy. No movies were changed.'; return; }
-    streamingBusy = true; streamingController = new AbortController(); button.disabled = true; $('#wishlistStreamingCancel').hidden = false;
-    const controller = streamingController;
-    const results = $('#wishlistStreamingResults'); results.replaceChildren();
-    let updated = 0, checked = 0, estimated = 0, unknown = 0, skipped = 0, failure = '';
-    try {
-      for (const target of targets) {
-        if (controller.signal.aborted) break;
-        status.textContent = 'Checking US availability ' + (checked + 1) + '/' + targets.length + '…';
-        const available = await App.tmdb.streaming(target.tmdbId, controller.signal);
-        const usTheatricalDate = available ? '' : await App.tmdb.theatricalDate(target.tmdbId, controller.signal);
-        if (controller.signal.aborted) break;
-        checked++;
-        const current = saved().find(function (movie) { return movie.id === target.id; });
-        if (!current || current.status !== 'wishlist' || JSON.stringify(current) !== JSON.stringify(target) || (draft?.id === target.id && $('#movieDialog').open) || inlineEdit?.id === target.id) { skipped++; continue; }
-        const prediction = App.streamingRules.predict(current, { available: available, usTheatricalDate: usTheatricalDate });
-        const how = prediction.how;
-        if (prediction.status === 'ESTIMATE') estimated++;
-        else if (prediction.status === 'UNKNOWN') unknown++;
-        const item = document.createElement('li');
-        item.textContent = current.title + ': ' + how;
-        if (prediction.windows.length) {
-          const details = document.createElement('details'), summary = document.createElement('summary'), list = document.createElement('ul');
-          summary.textContent = 'Subscription Windows'; details.append(summary, list);
-          prediction.windows.forEach(function (window) { const row = document.createElement('li'); row.textContent = (window.window || 'Title rights') + ': ' + window.services.join(' / ') + (window.estimatedDates ? ' · estimated ' + window.estimatedDates.join('–') : window.officialDate ? ' · official ' + window.officialDate : ' · timing unknown') + (window.confidence ? ' · ' + window.confidence + ' rights confidence' : '') + (window.notes ? ' · ' + window.notes : ''); list.append(row); });
-          item.append(details);
-        }
-        if (prediction.needsResearch) {
-          const link = document.createElement('a');
-          link.href = 'https://www.google.com/search?q=' + encodeURIComponent(current.title + ' ' + (current.releaseDate || '').slice(0, 4) + ' US subscription streaming distribution rights official release date');
-          link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Research This Title';
-          item.append(document.createTextNode(' · ' + prediction.reason + ' '), link);
-        }
-        results.append(item);
-        if (current.how === how) continue;
-        App.storage.mutate(function (next) { next.workspace.movies.find(function (movie) { return movie.id === target.id; }).how = how; }, { reason: 'wishlist-streaming' });
-        updated++;
-        if (!App.storage.saveNow()) { failure = 'Storage unavailable; export a backup before closing.'; break; }
-      }
-    } catch (error) { if (!controller.signal.aborted) failure = error.message; }
-    finally {
-      streamingBusy = false; streamingController = null; button.disabled = false; $('#wishlistStreamingCancel').hidden = true;
-      status.textContent = 'Checked ' + checked + '/' + targets.length + '; ' + updated + ' updated; ' + estimated + ' estimates; ' + unknown + ' unknown; ' + skipped + ' changed or being edited, skipped.' + (failure ? ' Stopped: ' + failure : controller.signal.aborted ? ' Stopped. Completed updates are saved.' : ' Complete.');
-    }
-  }
-  function howValues() { return Array.from(new Set(saved().map(function (movie) { return movie.how; }).filter(Boolean))).sort(function (a, b) { return a.localeCompare(b); }).join('\n'); }
-  function initBulkPivots() {
-    let reviewed = null;
-    function invalidate() { reviewed = null; $('#bulkPivotApply').disabled = true; $('#bulkPivotPreview').textContent = ''; $('#bulkPivotError').textContent = ''; $('#bulkPivotMovies').removeAttribute('aria-invalid'); }
-    function preview() {
-      invalidate();
-      try {
-        const result = model.bulkPivots(saved(), $('#bulkPivotTags').value, $('#bulkPivotMovies').value);
-        const issues = result.rows.filter(function (row) { return row.error; });
-        const matched = result.rows.filter(function (row) { return !row.error; });
-        const issueList = issues.length ? '<section class="bulk-pivot-issues" aria-labelledby="bulkPivotIssuesTitle"><h3 id="bulkPivotIssuesTitle">Needs Attention (' + issues.length + ')</h3><ul>' + issues.map(function (row) {
-          const label = row.error.startsWith('Not found') ? 'NOT FOUND' : row.error.startsWith('Multiple matches') ? 'MULTIPLE MATCHES' : 'CANNOT APPLY';
-          return '<li><span class="bulk-pivot-issue-label">' + label + '</span><strong>' + esc(row.input) + '</strong><span>' + esc(row.error) + '</span></li>';
-        }).join('') + '</ul><p>Correct the movie names or use TMDB IDs in the Movies box, then review again.</p></section>' : '';
-        $('#bulkPivotPreview').innerHTML = issueList + '<p>' + result.changes.length + ' movies ' + (issues.length ? 'matched for updates (not applied)' : 'to update') + '.</p>' + (matched.length ? '<details' + (issues.length ? '' : ' open') + '><summary>Matched Movies (' + matched.length + ')</summary><ul>' + matched.map(function (row) {
-          return '<li><strong>' + esc(row.title || row.input) + '</strong>: ' + (row.duplicate ? 'Already included above' : row.additions.length ? 'Append ' + esc(row.additions.join(', ')) : 'No change — pivots already present') + '</li>';
-        }).join('') + '</ul></details>' : '');
-        if (!result.valid) {
-          $('#bulkPivotError').textContent = issues.length + ' movie ' + (issues.length === 1 ? 'entry needs' : 'entries need') + ' attention. Nothing can be applied until these are resolved.';
-          $('#bulkPivotMovies').setAttribute('aria-invalid', 'true');
-          $('#bulkPivotError').focus();
-          $('#bulkPivotError').scrollIntoView({ block: 'start' });
-        }
-        else if (result.changes.length) { reviewed = result; $('#bulkPivotApply').disabled = false; }
-      } catch (error) { $('#bulkPivotError').textContent = error.message; }
-    }
-    $('#bulkPivotsButton').addEventListener('click', function (event) {
-      $('#bulkPivotsForm').reset(); invalidate();
-      App.components.openDialog('#bulkPivotsDialog', { trigger: event.currentTarget, focus: '#bulkPivotTags' });
-    });
-    $('#bulkPivotTags').addEventListener('input', invalidate);
-    $('#bulkPivotMovies').addEventListener('input', invalidate);
-    $('#bulkPivotReview').addEventListener('click', preview);
-    $('#bulkPivotsForm').addEventListener('submit', function (event) {
-      event.preventDefault();
-      if (!reviewed) return;
-      try {
-        const current = model.bulkPivots(saved(), $('#bulkPivotTags').value, $('#bulkPivotMovies').value);
-        if (JSON.stringify(current) !== JSON.stringify(reviewed)) { preview(); $('#bulkPivotError').textContent = 'Movie data changed. Review the refreshed matches before applying.'; return; }
-        if (!App.storage.saveRecovery('Before bulk pivot entry')) throw new Error('Could not save a recovery copy. No movies were changed.');
-        const changes = new Map(current.changes.map(function (row) { return [row.id, row.after]; }));
-        App.storage.mutate(function (next) { next.workspace.movies = next.workspace.movies.map(function (movie) { return changes.has(movie.id) ? model.normalize(Object.assign({}, movie, { other: changes.get(movie.id) })) : movie; }); }, { reason: 'bulk-pivots' });
-        const persisted = App.storage.saveNow();
-        reviewed = null;
-        App.components.closeDialog('#bulkPivotsDialog');
-        App.components.toast(persisted ? changes.size + ' movies updated.' : 'Changes kept for this session. Export a backup before closing.', { title: persisted ? 'Pivots appended' : 'Storage unavailable', kind: persisted ? 'success' : 'warning' });
-      } catch (error) { $('#bulkPivotError').textContent = error.message; }
-    });
-  }
-  function bindCopy(button, text, message, refresh) {
-    $(button).addEventListener('click', async function () {
-      const input = $(text);
-      if (refresh) input.value = refresh();
-      try { await navigator.clipboard.writeText(input.value); App.components.toast(message, { title: 'Copied', kind: 'success' }); }
-      catch (error) { input.focus(); input.select(); App.components.toast('List selected. Copy it using your keyboard.', { title: 'Copy List' }); }
-    });
-  }
   function init() {
-    initBulkPivots();
-    $('#wishlistRatingsButton').addEventListener('click', updateWishlistRatings);
+    App.movieTools.init();
+    $('#wishlistRatingsButton').addEventListener('click', batches.ratings);
     $('#movieIncompleteButton').addEventListener('click', function () { incompleteOnly = !incompleteOnly; render(); });
-    $('#movieNamesButton').addEventListener('click', function (event) {
-      $('#movieNamesText').value = saved().map(function (movie) { return movie.title; }).sort(function (a, b) { return a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }); }).join('\n');
-      App.components.openDialog('#movieNamesDialog', { trigger: event.currentTarget, focus: '#movieNamesText' });
-    });
-    bindCopy('#movieNamesCopy', '#movieNamesText', 'Movie names copied.');
-    $('#movieAnalysisButton').addEventListener('click', function (event) {
-      const movies = saved();
-      $('#movieAnalysisText').value = model.analysisText(movies);
-      $('#movieAnalysisSummary').textContent = movies.length + ' movies · All saved details · No list filters applied';
-      App.components.openDialog('#movieAnalysisDialog', { trigger: event.currentTarget, focus: '#movieAnalysisText' });
-    });
-    bindCopy('#movieAnalysisCopy', '#movieAnalysisText', 'Movie database copied.');
-    $('#movieHowValuesButton').addEventListener('click', function (event) { $('#movieHowValuesText').value = howValues(); App.components.openDialog('#movieHowValuesDialog', { trigger: event.currentTarget, focus: '#movieHowValuesText' }); });
-    bindCopy('#movieHowValuesCopy', '#movieHowValuesText', 'How values copied.', howValues);
     document.querySelectorAll('[data-editor-priority]').forEach(function (button) { button.addEventListener('click', function () { const input = $('#movieForm').elements.priority; input.value = input.value === button.dataset.editorPriority ? '' : button.dataset.editorPriority; statusFields(); }); });
     $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.addEventListener('input', dateFields); input.addEventListener('change', dateFields); });
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); if (button.dataset.editorState === 'watched') $('#movieForm').elements.rating.focus(); else $('[data-editor-priority]').focus(); }); });
     $('#wishlistRulesDate').textContent = 'User-supplied US rules snapshot: ' + App.streamingRules.reviewedOn + '. Timing is estimated from the US theatrical opening (wide, then limited). Rights confidence does not guarantee a date. Older catalog needs title-specific research. Rules and title exceptions are bundled; no automatic web research runs during checks.';
     $('#wishlistRulesList').innerHTML = App.streamingRules.rules.map(function (rule) { return '<li>' + esc(rule.studio) + ' → ' + esc(rule.services.join(' / ')) + ' · ' + esc(rule.window) + ' · typical ' + (rule.typicalDays ? rule.typicalDays.join('–') + ' days' : 'unknown') + ' · min ' + (rule.minDays ? rule.minDays.join('–') : 'unknown') + ' · max ' + (rule.maxDays ? rule.maxDays.join('–') : 'unknown') + ' · ' + esc(rule.confidence) + ' rights confidence. ' + esc(rule.notes) + '</li>'; }).join('');
-    $('#wishlistStreamingCancel').addEventListener('click', function () { streamingController?.abort(); });
-    $("#wishlistStreamingButton").addEventListener("click", function () { fillStreaming(); });
+    $('#wishlistStreamingCancel').addEventListener('click', batches.cancel);
+    $("#wishlistStreamingButton").addEventListener("click", batches.how);
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });
     $("#moviesWorkspace").addEventListener("click", function (event) {
       const button = event.target.closest("button"); if (!button) return;
