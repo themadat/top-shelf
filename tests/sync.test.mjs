@@ -34,7 +34,7 @@ function harness({ token = 'test-token', online = true } = {}) {
     getState: () => state, hasSecret: () => Boolean(token), getSecret: () => token,
     setSecret(value) { token = value; return true; }, clearSecret() { token = ''; },
     mutate(callback, options = {}) { callback(state); if (options.touch !== false) App.stateModel.touch(state); state = App.stateModel.normalize(state); },
-    saveRecovery() { if (!h.recoveryWorks) return false; h.recovery = structuredClone(state); return true; },
+    async saveRecoveryAsync() { if (!h.recoveryWorks) return false; h.recovery = structuredClone(state); return true; },
     replace(next, options) { replacements.push(options); state = next; }
   };
   App.components = {
@@ -663,4 +663,30 @@ test('upgrade baseline repair never trusts a changed revision or different targe
     assert.equal(h.sync.getInfo().change, mismatch === 'target' ? 'first-sync' : 'conflict');
     assert.equal(h.state.modules.cloudSync.baselineHash, 'data-v1:before-normalization-upgrade');
   }
+});
+
+
+test('cloud restore waits for recovery and refuses concurrent local edits', async () => {
+  const h = harness(), gate = deferred(), started = deferred(); h.confirmation = true;
+  changeNotes(h.remote, 'Cloud notes');
+  h.App.storage.saveRecoveryAsync = async () => { started.resolve(); await gate.promise; return true; };
+  const restore = h.sync.restoreFromCloud();
+  await started.promise;
+  assert.equal(h.replacements.length, 0);
+  changeNotes(h.state, 'Typed while recovery was saving');
+  gate.resolve(); await restore;
+  assert.equal(h.replacements.length, 0);
+  assert.equal(h.state.workspace.documents[0].html, 'Typed while recovery was saving');
+  assert.ok(h.toasts.some(t => /Local data changed/.test(t.message)));
+});
+
+test('cloud restore never reports success or changes baseline after persistence fails', async () => {
+  const h = harness(); h.confirmation = true;
+  changeNotes(h.remote, 'Cloud notes');
+  h.App.storage.replace = () => { throw new Error('Storage is full; current data was kept'); };
+  const baseline = h.state.modules.cloudSync.baselineHash;
+  await h.sync.restoreFromCloud();
+  assert.equal(h.state.modules.cloudSync.baselineHash, baseline);
+  assert.equal(h.toasts.some(t => t.title === 'Sync complete'), false);
+  assert.ok(h.toasts.some(t => /Storage is full/.test(t.message)));
 });

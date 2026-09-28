@@ -10,6 +10,8 @@ GitHub target is fixed: themadat/app-data/main/data/top-shelf.json. Imports cann
 
 Sync repairs baselineHash only when baselineTarget and nonempty baselineSha match the freshly fetched remote blob. Different revisions still require normal conflict handling. No timestamp-winner guessing. Recovery precedes destructive replacements/batches; concurrent edits must not be overwritten.
 
+Cloud download/merge and manual recovery prefer an IndexedDB recovery snapshot, committed before removing the superseded localStorage recovery key. This frees localStorage space without removing the active library, credentials, or unrelated keys. If IndexedDB is unavailable, the existing localStorage recovery path remains a fallback. Startup loads database recovery for Developer Tools and recovery from an unreadable active state; Erase All clears both stores. Replacements publish state and success only after the active library is persisted. Failed writes retain the prior live and stored library; async recovery rejects intervening edits. A cloud library larger than localStorage capacity still fails safely.
+
 Notes buffers typing 300ms before normalization; flush on blur/close/hidden/page exit, cancel pending drafts on state replacement. Movie/pivot/subgenre views ignore edit-document redraws. Notes fills desktop height minus 2rem and is full-screen on mobile.
 
 

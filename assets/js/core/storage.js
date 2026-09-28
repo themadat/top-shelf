@@ -6,6 +6,7 @@
   const u = App.utils;
   const model = App.stateModel;
   let currentState;
+  let databaseRecovery = null;
   let persistentStorageAvailable = true;
   let lastSavedJson = "";
   let loadReport = { source: "default", migrations: [], warnings: [], recovered: false, error: "" };
@@ -45,15 +46,60 @@
     try { localStorage.removeItem(key); } catch (error) { persistentStorageAvailable = false; }
   }
 
+  // Recovery can exceed localStorage's small per-origin quota. IndexedDB has
+  // separate capacity; only a completed transaction counts as a saved backup.
+  function recoveryDatabase(operation, value) {
+    return new Promise(function (resolve, reject) {
+      if (typeof indexedDB === "undefined") { reject(new Error("Recovery database is unavailable.")); return; }
+      let blocked = false;
+      const request = indexedDB.open(config.storage.recoveryKey + ".database", 1);
+      request.onupgradeneeded = function () { request.result.createObjectStore("snapshots"); };
+      request.onerror = function () { reject(request.error); };
+      request.onblocked = function () { blocked = true; reject(new Error("Recovery database is busy. Close other app tabs and try again.")); };
+      request.onsuccess = function () {
+        const db = request.result;
+        if (blocked) { db.close(); return; }
+        const transaction = db.transaction("snapshots", operation === "read" ? "readonly" : "readwrite");
+        const store = transaction.objectStore("snapshots");
+        const result = operation === "read" ? store.get("recovery") : operation === "clear" ? store.delete("recovery") : store.put(value, "recovery");
+        transaction.oncomplete = function () { db.close(); resolve(result.result); };
+        transaction.onabort = function () { db.close(); reject(transaction.error || new Error("Recovery could not be saved.")); };
+        transaction.onerror = function () { /* onabort handles transaction failures */ };
+      };
+    });
+  }
+
+  async function loadDatabaseRecovery() {
+    try {
+      const raw = await recoveryDatabase("read");
+      databaseRecovery = raw ? { state: model.prepare(raw.state).state, createdAt: raw.createdAt, reason: raw.reason } : null;
+    } catch (error) { databaseRecovery = null; }
+  }
+
+  async function saveRecoveryAsync(reason, state) {
+    const snapshot = { createdAt: u.isoNow(), reason: u.cleanLine(reason || "Before data replacement", 160), state: model.normalize(u.clone(state || getState())) };
+    const prior = readLocal(config.storage.recoveryKey), persisted = readLocal(config.storage.stateKey);
+    try {
+      await recoveryDatabase("write", snapshot);
+    } catch (error) {
+      return saveRecovery(reason, snapshot.state);
+    }
+    databaseRecovery = snapshot;
+    if (readLocal(config.storage.stateKey) !== persisted) throw new Error("Saved data changed in another tab while making recovery. Reload and check cloud sync again.");
+    // Reclaim only the superseded recovery, never library data or credentials.
+    if (readLocal(config.storage.recoveryKey) === prior) removeLocal(config.storage.recoveryKey);
+    return true;
+  }
+
   function readRecovery() {
     const raw = readLocal(config.storage.recoveryKey);
-    if (!raw) return null;
+    if (!raw) return databaseRecovery;
     try {
       const parsed = JSON.parse(raw);
       const prepared = model.prepare(parsed.state || parsed);
       return { state: prepared.state, createdAt: parsed.createdAt || "", reason: parsed.reason || "Recovery snapshot" };
     } catch (error) {
-      return null;
+      return databaseRecovery;
     }
   }
 
@@ -161,10 +207,16 @@
     const settings = Object.assign({ recoveryReason: "Before data replacement", saveRecovery: true, reason: "replace", touch: true }, options || {});
     const prepared = model.prepare(nextState);
     if (settings.saveRecovery && currentState && !saveRecovery(settings.recoveryReason, currentState)) throw new Error("Could not save a recovery copy. Current data was kept.");
-    currentState = prepared.state;
-    if (settings.touch) model.touch(currentState);
-    lastSavedJson = "";
-    saveNow();
+    const next = prepared.state;
+    if (settings.touch) model.touch(next);
+    const json = JSON.stringify(next);
+    // setItem is atomic: keep both the prior stored value and live state until
+    // the replacement is durably saved. Never report an in-memory-only restore.
+    if (!writeLocal(config.storage.stateKey, json)) throw new Error("The replacement could not fit in browser storage. Current data was kept; the recovery copy is still available. Export a backup before freeing storage.");
+    scheduleSave.cancel();
+    currentState = next;
+    lastSavedJson = json;
+    emit("app:statesaved", { bytes: new Blob([json]).size, updatedAt: next.meta.updatedAt });
     emit("app:statechange", { reason: settings.reason, state: currentState });
     return currentState;
   }
@@ -181,7 +233,9 @@
     return { createdAt: recovery.createdAt, reason: recovery.reason, records: recovery.state.workspace.records.length, documents: recovery.state.workspace.documents.length };
   }
 
-  function clearAll() {
+  async function clearAll() {
+    if (typeof indexedDB !== "undefined") await recoveryDatabase("clear");
+    databaseRecovery = null;
     scheduleSave.cancel();
     [config.storage.stateKey, config.storage.tmdbSecretKey, config.storage.recoveryKey, config.storage.secretKey, config.storage.sessionSecretKey].concat(config.storage.legacyKeys).forEach(removeLocal);
     try { sessionStorage.removeItem(config.storage.sessionSecretKey); sessionStorage.removeItem(config.storage.tmdbSecretKey); } catch (error) { /* unavailable */ }
@@ -243,6 +297,8 @@
 
   App.storage = {
     load: load,
+    loadDatabaseRecovery: loadDatabaseRecovery,
+    saveRecoveryAsync: saveRecoveryAsync,
     getState: getState,
     getLoadReport: function () { return u.clone(loadReport); },
     mutate: mutate,

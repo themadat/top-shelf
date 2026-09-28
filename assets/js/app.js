@@ -602,7 +602,8 @@
   async function eraseAllData() {
     const accepted = await components.confirm({ title: "Erase all application data?", message: "This permanently removes movies, TV shows, notes, preferences, sync settings, stored GitHub and TMDB tokens, and recovery data from this browser. Export a backup first if anything should be kept.", confirmLabel: "Erase everything", cancelLabel: "Keep my data", danger: true });
     if (!accepted) return;
-    storage.clearAll();
+    try { await storage.clearAll(); }
+    catch (error) { components.toast(error.message, { title: "Erase failed", kind: "danger" }); return; }
     renderAll();
     components.closeDialog("#supportDialog", "erased");
     $("#assertiveStatus").textContent = "All application data was erased.";
@@ -663,12 +664,16 @@
     if (!info) return;
     const accepted = await components.confirm({ title: "Restore recovery copy?", message: "Restore the copy saved " + u.relativeTime(info.createdAt) + " (“" + info.reason + "”). Current data will be replaced.", confirmLabel: "Restore recovery", danger: true });
     if (!accepted) return;
-    storage.restoreRecovery(); renderAll();
+    try { storage.restoreRecovery(); }
+    catch (error) { components.toast(error.message, { title: "Recovery failed", kind: "danger" }); return; }
+    renderAll();
     components.toast("The recovery copy was restored.", { title: "Recovery complete", kind: "success" });
   }
 
-  function saveRecoveryCopy() {
-    const saved = storage.saveRecovery("Manual recovery copy", state());
+  async function saveRecoveryCopy() {
+    let saved;
+    try { saved = await storage.saveRecoveryAsync("Manual recovery copy", state()); }
+    catch (error) { components.toast(error.message, { title: "Recovery failed", kind: "danger" }); return; }
     if (saved) {
       renderDeveloper();
       components.toast("A recoverable local copy was saved.", { title: "Recovery copy saved", kind: "success" });
@@ -1041,7 +1046,8 @@
     }
   }
 
-  function init() {
+  async function init() {
+    await storage.loadDatabaseRecovery();
     storage.load();
     applyIdentity();
     components.init();

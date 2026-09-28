@@ -447,8 +447,11 @@
     runtime.error = "";
     emit();
     try {
+      const before = u.stableJson(storage.getState());
       const next = model.applySync(storage.getState(), runtime.remoteState);
-      if (!storage.saveRecovery("Before downloading GitHub data")) throw new Error("The local recovery copy could not be saved. Export a backup before restoring from cloud.");
+      if (!await storage.saveRecoveryAsync("Before downloading GitHub data")) throw new Error("The local recovery copy could not be saved. Export a backup before restoring from cloud.");
+      if (!currentRequest(context)) return false;
+      if (u.stableJson(storage.getState()) !== before) throw new Error("Local data changed while saving recovery. Check cloud sync again before restoring.");
       storage.replace(next, { saveRecovery: false, reason: "sync-download", touch: false });
       rememberBaseline(runtime.remoteSha, runtime.remoteHash);
       App.components.toast("This device now uses the GitHub copy. The previous local copy is recoverable in Developer Tools.", { title: "Sync complete", kind: "success", duration: 5000 });
@@ -464,15 +467,23 @@
 
   async function performMerge() {
     if (!runtime.remoteState) return performUpload();
+    const context = requestContext("syncing");
+    runtime.busy = true; runtime.operation = "syncing"; emit();
     try {
+      const before = u.stableJson(storage.getState());
       const merged = model.merge(storage.getState(), runtime.remoteState);
-      if (!storage.saveRecovery("Before merging GitHub data")) throw new Error("The local recovery copy could not be saved. Export a backup before merging.");
+      if (!await storage.saveRecoveryAsync("Before merging GitHub data")) throw new Error("The local recovery copy could not be saved. Export a backup before merging.");
+      if (!currentRequest(context)) return false;
+      if (u.stableJson(storage.getState()) !== before) throw new Error("Local data changed while saving recovery. Check cloud sync again before merging.");
       storage.replace(merged, { saveRecovery: false, reason: "sync-merge", touch: false });
     } catch (error) {
+      if (!currentRequest(context)) return false;
       recordError(error, "Merge failed.");
       App.components.toast(runtime.error, { title: "Sync Failed", kind: "danger", duration: 6000 });
       emit();
       return false;
+    } finally {
+      if (currentRequest(context)) { runtime.busy = false; runtime.operation = ""; emit(); }
     }
     return performUpload();
   }
