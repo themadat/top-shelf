@@ -209,9 +209,17 @@
     if (!response.ok) throw await responseError(response);
     const file = await response.json();
     if (!file || file.type !== "file" || typeof file.content !== "string" || typeof file.sha !== "string") throw new Error("The configured GitHub path is not a readable file.");
+    let encoded = file.content;
+    if (!encoded.trim() && file.encoding === "none") {
+      const blobResponse = await fetch(apiRepositoryUrl(cloud) + "/git/blobs/" + encodeURIComponent(file.sha), { headers: headers(token), signal: context.signal, cache: "no-store" });
+      if (!blobResponse.ok) throw await responseError(blobResponse);
+      const blob = await blobResponse.json();
+      if (!blob || typeof blob.content !== "string" || blob.encoding !== "base64") throw new Error("The GitHub data blob is not readable.");
+      encoded = blob.content;
+    }
     let decoded;
     try {
-      const binary = atob(file.content.replace(/\s/g, ""));
+      const binary = atob(encoded.replace(/\s/g, ""));
       decoded = new TextDecoder().decode(Uint8Array.from(binary, function (character) { return character.charCodeAt(0); }));
     } catch (error) {
       throw new Error("The GitHub file could not be decoded.");
@@ -232,7 +240,7 @@
   async function writeRemote(cloud, token, context, state, sha) {
     const body = {
       message: "Update " + config.identity.shortName + " data (v" + config.identity.version + ")",
-      content: utf8Base64(JSON.stringify(model.syncPayload(state), null, 2)),
+      content: utf8Base64(JSON.stringify(model.syncPayload(state))),
       branch: cloud.branch
     };
     if (sha) body.sha = sha;

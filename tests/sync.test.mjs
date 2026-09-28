@@ -167,6 +167,22 @@ test('missing remote is static pending and malformed JSON is a failed attempt', 
   assert.equal(h.sync.getInfo().state, 'failed');
 });
 
+test('large GitHub files fall back to the blob API and future uploads are compact', async () => {
+  const h = harness(), payload = h.App.stateModel.syncPayload(h.remote), encoded = Buffer.from(JSON.stringify(payload, null, 2)).toString('base64');
+  h.respond = (url, options) => {
+    if (options.method === 'PUT') return response(200, { content: { sha: 'compact-sha' } });
+    if (url.includes('/git/blobs/')) return response(200, { encoding: 'base64', content: encoded });
+    return response(200, { type: 'file', sha: 'large-sha', size: 1052837, encoding: 'none', content: '' });
+  };
+  await h.sync.check(true);
+  assert.ok(h.requests.some(r => r.url.includes('/git/blobs/large-sha')));
+  changeNotes(h.state, 'local compact change');
+  await h.sync.syncNow();
+  const write = h.requests.find(r => r.options.method === 'PUT');
+  const uploaded = Buffer.from(JSON.parse(write.options.body).content, 'base64').toString();
+  assert.equal(uploaded.includes('\n'), false); assert.doesNotThrow(() => JSON.parse(uploaded));
+});
+
 test('network unavailability is neutral and reconnect can recover', async () => {
   const h = harness(); h.sync.init();
   h.respond = () => { throw new Error('Failed to fetch'); };
