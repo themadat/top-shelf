@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"1.0.0.9","date":"2026-09-28T12:00:00.000Z","title":"Reliable Recovery Rotation","summary":"Replace large recovery snapshots without temporarily retaining two copies, allowing safe TV ID re-imports under browser storage pressure.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.8","date":"2026-09-28T12:00:00.000Z","title":"TV Metadata Columns and Safe Re-import","summary":"Show selected TMDB series metadata in sortable columns and let re-imports link IDs without replacing personal TV data.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.7","date":"2026-09-28T12:00:00.000Z","title":"TMDB IDs for TV Import","summary":"Accept reviewed TMDB TV IDs with imported activity status and provide a complete matched import file.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.6","date":"2026-09-28T12:00:00.000Z","title":"Boardgames Shelf","summary":"Add a Boardgames tab with its own checkerboard icon and keyboard shortcut.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

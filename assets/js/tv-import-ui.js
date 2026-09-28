@@ -29,10 +29,14 @@
   function apply() {
     try {
       if (!preview || !input) return;
-      const result = App.tvImport.apply(state(), input, preview.snapshot, selected());
-      if (!App.storage.saveRecovery('Before bulk TV import')) throw new Error('Could not save a recovery copy because browser storage is unavailable or full. No shows were added or linked.');
-      App.storage.mutate(function (s) { s.workspace.tvShows = result.shows; }, { reason: 'tv-import' });
-      App.storage.saveNow();
+      const priorShows = App.utils.clone(state()), priorMeta = App.utils.clone(App.storage.getState().meta);
+      const result = App.tvImport.apply(priorShows, input, preview.snapshot, selected());
+      App.storage.mutate(function (s) { s.workspace.tvShows = result.shows; }, { save: false, reason: 'tv-import' });
+      if (!App.storage.saveNow()) {
+        App.storage.mutate(function (s) { s.workspace.tvShows = priorShows; s.meta = priorMeta; }, { save: false, touch: false, reason: 'tv-import-rollback' });
+        App.storage.saveNow();
+        throw new Error('Browser storage could not save the imported TV IDs. The in-memory change was rolled back; your saved library is unchanged.');
+      }
       App.components.closeDialog('#tvImportDialog');
       App.components.toast('Added ' + result.count + ' shows and linked ' + result.linked + ' existing shows. Use Refresh Show Data to fetch TMDB columns.', { title: 'TV import complete', kind: 'success' });
     } catch (error) { $('#tvImportError').textContent = error.message; $('#tvImportApply').disabled = true; }
