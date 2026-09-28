@@ -30,7 +30,7 @@
     try {
       if (!preview || !input) return;
       const result = App.tvImport.apply(state(), input, preview.snapshot, selected());
-      if (!App.storage.saveRecovery('Before bulk TV import')) throw new Error('Could not save a recovery copy. No shows were added.');
+      if (!App.storage.saveRecovery('Before bulk TV import')) throw new Error('Could not save a recovery copy because browser storage is unavailable or full. No shows were added or linked.');
       App.storage.mutate(function (s) { s.workspace.tvShows = result.shows; }, { reason: 'tv-import' });
       App.storage.saveNow();
       App.components.closeDialog('#tvImportDialog');

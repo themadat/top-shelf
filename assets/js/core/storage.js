@@ -134,7 +134,27 @@
       reason: u.cleanLine(reason || "Before data replacement", 160),
       state: model.normalize(u.clone(state || getState()))
     };
-    return writeLocal(config.storage.recoveryKey, JSON.stringify(snapshot));
+    const value = JSON.stringify(snapshot), prior = readLocal(config.storage.recoveryKey);
+    try {
+      localStorage.setItem(config.storage.recoveryKey, value);
+      persistentStorageAvailable = true;
+      return true;
+    } catch (firstError) {
+      // Some browsers briefly count both values while replacing a large key. Rotate
+      // the superseded snapshot, then restore it if the new snapshot still cannot fit.
+      if (prior !== null && firstError && firstError.name === "QuotaExceededError") {
+        try {
+          localStorage.removeItem(config.storage.recoveryKey);
+          localStorage.setItem(config.storage.recoveryKey, value);
+          persistentStorageAvailable = true;
+          return true;
+        } catch (retryError) {
+          try { localStorage.setItem(config.storage.recoveryKey, prior); } catch (restoreError) { /* current state remains untouched */ }
+          return writeLocal(config.storage.recoveryKey, value);
+        }
+      }
+      return writeLocal(config.storage.recoveryKey, value);
+    }
   }
 
   function replace(nextState, options) {
