@@ -2,11 +2,25 @@
 
 This is the durable, developer-facing backlog used by the `wish`, `plan`, `start`, and `cut` workflows. It is not application state and is never included in user backups.
 
-Next id: `WISH-001`
+Next id: `WISH-002`
 
 ## Active wishes
 
-None yet.
+### WISH-001 — TV Library and Flexible Ratings
+
+- Status: Active — implementation complete and verified; local release prepared
+- Priority: User requested
+- Effort: Large
+- Target: Unscheduled
+- Plan: [TV Tab Plan](WISH-001-tv-tab-PLAN.md)
+- Released: —
+- Affected modules: TV model/UI, TMDB, state/backups/sync, shell navigation, offline assets.
+
+Behavior: List watched TV shows, separate Completed/Stopped viewing state from series activity, and support show-, season- or episode-level ratings. Fetch metadata through TMDB.
+
+Acceptance: Preserve exact rating scales, never overwrite personal data during refresh, retain scores when switching rating mode, support offline editing and safe backup/sync migration.
+
+Confirmed: show ratings are 0–5; season and episode ratings are 1–10. Overall show rating remains manual with separate calculated averages.
 
 ## Entry template
 

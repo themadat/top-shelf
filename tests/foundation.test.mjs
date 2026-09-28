@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
 const context = vm.createContext({ window: {}, URL, TextEncoder, TextDecoder, Uint8Array, structuredClone });
-for (const path of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js']) {
+for (const path of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js', 'core/tv.js']) {
   vm.runInContext(read('assets/js/' + path), context);
 }
 const App = context.window.LocalApp;

@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 5;
-  // Older builds reject this envelope instead of dropping synced subgenre review status.
-  const SYNC_SCHEMA_VERSION = 9;
+  const SYNC_VERSION = 6;
+  // Older builds reject TV-bearing envelopes instead of silently dropping shows.
+  const SYNC_SCHEMA_VERSION = 10;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -80,6 +80,7 @@
       workspace: {
         title: config.identity.name,
         movies: [],
+        tvShows: [],
         pivotSettings: {},
         records: records,
         documents: documents
@@ -115,6 +116,7 @@
         selectedDocumentId: documents[0] ? documents[0].id : "",
         selectedShelf: config.shelves[0].id,
         movieSorts: {},
+        tv: { sort: "title", direction: "asc", widths: {}, filter: "all", query: "" },
         movieColumnWidths: { all: {}, wishlist: {}, watched: {} },
         pivotColumnWidths: {}, pivotLocalSettings: {}, pivotSubsectionSorts: {},
         search: "",
@@ -284,7 +286,12 @@
     (source.workspace?.movies || []).forEach(function (movie) { if (!movie.deleted && movie.subgenreReviewed === undefined) movie.subgenreReviewed = true; });
     return source;
   }
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6 };
+  function migrate6to7(input) {
+    const source = u.clone(input); source.schemaVersion = 7;
+    source.workspace = Object.assign({}, source.workspace, { tvShows: [] });
+    return source;
+  }
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -440,6 +447,7 @@
       workspace: {
         title: u.cleanLine(sourceWorkspace.title || base.workspace.title, 100) || base.workspace.title,
         movies: App.movies.normalizeList(sourceWorkspace.movies),
+        tvShows: App.tv.normalizeList(sourceWorkspace.tvShows),
         pivotSettings: normalizePivotSettings(sourceWorkspace.pivotSettings),
         records: records,
         documents: documents
@@ -476,6 +484,12 @@
         selectedShelf: config.shelves.some(function (shelf) { return shelf.id === sourceUi.selectedShelf; }) ? sourceUi.selectedShelf : config.shelves[0].id,
         search: u.cleanLine(sourceUi.search, 200),
         movieColumnWidths: movieWidths(sourceUi.movieColumnWidths),
+        tv: {
+          sort: ["rating", "title", "status", "seriesStatus", "mode", "seasons", "lastWatched", "notes"].includes(sourceUi.tv?.sort) ? sourceUi.tv.sort : "title",
+          direction: sourceUi.tv?.direction === "desc" ? "desc" : "asc",
+          widths: columnWidths(sourceUi.tv?.widths, ["rating", "title", "status", "seriesStatus", "mode", "seasons", "lastWatched", "notes"], 2000),
+          filter: App.tv.statuses.includes(sourceUi.tv?.filter) ? sourceUi.tv.filter : "all", query: u.cleanLine(sourceUi.tv?.query, 200)
+        },
         pivotColumnWidths: columnWidths(sourceUi.pivotColumnWidths, ['ratings','years','genres','other','collections','actors','directors','productionCompanies'], 1200),
         pivotLocalSettings: normalizePivotSettings(sourceUi.pivotLocalSettings),
         pivotSubsectionSorts: subsectionSorts(sourceUi.pivotSubsectionSorts),
@@ -576,6 +590,7 @@
     next.ui.search = "";
     next.ui.records = defaults.ui.records;
     next.ui.movieSorts = defaults.ui.movieSorts;
+    next.ui.tv = defaults.ui.tv;
     next.ui.movieColumnWidths = defaults.ui.movieColumnWidths;
     next.ui.pivotColumnWidths = {}; next.ui.pivotLocalSettings = {}; next.ui.pivotSubsectionSorts = {};
     next.ui.documents = defaults.ui.documents;
@@ -611,6 +626,7 @@
     if (notes) data.notes = notes;
     if (Object.keys(normalized.workspace.pivotSettings).length) data.pivotSettings = normalized.workspace.pivotSettings;
     if (normalized.workspace.movies.length) data.movies = normalized.workspace.movies;
+    if (normalized.workspace.tvShows.length) data.tvShows = normalized.workspace.tvShows.map(App.tv.content).sort(function (a, b) { return a.id.localeCompare(b.id); });
     // Preserve real content from older backups, without exporting empty scaffolding.
     if (normalized.workspace.records.length) data.records = normalized.workspace.records.map(function (record) {
       const item = Object.assign({}, record);
@@ -635,10 +651,11 @@
     const priorMovies = input.syncFormat === SYNC_FORMAT && input.syncVersion === 2 && input.schemaVersion === 6;
     const priorPivots = input.syncFormat === SYNC_FORMAT && input.syncVersion === 3 && input.schemaVersion === 7;
     const priorReview = input.syncFormat === SYNC_FORMAT && input.syncVersion === 4 && input.schemaVersion === 8;
-    if (!legacyContent && !priorMovies && !priorPivots && !priorReview && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const priorSubgenres = input.syncFormat === SYNC_FORMAT && input.syncVersion === 5 && input.schemaVersion === 9;
+    if (!legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorMovies || priorPivots ? [] : ["pivotSettings"])).includes(key); })
+      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(input.syncVersion === SYNC_VERSION ? ["tvShows"] : [])).includes(key); })
       || ("notes" in data && (typeof data.notes !== "string" || data.notes.length > config.controls.maxDocumentHtmlLength))
       || ("records" in data && (!Array.isArray(data.records) || data.records.length > config.controls.maxRecords))) {
       throw new Error("The cloud file contains invalid or unsupported content.");
@@ -652,11 +669,12 @@
       workspace: {
         documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(data.notes || "").replace(/\n/g, "<br>") }],
         movies: App.movies.normalizeList((data.movies || []).map(function (movie) { return legacyContent || priorMovies || priorPivots || priorReview ? Object.assign({ subgenreReviewed: true }, movie) : movie; })),
+        tvShows: App.tv.normalizeList(data.tvShows),
         pivotSettings: normalizePivotSettings(data.pivotSettings),
         records: data.records || []
       }
     });
-    return { state: state, legacy: legacyContent || priorMovies || priorPivots || priorReview, migrations: [], validation: validate(state) };
+    return { state: state, legacy: legacyContent || priorMovies || priorPivots || priorReview || priorSubgenres, migrations: [], validation: validate(state) };
   }
 
   function applySync(localState, remoteState) {
@@ -665,6 +683,7 @@
     next.workspace.documents = remote.workspace.documents;
     next.workspace.records = remote.workspace.records;
     next.workspace.movies = remote.workspace.movies;
+    next.workspace.tvShows = remote.workspace.tvShows;
     next.workspace.pivotSettings = remote.workspace.pivotSettings;
     next.meta.tombstones = remote.meta.tombstones;
     return normalize(touch(next));
@@ -682,7 +701,7 @@
       pivotSettings[entry[0]] = entry[1];
     });
     if (Object.keys(pivotSettings).length) data.pivotSettings = pivotSettings;
-    [["records", "id", config.controls.maxRecords], ["movies", "id", config.controls.maxMovies]].forEach(function (entry) {
+    [["records", "id", config.controls.maxRecords], ["movies", "id", config.controls.maxMovies], ["tvShows", "id", config.controls.maxTvShows]].forEach(function (entry) {
       const items = new Map();
       (local[entry[0]] || []).concat(remote[entry[0]] || []).forEach(function (item) {
         const current = items.get(item[entry[1]]);
@@ -693,6 +712,7 @@
       if (items.size) data[entry[0]] = Array.from(items.values());
     });
     if (data.movies) data.movies = App.movies.normalizeList(data.movies);
+    if (data.tvShows) data.tvShows = App.tv.normalizeList(data.tvShows).map(App.tv.content);
     return { syncFormat: SYNC_FORMAT, syncVersion: SYNC_VERSION, schemaVersion: SYNC_SCHEMA_VERSION, data: data };
   }
 

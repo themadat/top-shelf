@@ -19,7 +19,7 @@ Fields: id, tmdbId, title, releaseDate, status, how, other, genres, productionCo
 
 ## TMDB and review workflows
 
-TMDB search requires explicit result selection. Details append credits. Settings → Movie Lookup Settings holds masked token presence, with device/tab retention. Raw details/provider JSON is session-only, escaped, collapsible; US starts open, other countries/rent/buy closed. Abort stale lookups on close/switch. User edits win over asynchronous results.
+TMDB search requires explicit result selection. Details append credits. Settings → TMDB Lookup Settings holds masked token presence, with device/tab retention. Raw details/provider JSON is session-only, escaped, collapsible; US starts open, other countries/rent/buy closed. Abort stale lookups on close/switch. User edits win over asynchronous results.
 
 Update How explicitly checks every Wishlist movie, ignoring list filters. Live US flatrate/free/ads beats generic rules; rental/purchase is excluded. Bundled September 2026 rules: docs/STREAMING-RULES.md. Source-backed titleOverrides (currently empty) support official subscription dates/rights/distributor precedence. Sequential windows and ranges remain distinct; no estimate writes Available Date. US theatrical dates use earliest type3 then type2, never digital. Generic releaseDate only rejects old catalog. Unknown/conflicting/old titles retain existing How with one spaced star; empty stays empty. No repeated automated web research; unresolved titles get manual research links.
 

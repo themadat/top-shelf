@@ -13,6 +13,7 @@
     return {
       workspaceTitle: state.workspace.title,
       movies: state.workspace.movies.filter(function (movie) { return !movie.deleted; }).length,
+      tvShows: state.workspace.tvShows.filter(function (show) { return !show.deleted; }).length,
       records: state.workspace.records.length,
       documents: state.workspace.documents.length,
       categories: categories.size,
@@ -58,6 +59,7 @@
     document.querySelector("[data-import-workspace]").textContent = summary.workspaceTitle;
     document.querySelector("[data-import-movies]").textContent = summary.movies + " (current: " + current.movies + ")";
     document.querySelector("[data-import-documents]").textContent = summary.documents + " (current: " + current.documents + ")";
+    document.querySelector("[data-import-tv]").textContent = summary.tvShows + " (current: " + current.tvShows + ")";
     document.querySelector("[data-import-version]").textContent = "State v" + summary.schemaVersion + " · app v" + (summary.appVersion || "unknown");
     document.querySelector("[data-import-updated]").textContent = u.dateLabel(summary.updatedAt);
     const migrationRow = document.querySelector("[data-import-migrations-row]");
@@ -91,7 +93,7 @@
     if (!pendingImport) return;
     const accepted = await App.components.confirm({
       title: "Replace current data?",
-      message: "The validated backup will replace movies, notes, preferences, and module settings. A recoverable copy of the current data will be saved first.",
+      message: "The validated backup will replace movies, TV shows, notes, preferences, and module settings. A recoverable copy of the current data will be saved first.",
       confirmLabel: "Replace data",
       cancelLabel: "Keep current data",
       danger: true,
@@ -103,7 +105,7 @@
     catch (error) { App.components.message("Import unavailable", error.message); return; }
     pendingImport = null;
     App.components.closeDialog("#importPreviewDialog", "imported");
-    App.components.toast("Imported " + summary.movies + " movies and " + summary.documents + " notes.", { title: "Backup restored", kind: "success" });
+    App.components.toast("Imported " + summary.movies + " movies, " + summary.tvShows + " TV shows, and " + summary.documents + " notes.", { title: "Backup restored", kind: "success" });
   }
 
   function init() {

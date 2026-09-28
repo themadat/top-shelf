@@ -1,0 +1,63 @@
+.tv-workspace { min-width: 0; padding: .25rem 0; }
+.tv-toolbar, .tv-lookup-row, .tv-manual-row, .tv-season-tools, .tv-batch { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.tv-toolbar { margin-bottom: .4rem; }
+.tv-toolbar input, .tv-toolbar select { min-height: 2.5rem; }
+.tv-search { flex: 1 1 150px; min-width: 100px; }
+.tv-search input { width: 100%; }
+#tvCount { font-size: .8rem; white-space: nowrap; color: var(--muted); }
+.tv-batch:has(:not(:empty)) { margin-bottom: .4rem; font-size: .85rem; }
+.tv-table-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: .5rem; }
+#tvTable { table-layout: fixed; border-collapse: collapse; font-size: .88rem; min-width: 100%; }
+#tvTable th, #tvTable td, .tv-episodes td, .tv-episodes th { padding: .4rem .45rem; border-bottom: 1px solid var(--line); text-align: left; }
+#tvTable th { position: relative; background: var(--surface-2); }
+#tvTable th > button:first-child { border: 0; padding: .25rem .35rem .25rem 0; background: none; color: inherit; font: inherit; font-weight: 600; white-space: nowrap; }
+#tvTable td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#tvTable td select { width: 100%; min-width: 0; padding: .2rem; font-size: .83rem; }
+.tv-title-button { max-width: 100%; padding: .15rem 0; border: 0; background: none; color: var(--text); text-align: left; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv-title-button:hover { color: var(--accent-strong); text-decoration: underline; }
+.tv-table-averages { display: block; color: var(--muted); font-size: .72rem; }
+.tv-resize { position: absolute; right: 0; top: 0; bottom: 0; width: 9px; padding: 0; border: 0; background: transparent; cursor: col-resize; touch-action: none; }
+.tv-resize:hover, .tv-resize:focus-visible { background: var(--accent-soft); }
+.tv-dialog { width: min(1100px, calc(100vw - 2rem)); height: calc(100dvh - 2rem); max-height: calc(100dvh - 2rem); }
+.tv-dialog .dialog-shell { height: 100%; }
+.tv-dialog .dialog-body { min-height: 0; overflow-y: auto; }
+.tv-dialog .dialog-footer { flex-wrap: wrap; }
+#tvEditorStatus { flex: 1 1 220px; font-size: .85rem; overflow-wrap: anywhere; }
+.tv-fields { display: grid; grid-template-columns: minmax(200px, 2fr) 1fr 1fr 1.2fr; gap: .7rem; margin: 1rem 0; }
+.tv-fields label, .tv-lookup-row label, .tv-notes-label, .tv-manual-row label { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; }
+.tv-fields input, .tv-fields select, .tv-notes-label textarea { width: 100%; min-width: 0; }
+.tv-notes-label { margin: .8rem 0; }
+.tv-notes-label textarea { min-height: 100px; resize: vertical; }
+.tv-rating-field { padding: .5rem; margin: .65rem 0; border: 1px solid var(--line); border-radius: .6rem; }
+.tv-rating-field legend { font-size: .85rem; font-weight: 600; }
+.tv-rating-buttons { display: flex; flex-wrap: wrap; align-items: stretch; gap: .3rem; }
+.tv-rating-button { flex: 1 1 62px; min-width: 50px; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: .4rem .25rem; border: 1px solid var(--line); border-radius: .4rem; background: var(--surface-2); color: var(--text); }
+.tv-rating-button small { font-size: .65rem; line-height: 1.3; }
+.tv-rating-button[aria-pressed="true"] { background: var(--accent-strong); color: white; border-color: var(--accent-strong); box-shadow: inset 0 0 0 1px currentColor; }
+.tv-averages { padding: .5rem .65rem; border-radius: .4rem; background: var(--accent-soft); font-size: .85rem; }
+.tv-metadata p { margin: .4rem 0; }
+.tv-metadata small, .tv-season-tools small { color: var(--muted); }
+.tv-season { border: 1px solid var(--line); border-radius: .5rem; margin: .5rem 0; }
+.tv-season > summary { color: var(--accent-strong); background: var(--surface-2); padding: .6rem; cursor: pointer; }
+.tv-season > summary small { margin-left: .4rem; font-weight: normal; }
+.tv-season-body { padding: .5rem; }
+.tv-episodes { width: 100%; min-width: 570px; border-collapse: collapse; font-size: .85rem; margin: .5rem 0; }
+.tv-episodes select { max-width: 220px; }
+.tv-episodes th { background: var(--surface-2); }
+.tv-manual-row { align-items: end; margin-top: .6rem; }
+.tv-manual-row input { width: 100px; }
+.tv-orphan { display: block; color: var(--muted); }
+.tv-lookup-row { align-items: end; padding: .6rem 0; }
+.tv-lookup-row label { flex: 1; }
+.tv-lookup-results { display: flex; flex-wrap: wrap; gap: .4rem; max-height: 230px; overflow: auto; }
+@media (max-width: 600px) {
+  .tv-toolbar { gap: .35rem; }
+  .tv-toolbar .button { font-size: .78rem; padding: .4rem; }
+  .tv-search { flex-basis: 130px; }
+  .tv-fields { grid-template-columns: 1fr 1fr; }
+  .tv-title-field { grid-column: 1 / -1; }
+  .tv-dialog { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
+  .tv-dialog .dialog-body { padding: .75rem; }
+  .tv-dialog .dialog-footer { gap: .35rem; padding: .6rem; }
+  #tvEditorStatus { flex-basis: 100%; }
+}

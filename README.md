@@ -1,6 +1,6 @@
 # Top Shelf 1.0
 
-A static, local-first movie library with Wishlist, Watched, Notes and eight pivot views. The remaining shelves are starter views. No build step, backend, account or runtime dependency.
+A static, local-first movie and TV library with Wishlist, Watched, Notes and eight movie pivot views. Other shelves remain starter views. No build step, backend, account or runtime dependency.
 
 ## Use
 
@@ -10,6 +10,7 @@ Serve the repository with `python3 -m http.server 8000`, then open `http://local
 - Click table cells to edit priority/rating, notes, How, dates and Other Pivots. Enter saves; Escape cancels.
 - Wishlist shows TMDB average ratings beside Priority. Update Ratings refreshes scores; Update How checks US availability and bundled streaming estimates.
 - Pivots summarize watched movies. Search each panel, adjust minimums, sort, resize columns and star people/companies/collections into Other Pivots.
+- TV tracks Watching, Caught Up, Completed and Stopped separately from series activity. Rate shows 0–5 and seasons/episodes 1–10; calculated averages stay separate from your show score.
 - Notes autosaves. Settings offers backup/recovery, appearance, sync, movie-name/details exports and How values.
 - Subgenre Review exports a request for an LLM and previews additive result imports before applying them.
 
@@ -17,13 +18,13 @@ Personal ratings use 0–5; priority 1 is highest. Ave uses TMDB's 0–10 scale 
 
 ## TMDB
 
-Enter your **TMDB API Read Access Token** in **Settings → Movie Lookup Settings**, choosing device or session storage. Lookup needs internet; saved movies remain usable offline. Tokens never enter source, backups, diagnostics or cloud content. Raw responses are available in the movie editor's collapsible TMDB Details.
+Enter your **TMDB API Read Access Token** in **Settings → TMDB Lookup Settings**, choosing device or session storage. Lookup needs internet; saved movies and TV shows remain usable offline. TV searches require selecting a match; season episode lists load on demand. Refresh Show Data checks all linked shows, preserves personal ratings/notes, and skips shows being edited. Tokens never enter source, backups, diagnostics or cloud content. Raw responses are available in the movie editor's collapsible TMDB Details.
 
 This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability comes from JustWatch through TMDB; rentals/purchases are excluded from subscription predictions.
 
 ## Storage and sync
 
-Browser storage holds movies, Notes and local preferences. Export regular full JSON backups in Settings. Recovery copies precede destructive replacements. Local schema is 6; cloud format is top-shelf-app-data v5/schema 9. Prior formats remain readable. Update all devices before syncing so older clients do not drop newer optional movie fields.
+Browser storage holds movies, TV shows, Notes and local preferences. Export regular full JSON backups in Settings. Recovery copies precede destructive replacements. Local schema is 7; cloud format is top-shelf-app-data v6/schema 10. Prior formats remain readable. Update all devices before syncing; older clients reject the TV format.
 
 GitHub Sync targets `themadat/app-data/main/data/top-shelf.json`. To provision it:
 
@@ -32,7 +33,7 @@ GitHub Sync targets `themadat/app-data/main/data/top-shelf.json`. To provision i
 3. Enter it only in **Settings → Data Sync**, then Test and Save. Configure each browser separately.
 4. Verify a Notes upload/download round trip. Divergent edits require an explicit choice; timestamps do not choose winners.
 
-Movie column widths are independent per All/Wishlist/Watched. Pivot widths and local sorting stay on each device, appear in full backups, and are excluded from content sync. Credentials are always excluded. More setup detail: [RESET](docs/RESET.md).
+Movie column widths are independent per All/Wishlist/Watched. TV has separate local widths, sorting and filters. Pivot widths and local sorting stay on each device, appear in full backups, and are excluded from content sync. Credentials are always excluded. More setup detail: [RESET](docs/RESET.md).
 
 ## Development
 

@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 import vm from 'node:vm';
 const context=vm.createContext({window:{},structuredClone, URL, console});
-for(const file of ['config.js','core/utils.js','core/movies.js','core/subgenres.js','core/state.js']) vm.runInContext(readFileSync(new URL('../assets/js/'+file,import.meta.url),'utf8'),context);
+for(const file of ['config.js','core/utils.js','core/movies.js', 'core/tv.js','core/subgenres.js','core/state.js']) vm.runInContext(readFileSync(new URL('../assets/js/'+file,import.meta.url),'utf8'),context);
 const A=context.window.LocalApp;
 A.utils.sanitizeRichHtml = String; A.utils.richTextToPlainText = String;
 const movie=(id,extra={})=>A.movies.normalize({id:String(id),tmdbId:id,title:'Movie '+id,status:'wishlist',...extra});

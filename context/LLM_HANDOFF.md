@@ -7,6 +7,7 @@ Read only the reference relevant to the change. This file is an index, not requi
 | Identity/current release | assets/js/config.js | docs/WORKFLOWS.md (release only) |
 | Shell, Notes, settings | assets/js/app.js, assets/css/app.css | docs/DATA-CONTRACTS.md (persistence only) |
 | Movie table/editor | assets/js/movies-ui.js, assets/js/core/movies.js, assets/css/movies.css | docs/MOVIES.md |
+| TV table/editor/ratings | assets/js/tv-ui.js, assets/js/tv-editor.js, assets/js/core/tv.js, assets/css/tv.css | docs/DATA-CONTRACTS.md (TV) |
 | Movie widths | assets/js/movie-columns.js | docs/DATA-CONTRACTS.md |
 | Wishlist batch checks | assets/js/movie-batches.js, assets/js/core/tmdb.js | docs/MOVIES.md, docs/STREAMING-RULES.md |
 | Export/copy and bulk pivots | assets/js/movie-tools.js | docs/MOVIES.md |

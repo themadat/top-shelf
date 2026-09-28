@@ -17,7 +17,7 @@ function harness({ token = 'test-token', online = true } = {}) {
     TextEncoder, TextDecoder, Uint8Array, AbortController, structuredClone, atob, btoa, URL, console,
     fetch: async (url, options) => { requests.push({ url, options }); return h.respond(url, options); }
   });
-  for (const file of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js', 'core/state.js']) {
+  for (const file of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/state.js']) {
     vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
     // Fixtures contain plain text; DOM sanitization is exercised in browser checks.
     if (file === 'core/utils.js') {
@@ -256,7 +256,7 @@ test('first upload still requires a choice; a synchronized copy needs no write',
 test('empty foundations sync only an empty content envelope, independent of device, UI, or save metadata', () => {
   const h = harness(), model = h.App.stateModel;
   const original = JSON.stringify(model.syncPayload(h.state));
-  assert.deepEqual(JSON.parse(original), { syncFormat: 'top-shelf-app-data', syncVersion: 5, schemaVersion: 9, data: {} });
+  assert.deepEqual(JSON.parse(original), { syncFormat: 'top-shelf-app-data', syncVersion: 6, schemaVersion: 10, data: {} });
   assert.ok(Buffer.byteLength(JSON.stringify(model.syncPayload(h.state), null, 2)) < 120);
   h.App.storage.mutate(state => {
     state.preferences.appearance.mode = 'dark'; state.ui.search = 'cloud'; state.ui.supportTab = 'dataSync';
@@ -303,7 +303,7 @@ test('legacy whole-state files migrate without false conflicts and compact on ex
   await h.sync.syncNow();
   const written = JSON.parse(Buffer.from(JSON.parse(h.requests.find(r => r.options.method === 'PUT').options.body).content, 'base64').toString());
   assert.deepEqual(written.data, {});
-  assert.equal(written.syncVersion, 5);
+  assert.equal(written.syncVersion, 6);
   assert.equal(h.state.preferences.appearance.mode, 'system');
 });
 
@@ -428,8 +428,8 @@ test('movie content round trips through backups and sync with credentials omitte
   const h = harness(), model = h.App.stateModel;
   h.state.workspace.movies = [movieFixture(h.App, { how: 'Cinema', other: 'With friends', priority: 1, notes: 'See in IMAX' })];
   const payload = model.syncPayload(h.state);
-  assert.equal(payload.syncVersion, 5);
-  assert.equal(payload.schemaVersion, 9);
+  assert.equal(payload.syncVersion, 6);
+  assert.equal(payload.schemaVersion, 10);
   assert.equal(payload.data.movies[0].how, 'Cinema');
   assert.equal(model.syncHash(model.prepareSync(payload).state), model.syncHash(h.state));
   assert.equal(model.prepare(model.exportEnvelope(h.state)).state.workspace.movies[0].notes, 'See in IMAX');

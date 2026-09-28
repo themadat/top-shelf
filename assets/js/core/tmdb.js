@@ -12,8 +12,8 @@
   }
   function forget() { try { localStorage.removeItem(App.config.storage.tmdbSecretKey); sessionStorage.removeItem(App.config.storage.tmdbSecretKey); } catch (error) { throw new Error("This browser could not forget the TMDB token."); } }
   async function request(path, params, signal) {
-    if (!token()) throw new Error("Add your TMDB API Read Access Token in Settings → Movie Lookup Settings.");
-    if (navigator.onLine === false) throw new Error("TMDB lookup needs an internet connection. Saved movies remain available offline.");
+    if (!token()) throw new Error("Add your TMDB API Read Access Token in Settings → TMDB Lookup Settings.");
+    if (navigator.onLine === false) throw new Error("TMDB lookup needs an internet connection. Saved movies and TV remain available offline.");
     const url = new URL("https://api.themoviedb.org/3/" + path);
     Object.entries(Object.assign({ language: "en-US" }, params)).forEach(function (entry) { url.searchParams.set(entry[0], entry[1]); });
     const controller = new AbortController();
@@ -23,7 +23,7 @@
     const timer = setTimeout(abort, 15000);
     try {
       const response = await fetch(url.href, { headers: { accept: "application/json", Authorization: "Bearer " + token() }, signal: controller.signal, cache: "no-store" });
-      if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "TMDB rejected this token. Check your API Read Access Token." : response.status === 429 ? "TMDB is busy. Wait a moment and try again." : response.status === 404 ? "No movie was found for that TMDB ID." : "TMDB is unavailable. Please retry.");
+      if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "TMDB rejected this token. Check your API Read Access Token." : response.status === 429 ? "TMDB is busy. Wait a moment and try again." : response.status === 404 ? "No matching TMDB entry was found for that ID." : "TMDB is unavailable. Please retry.");
       return await response.json();
     } catch (error) {
       if (signal?.aborted) throw new DOMException("Cancelled", "AbortError");
@@ -84,5 +84,23 @@
     return usTheatricalDate(await request('movie/' + id + '/release_dates', {}, signal));
   }
   async function streaming(id, signal) { return (await streamingResponse(id, signal)).how; }
+  function tvId(id) { if (!/^\d+$/.test(String(id)) || !Number.isSafeInteger(Number(id)) || Number(id) < 1) throw new Error('Enter a numeric TMDB TV ID.'); return Number(id); }
+  async function searchTv(query, signal) {
+    const data = await request('search/tv', { query: query, include_adult: 'false' }, signal);
+    if (!Array.isArray(data.results)) throw new Error('TMDB returned invalid TV search results.');
+    return data.results.slice(0, 20);
+  }
+  async function tvDetails(id, signal) {
+    const expected = tvId(id), mapped = App.tv.fromTmdb(await request('tv/' + expected, {}, signal));
+    if (mapped.tmdbId !== expected) throw new Error('TMDB returned a different TV show.');
+    return mapped;
+  }
+  async function tvSeason(id, season, signal) {
+    if (!Number.isInteger(season) || season < 0 || season > 100000) throw new Error('Enter a valid season number.');
+    const mapped = App.tv.seasonFromTmdb(await request('tv/' + tvId(id) + '/season/' + season, {}, signal));
+    if (mapped.number !== season) throw new Error('TMDB returned a different season.');
+    return mapped;
+  }
   App.tmdb = { theatricalDate: theatricalDate, usTheatricalDate: usTheatricalDate, remembered: remembered, detailsResponse: detailsResponse, streamingResponse: streamingResponse, streaming: streaming, streamingNames: streamingNames, token: token, saveToken: saveToken, forget: forget, search: search, details: details };
+  Object.assign(App.tmdb, { searchTv: searchTv, tvDetails: tvDetails, tvSeason: tvSeason });
 })();
