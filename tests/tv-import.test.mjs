@@ -31,6 +31,17 @@ test('bulk import skips existing titles/IDs and prior import tombstones, preserv
   assert.equal(importer.preview(deleted, file([row('New Show')])).entries[0].skip, true);
 });
 
+test('re-import links an ID to an existing title without replacing personal data', () => {
+  const existing = [A.tv.normalize({ id: 'manual', title: 'Existing Show', rating: 5, status: 'Stopped', mode: 'Episode', notes: 'Keep', seasons: [{ number: 1, rating: 9 }] })];
+  const data = file([row('Existing Show', { tmdbId: 123, rating: 1, status: 'Watching', notes: 'Replace' })]);
+  const p = importer.preview(existing, data); assert.equal(p.entries[0].action, 'link'); assert.equal(p.entries[0].skip, false);
+  const result = importer.apply(existing, data, p.snapshot, [p.entries[0].show.id]);
+  assert.equal(result.count, 0); assert.equal(result.linked, 1); assert.equal(result.shows.length, 1); assert.equal(result.shows[0].tmdbId, 123);
+  assert.equal(result.shows[0].rating, 5); assert.equal(result.shows[0].status, 'Stopped'); assert.equal(result.shows[0].mode, 'Episode');
+  assert.equal(result.shows[0].notes, 'Keep'); assert.equal(result.shows[0].seasons[0].rating, 9);
+  assert.equal(importer.preview(result.shows, data).entries[0].skip, true);
+});
+
 test('bulk import validates before applying, blocks stale previews and respects row selections', () => {
   const data = file([row('One'), row('Two')]), p = importer.preview([], data);
   const result = importer.apply([], data, p.snapshot, [p.entries[1].show.id]);

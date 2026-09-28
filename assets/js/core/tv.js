@@ -27,6 +27,8 @@
     return items;
   }
   function date(value) { return App.movies.date(value); }
+  function count(value) { return integer(value, 0, 1000000) ? value : null; }
+  function average(value) { return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 10 ? value : null; }
   function episode(input) {
     const s = u.plainObject(input);
     return { tmdbId: providerId(s.tmdbId), number: number(s.number, 1), title: u.cleanLine(s.title, 300), airDate: date(s.airDate), rating: rating(s.rating), watched: s.watched === true, orphaned: s.orphaned === true };
@@ -49,7 +51,8 @@
     if (seasons.reduce(function (n, s) { return n + s.episodes.length; }, 0) > 30000) throw new Error('A show may contain up to 30,000 loaded episodes.');
     const names = function (value) { return collection(value, 200, 'Metadata').map(function (n) { return u.cleanLine(n, 200); }).filter(Boolean); };
     return { id: id || u.uid('tv'), tmdbId: providerId(s.tmdbId), title: u.cleanLine(s.title, 300) || 'Untitled show', originalTitle: u.cleanLine(s.originalTitle, 300), overview: u.cleanText(s.overview, 5000),
-      firstAirDate: date(s.firstAirDate), lastAirDate: date(s.lastAirDate), genres: names(s.genres), networks: names(s.networks), companies: names(s.companies),
+      firstAirDate: date(s.firstAirDate), lastAirDate: date(s.lastAirDate), type: u.cleanLine(s.type, 100), genres: names(s.genres), networks: names(s.networks), companies: names(s.companies),
+      numberOfSeasons: count(s.numberOfSeasons), numberOfEpisodes: count(s.numberOfEpisodes), voteAverage: average(s.voteAverage),
       providerStatus: u.cleanLine(s.providerStatus, 100), inProduction: typeof s.inProduction === 'boolean' ? s.inProduction : null,
       fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', status: statuses.includes(s.status) ? s.status : 'Watching', mode: modes.includes(s.mode) ? s.mode : 'Show',
       rating: rating(s.rating, true), notes: u.cleanText(s.notes, 20000), lastWatched: u.cleanLine(s.lastWatched, 100), seasons: seasons };
@@ -79,7 +82,8 @@
   function fromTmdb(raw) {
     if (!providerId(raw?.id) || !u.cleanLine(raw.name, 300) || !Array.isArray(raw.seasons)) throw new Error('TMDB returned invalid TV details.');
     const names = function (items) { return (items || []).map(function (x) { return x.name; }); };
-    return normalize({ tmdbId: raw.id, title: raw.name, originalTitle: raw.original_name, overview: raw.overview, firstAirDate: raw.first_air_date, lastAirDate: raw.last_air_date,
+    return normalize({ tmdbId: raw.id, title: raw.name, originalTitle: raw.original_name, overview: raw.overview, firstAirDate: raw.first_air_date, lastAirDate: raw.last_air_date, type: raw.type,
+      numberOfSeasons: raw.number_of_seasons, numberOfEpisodes: raw.number_of_episodes, voteAverage: raw.vote_average,
       genres: names(raw.genres), networks: names(raw.networks), companies: names(raw.production_companies), providerStatus: raw.status, inProduction: raw.in_production, fetchedAt: u.isoNow(),
       seasons: raw.seasons.map(function (s) { return { tmdbId: s.id, number: s.season_number, title: s.name, airDate: s.air_date, episodeCount: s.episode_count }; }) });
   }

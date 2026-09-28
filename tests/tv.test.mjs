@@ -13,7 +13,7 @@ function harness(fetch = async () => { throw new Error('Unexpected request'); })
 }
 const App = harness(), tv = App.tv, model = App.stateModel;
 const show = (extra = {}) => tv.normalize({ id: 'tv-one', title: 'Example', tmdbId: 123, ...extra });
-const series = () => ({ id: 123, name: 'Example', status: 'Returning Series', in_production: true, first_air_date: '2020-01-02', genres: [{ name: 'Drama' }], networks: [{ name: 'Network' }], production_companies: [{ name: 'Studio' }], seasons: [{ id: 71, season_number: 1, name: 'Season 1', episode_count: 3 }] });
+const series = () => ({ id: 123, name: 'Example', status: 'Returning Series', in_production: true, type: 'Scripted', first_air_date: '2020-01-02', last_air_date: '2024-03-04', number_of_seasons: 4, number_of_episodes: 38, vote_average: 8.25, genres: [{ name: 'Drama' }], networks: [{ name: 'Network' }], production_companies: [{ name: 'Studio' }], seasons: [{ id: 71, season_number: 1, name: 'Season 1', episode_count: 3 }] });
 const season = () => ({ id: 71, season_number: 1, name: 'Season 1', episodes: [{ id: 91, episode_number: 1, name: 'Pilot', air_date: '2020-01-02' }, { id: 92, episode_number: 2, name: 'Second' }] });
 
 test('TV scales preserve zero, blanks, whole numbers and exact labels', () => {
@@ -45,6 +45,8 @@ test('refresh matches stable IDs through renumbering and preserves removed ratin
   const old = show({ rating: 4, status: 'Stopped', mode: 'Episode', notes: 'Keep me', lastWatched: 'S1 E2', seasons: [{ tmdbId: 71, number: 1, rating: 9, loaded: true, episodes: [{ tmdbId: 91, number: 1, rating: 7, watched: true }, { tmdbId: 92, number: 2, rating: 1 }] }] });
   const raw = series(); raw.seasons[0].season_number = 2;
   const refreshed = tv.refresh(old, tv.fromTmdb(raw));
+  assert.equal(refreshed.firstAirDate, '2020-01-02'); assert.equal(refreshed.lastAirDate, '2024-03-04'); assert.equal(refreshed.type, 'Scripted');
+  assert.equal(refreshed.numberOfSeasons, 4); assert.equal(refreshed.numberOfEpisodes, 38); assert.equal(refreshed.voteAverage, 8.25);
   assert.equal(refreshed.seasons[0].number, 2); assert.equal(refreshed.seasons[0].rating, 9); assert.equal(refreshed.seasons[0].episodes[0].rating, 7);
   for (const key of ['id', 'rating', 'status', 'mode', 'notes', 'lastWatched']) assert.equal(refreshed[key], old[key]);
   const response = season(); response.season_number = 2; response.episodes = [{ id: 91, episode_number: 2, name: 'Renumbered' }, { id: 93, episode_number: 1, name: 'New pilot' }];

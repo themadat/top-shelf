@@ -28,17 +28,24 @@
     existing.forEach(function (s) { ids.set(s.id, s); if (!s.deleted) keys.set(titleKey(s.title), s); if (s.tmdbId) providers.set(s.tmdbId, s); });
     const entries = imported.map(function (show) {
       const match = ids.get(show.id) || (show.tmdbId && providers.get(show.tmdbId)) || keys.get(titleKey(show.title));
-      return { show: show, skip: !!match, reason: match ? (match.deleted ? 'Previously deleted · skipped' : 'Already in library · kept unchanged') : 'Add' };
+      const link = match && !match.deleted && !match.tmdbId && show.tmdbId;
+      return { show: show, matchId: match?.id || '', action: link ? 'link' : match ? 'skip' : 'add', skip: !!match && !link,
+        reason: link ? 'Link TMDB ID · keep personal data' : match ? (match.deleted ? 'Previously deleted · skipped' : 'Already in library · kept unchanged') : 'Add' };
     });
-    App.tv.normalizeList(existing.concat(entries.filter(function (e) { return !e.skip; }).map(function (e) { return e.show; })));
+    const additions = entries.filter(function (e) { return e.action === 'add'; }).map(function (e) { return e.show; });
+    const links = new Map(entries.filter(function (e) { return e.action === 'link'; }).map(function (e) { return [e.matchId, e.show]; }));
+    App.tv.normalizeList(existing.map(function (s) { const incoming = links.get(s.id); return incoming ? App.tv.normalize(Object.assign({}, s, { tmdbId: incoming.tmdbId, providerStatus: s.providerStatus || incoming.providerStatus })) : s; }).concat(additions));
     return { entries: entries, snapshot: u.stableJson(existing) };
   }
   function apply(existing, input, snapshot, selectedIds) {
     if (u.stableJson(existing) !== snapshot) throw new Error('TV data changed since this preview. Preview the file again before importing.');
     const result = preview(existing, input), selected = new Set(selectedIds);
-    const added = result.entries.filter(function (e) { return !e.skip && selected.has(e.show.id); }).map(function (e) { return e.show; });
-    if (!added.length) throw new Error('Select at least one new show to import.');
-    return { shows: App.tv.normalizeList(existing.concat(added)), count: added.length };
+    const chosen = result.entries.filter(function (e) { return !e.skip && selected.has(e.show.id); });
+    if (!chosen.length) throw new Error('Select at least one show to add or link.');
+    const links = new Map(chosen.filter(function (e) { return e.action === 'link'; }).map(function (e) { return [e.matchId, e.show]; }));
+    const linked = existing.map(function (s) { const incoming = links.get(s.id); return incoming ? App.tv.normalize(Object.assign({}, s, { tmdbId: incoming.tmdbId, providerStatus: s.providerStatus || incoming.providerStatus })) : s; });
+    const added = chosen.filter(function (e) { return e.action === 'add'; }).map(function (e) { return e.show; });
+    return { shows: App.tv.normalizeList(linked.concat(added)), count: added.length, linked: links.size };
   }
   App.tvImport = { preview: preview, apply: apply };
 })();

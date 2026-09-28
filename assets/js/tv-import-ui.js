@@ -8,7 +8,7 @@
   function counts() {
     const count = selected().length;
     $('#tvImportApply').disabled = !count;
-    $('#tvImportSummary').textContent = count + ' new shows selected · ' + preview.entries.filter(function (e) { return e.skip; }).length + ' existing/deleted shows skipped. Existing ratings and notes stay unchanged.';
+    $('#tvImportSummary').textContent = count + ' shows selected to add or link · ' + preview.entries.filter(function (e) { return e.skip; }).length + ' existing/deleted shows skipped. Existing ratings, statuses, notes, and detailed scores stay unchanged.';
   }
   async function read(file) {
     const sequence = ++generation; input = null; preview = null;
@@ -34,7 +34,7 @@
       App.storage.mutate(function (s) { s.workspace.tvShows = result.shows; }, { reason: 'tv-import' });
       App.storage.saveNow();
       App.components.closeDialog('#tvImportDialog');
-      App.components.toast('Added ' + result.count + ' TV shows. Existing shows were preserved.', { title: 'TV import complete', kind: 'success' });
+      App.components.toast('Added ' + result.count + ' shows and linked ' + result.linked + ' existing shows. Use Refresh Show Data to fetch TMDB columns.', { title: 'TV import complete', kind: 'success' });
     } catch (error) { $('#tvImportError').textContent = error.message; $('#tvImportApply').disabled = true; }
   }
   function init() {

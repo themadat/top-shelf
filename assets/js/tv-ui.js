@@ -2,14 +2,18 @@
   "use strict";
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['rating', 'Rating', 100], ['title', 'Show', 250], ['status', 'My Status', 140], ['seriesStatus', 'Series Status', 115], ['mode', 'Rate By', 110], ['seasons', 'Seasons', 80], ['lastWatched', 'Last Watched', 120], ['notes', 'Notes', 140]];
+  const columns = [['rating', 'Rating', 100], ['title', 'Show', 250], ['status', 'My Status', 140], ['firstAirDate', 'First Air', 110], ['lastAirDate', 'Last Air', 110], ['providerStatus', 'Status', 125], ['inProduction', 'In Production', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'Seasons', 80], ['numberOfEpisodes', 'Episodes', 85], ['voteAverage', 'TMDB Ave', 90], ['networks', 'Networks', 160], ['mode', 'Rate By', 110], ['lastWatched', 'Last Watched', 120], ['notes', 'Notes', 140]];
   let batch = null, resizing = false;
   function state() { return App.storage.getState(); }
   function saved() { return state().workspace.tvShows.filter(function (s) { return !s.deleted; }); }
   function pref() { return state().ui.tv; }
   function preference(patch) { App.storage.mutate(function (s) { Object.assign(s.ui.tv, patch); }, { touch: false, reason: 'tv-preference' }); }
   function options(items, value) { return items.map(function (s) { return '<option' + (s === value ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join(''); }
-  function value(show, key) { return key === 'seriesStatus' ? tv.seriesStatus(show) : key === 'seasons' ? show.seasons.filter(function (s) { return s.number > 0; }).length : show[key]; }
+  function value(show, key) {
+    if (key === 'genres' || key === 'networks') return show[key].join(', ');
+    if (key === 'inProduction') return show[key] === null ? null : show[key] ? 'Yes' : 'No';
+    return show[key];
+  }
   function render() {
     const shows = saved(), p = pref(), needle = p.query.toLowerCase();
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
@@ -30,7 +34,9 @@
       const labels = '<option value="">—</option>' + tv.showLabels.map(function (label, i) { return '<option value="' + i + '"' + (s.rating === i ? ' selected' : '') + '>' + i + ' · ' + esc(label) + '</option>'; }).join('');
       const avg = tv.averages(s), detail = [avg.seasons.count ? 'S ' + avg.seasons.value.toFixed(1) + '/10 (' + avg.seasons.count + ')' : '', avg.episodes.count ? 'E ' + avg.episodes.value.toFixed(1) + '/10 (' + avg.episodes.count + ')' : ''].filter(Boolean).join(' · ');
       return '<tr data-tv-id="' + s.id + '"><td><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button><small class="tv-table-averages" title="Season and episode averages with rated counts">' + esc(detail) + '</small></td>'
-        + '<td><select data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td><td>' + esc(tv.seriesStatus(s)) + '</td><td><select data-tv-edit="mode" aria-label="Rate by for ' + esc(s.title) + '">' + options(tv.modes, s.mode) + '</select></td><td>' + value(s, 'seasons') + '</td><td title="' + esc(s.lastWatched) + '">' + esc(s.lastWatched || '—') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
+        + '<td><select data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td>'
+        + ['firstAirDate', 'lastAirDate', 'providerStatus', 'inProduction', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes', 'voteAverage', 'networks'].map(function (key) { const cell = value(s, key); return '<td title="' + esc(cell ?? '') + '">' + esc(cell ?? '—') + '</td>'; }).join('')
+        + '<td><select data-tv-edit="mode" aria-label="Rate by for ' + esc(s.title) + '">' + options(tv.modes, s.mode) + '</select></td><td title="' + esc(s.lastWatched) + '">' + esc(s.lastWatched || '—') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
     }).join('');
     $('#tvCount').textContent = rows.length + ' / ' + shows.length;
     $('#tvEmpty').hidden = rows.length > 0; $('#tvEmpty').textContent = shows.length ? 'No shows match this filter.' : 'Add a show to start your TV library.';
