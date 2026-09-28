@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "1.0.0.6",
-      "buildId": "1.0.0.6",
+      "version": "1.0.0.7",
+      "buildId": "1.0.0.7",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -159,7 +159,7 @@
       "danger": "#a74747"
     },
     "releases": [
-      {"version":"1.0.0.6","date":"2026-09-28T12:00:00.000Z","title":"Boardgames Shelf","summary":"Add a Boardgames tab with its own checkerboard icon and keyboard shortcut.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
+      {"version":"1.0.0.7","date":"2026-09-28T12:00:00.000Z","title":"TMDB IDs for TV Import","summary":"Accept reviewed TMDB TV IDs with imported activity status and provide a complete matched import file.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
     ],
     "roadmap": [{"id": "movie-people-lookup", "title": "Look Up Movies By Actor Or Director", "description": "From the spreadsheet backlog: look up movies by actors and directors and sort the results.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 2, "createdAt": "2026-09-13"}, {"id": "movie-selection-link", "title": "Open A TMDB Search For Selected Text", "description": "From the spreadsheet backlog: add a lookup button that opens a TMDB link using the current text.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 1, "createdAt": "2026-09-13"}],
     "help": [

@@ -15,7 +15,6 @@
       if (row.notes !== undefined && (typeof row.notes !== 'string' || row.notes.length > 20000)) throw new Error(prefix + 'notes must be text up to 20,000 characters.');
       if (row.tmdbId !== undefined && row.tmdbId !== null && (!Number.isSafeInteger(row.tmdbId) || row.tmdbId < 1)) throw new Error(prefix + 'invalid TMDB TV ID.');
       if (row.seriesStatus !== undefined && !['Active', 'Unknown'].includes(row.seriesStatus)) throw new Error(prefix + 'imported series status must be Active or Unknown.');
-      if (row.seriesStatus === 'Active' && row.tmdbId) throw new Error(prefix + 'manually supplied activity requires an unlinked show; fetch activity for linked TMDB shows.');
       const title = u.cleanLine(row.title, 300), key = titleKey(title);
       if (titles.has(key) || (row.tmdbId && ids.has(row.tmdbId))) throw new Error(prefix + 'duplicate show in the file. Resolve duplicates before importing.');
       titles.add(key); if (row.tmdbId) ids.add(row.tmdbId);

@@ -28,7 +28,7 @@
   }
   function metadata() {
     $('#tvMetadata').innerHTML = '<p><strong>Series: ' + esc(tv.seriesStatus(draft)) + '</strong> · ' + esc(draft.firstAirDate || 'Unknown first air date') + (draft.lastAirDate ? ' – ' + esc(draft.lastAirDate) : '') + '</p>'
-      + (draft.tmdbId ? '<small>TMDB TV ' + draft.tmdbId + ' · Provider status: ' + esc(draft.providerStatus || 'Unknown') + ' · Last checked: ' + esc(draft.fetchedAt ? new Date(draft.fetchedAt).toLocaleString() : 'Not checked on this device') + '</small>' : '<small>' + (draft.providerStatus === 'Imported: Active' ? 'Active per imported list · ' : '') + 'Manual entry · Link a TMDB result to fetch metadata.</small>')
+      + (draft.tmdbId ? '<small>TMDB TV ' + draft.tmdbId + ' · ' + (draft.providerStatus === 'Imported: Active' ? 'Active per imported list; TMDB details not fetched' : 'Provider status: ' + esc(draft.providerStatus || 'Unknown')) + ' · Last checked: ' + esc(draft.fetchedAt ? new Date(draft.fetchedAt).toLocaleString() : 'Not checked on this device') + '</small>' : '<small>' + (draft.providerStatus === 'Imported: Active' ? 'Active per imported list · ' : '') + 'Manual entry · Link a TMDB result to fetch metadata.</small>')
       + '<p>' + esc([draft.genres.join(', '), draft.networks.join(', '), draft.companies.join(', ')].filter(Boolean).join(' · ')) + '</p>'
       + (draft.overview ? '<details><summary>Show overview</summary><p>' + esc(draft.overview) + '</p></details>' : '');
     $('#tvRefreshOne').hidden = !draft.tmdbId;

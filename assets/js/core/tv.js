@@ -65,7 +65,7 @@
   }
   function seriesStatus(show) {
     const raw = show.providerStatus;
-    if (!show.tmdbId && raw === 'Imported: Active') return 'Active';
+    if (raw === 'Imported: Active') return 'Active';
     if (['Ended', 'Canceled'].includes(raw)) return show.inProduction === true ? 'Unknown' : raw;
     if (['Returning Series', 'In Production'].includes(raw)) return show.inProduction === false ? 'Unknown' : 'Active';
     if (['Planned', 'Pilot'].includes(raw)) return 'Upcoming';

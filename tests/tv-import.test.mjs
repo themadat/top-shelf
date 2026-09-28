@@ -39,7 +39,9 @@ test('bulk import validates before applying, blocks stale previews and respects 
   assert.throws(() => importer.apply([], data, p.snapshot, []), /Select/);
   assert.throws(() => importer.preview([], file([row('One'), row('ONE')])), /duplicate/);
   assert.throws(() => importer.preview([], file([row('One', { tmdbId: 1 }), row('Two', { tmdbId: 1 })])), /duplicate/);
-  for (const bad of [row(''), row('Bad', { rating: -1 }), row('Bad', { rating: '0' }), row('Bad', { rating: 5.5 }), row('Bad', { status: 'Unclear' }), row('Bad', { tmdbId: '1' }), row('Bad', { seriesStatus: 'Ended' }), row('Bad', { tmdbId: 1, seriesStatus: 'Active' }), row('Bad', { notes: ['not text'] })]) assert.throws(() => importer.preview([], file([bad])));
+  for (const bad of [row(''), row('Bad', { rating: -1 }), row('Bad', { rating: '0' }), row('Bad', { rating: 5.5 }), row('Bad', { status: 'Unclear' }), row('Bad', { tmdbId: '1' }), row('Bad', { seriesStatus: 'Ended' }), row('Bad', { notes: ['not text'] })]) assert.throws(() => importer.preview([], file([bad])));
+  const linkedActive = importer.preview([], file([row('Linked active', { tmdbId: 99, seriesStatus: 'Active' })])).entries[0].show;
+  assert.equal(linkedActive.tmdbId, 99); assert.equal(A.tv.seriesStatus(linkedActive), 'Active');
   assert.throws(() => importer.preview([], { format: 'top-shelf-backup', version: 1, shows: [] }), /TV import/);
   assert.throws(() => A.stateModel.prepare(data), /Use TV → Import Shows/);
   const before = JSON.stringify(data); importer.preview([], data); assert.equal(JSON.stringify(data), before);
