@@ -91,7 +91,7 @@ test('shelf selection is normalized and local-only', () => {
   assert.equal(model.syncHash(state), initial);
   state.ui.selectedShelf = 'invalid';
   assert.equal(model.normalize(state).ui.selectedShelf, 'movies');
-  assert.equal(new Set(App.config.shelves.map(shelf => shelf.shortcut)).size, 8);
+  assert.equal(new Set(App.config.shelves.map(shelf => shelf.shortcut)).size, 9);
 });
 
 test('banner timing defaults, bounds, backups, and sync isolation', () => {

@@ -567,6 +567,7 @@
   }
 
   function prepare(input) {
+    if (input?.format === 'top-shelf-tv-import') throw new Error('Use TV → Import Shows for this file. It adds TV shows and is not a full-library backup.');
     if (input && ("syncFormat" in Object(input) || "syncVersion" in Object(input))) return prepareSync(input);
     const migration = migrate(input);
     const state = normalize(migration.state);

@@ -1,6 +1,6 @@
 # Top Shelf 1.0
 
-A static, local-first movie and TV library with Wishlist, Watched, Notes and eight movie pivot views. Other shelves remain starter views. No build step, backend, account or runtime dependency.
+A static, local-first movie and TV library with Wishlist, Watched, Notes and eight movie pivot views. Boardgames and the other shelves remain starter views. No build step, backend, account or runtime dependency.
 
 ## Use
 
@@ -10,6 +10,7 @@ Serve the repository with `python3 -m http.server 8000`, then open `http://local
 - Click table cells to edit priority/rating, notes, How, dates and Other Pivots. Enter saves; Escape cancels.
 - Wishlist shows TMDB average ratings beside Priority. Update Ratings refreshes scores; Update How checks US availability and bundled streaming estimates.
 - Pivots summarize watched movies. Search each panel, adjust minimums, sort, resize columns and star people/companies/collections into Other Pivots.
+- TV → Import Shows previews additive TV import JSON files; existing shows are preserved.
 - TV tracks Watching, Caught Up, Completed and Stopped separately from series activity. Rate shows 0–5 and seasons/episodes 1–10; calculated averages stay separate from your show score.
 - Notes autosaves. Settings offers backup/recovery, appearance, sync, movie-name/details exports and How values.
 - Subgenre Review exports a request for an LLM and previews additive result imports before applying them.

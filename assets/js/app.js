@@ -1050,6 +1050,7 @@
     App.moviesUI.init();
     App.tvEditor.init();
     App.tvUI.init();
+    App.tvImportUI.init();
     App.subgenresUI.init();
     App.pivotsUI.init();
     bindGeneralEvents();
