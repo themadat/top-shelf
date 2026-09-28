@@ -29,6 +29,7 @@
   function metadata() {
     $('#tvMetadata').innerHTML = '<p><strong>Series: ' + esc(tv.seriesStatus(draft)) + '</strong> · ' + esc(draft.firstAirDate || 'Unknown first air date') + (draft.lastAirDate ? ' – ' + esc(draft.lastAirDate) : '') + '</p>'
       + (draft.tmdbId ? '<small>TMDB TV ' + draft.tmdbId + ' · ' + (draft.providerStatus === 'Imported: Active' ? 'Active per imported list; TMDB details not fetched' : 'Provider status: ' + esc(draft.providerStatus || 'Unknown')) + ' · Last checked: ' + esc(draft.fetchedAt ? new Date(draft.fetchedAt).toLocaleString() : 'Not checked on this device') + '</small>' : '<small>' + (draft.providerStatus === 'Imported: Active' ? 'Active per imported list · ' : '') + 'Manual entry · Link a TMDB result to fetch metadata.</small>')
+      + '<p>In production: ' + (draft.inProduction === null ? 'Unknown' : draft.inProduction ? 'Yes' : 'No') + '</p>'
       + '<p>' + esc([draft.genres.join(', '), draft.networks.join(', '), draft.companies.join(', ')].filter(Boolean).join(' · ')) + '</p>'
       + (draft.overview ? '<details><summary>Show overview</summary><p>' + esc(draft.overview) + '</p></details>' : '');
     $('#tvRefreshOne').hidden = !draft.tmdbId;
@@ -59,11 +60,11 @@
   function readFields() {
     if (!draft) return;
     draft.title = $('#tvName').value.trim(); draft.status = $('#tvStatus').value; draft.mode = $('#tvMode').value;
-    draft.lastWatched = $('#tvLastWatched').value; draft.notes = $('#tvNotes').value;
+    draft.lastWatched = $('#tvLastWatched').value; draft.notes = $('#tvNotes').value; draft.seasonRanking = $('#tvSeasonRanking').value;
   }
   function fill() {
     $('#tvName').value = draft.title; $('#tvStatus').innerHTML = options(tv.statuses, draft.status); $('#tvMode').innerHTML = options(tv.modes, draft.mode);
-    $('#tvLastWatched').value = draft.lastWatched; $('#tvNotes').value = draft.notes;
+    $('#tvLastWatched').value = draft.lastWatched; $('#tvNotes').value = draft.notes; $('#tvSeasonRanking').value = draft.seasonRanking;
     $('#tvShowRating').innerHTML = ratingButtons(draft.rating, true, 'data-show-rating');
     metadata(); renderSeasons();
   }

@@ -68,3 +68,23 @@
 .tv-import-notes { white-space: pre-wrap; min-width: 150px; max-width: 300px; overflow-wrap: anywhere; }
 #tvImportError { color: var(--danger); }
 #tvImportFile { max-width: 100%; }
+
+.tv-toolbar input, .tv-toolbar select { height: 2.5rem; box-sizing: border-box; }
+.tv-search #tvCount { position: absolute; right: 2.1rem; pointer-events: none; }
+.tv-search input { padding-right: 7rem; }
+.tv-rating-select { display: block; position: relative; font-weight: 700; padding: .2rem; }
+.tv-rating-select select { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.tv-rating-select:focus-within { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+#tvTable .tv-tone-blue { color: light-dark(#185ca3, #8bc5ff); }
+#tvTable .tv-tone-green { color: light-dark(#23723a, #8cdda0); }
+#tvTable .tv-tone-purple { color: light-dark(#7940a5, #d6a5ff); }
+#tvTable .tv-tone-red { color: light-dark(#b12d39, #ff9ba4); }
+#tvTable .tv-tone-gold { color: light-dark(#866000, #efce72); }
+#tvTable .tv-tone-muted { color: var(--muted); }
+.tv-pivots { margin: .5rem 0; }
+#tvPivots { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+#tvPivots button { margin: .2rem; }
+#tvPivots button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-strong); }
+
+.tv-search { position: relative; display: flex; align-items: center; }
+.tv-search kbd { position: absolute; right: .65rem; color: var(--muted); font: inherit; font-size: .8rem; }

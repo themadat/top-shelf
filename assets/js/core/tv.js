@@ -5,6 +5,10 @@
   const modes = ['Show', 'Season', 'Episode'];
   const showLabels = ['Terrible', 'Below Average', 'Average', 'Above Average', 'Elite', 'Legendary'];
   const episodeLabels = ['', 'Did not Finish', 'Wtf did I just watch', 'Horrible', 'Bad', 'Meh', 'Average', 'Good', 'Great', 'Phenomenal', 'Best of the Best'];
+  const rankingSeeds = {
+    'dexter': 'Season 1: The Ice Truck Killer\nSeason 2: The Bay Harbor Butcher\nSeason 4: Trinity\nSeason 5: Barrel Girl Gang\nSeason 7: Isaak Sirko\nSeason 8: The Brain Surgeon\nSeason 3: The Skinner\nSeason 6: The Doomsday Killers',
+    'the wire': 'Season 3: The Politics\nSeason 1: The Corner\nSeason 2: The Docks\nSeason 4: The Schools\nSeason 5: The Media'
+  };
   function integer(value, min, max) { return Number.isInteger(value) && value >= min && value <= max; }
   function rating(value, show) {
     if (value === null || value === undefined || value === '') return null;
@@ -55,7 +59,7 @@
       numberOfSeasons: count(s.numberOfSeasons), numberOfEpisodes: count(s.numberOfEpisodes), voteAverage: average(s.voteAverage),
       providerStatus: u.cleanLine(s.providerStatus, 100), inProduction: typeof s.inProduction === 'boolean' ? s.inProduction : null,
       fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', status: statuses.includes(s.status) ? s.status : 'Watching', mode: modes.includes(s.mode) ? s.mode : 'Show',
-      rating: rating(s.rating, true), notes: u.cleanText(s.notes, 20000), lastWatched: u.cleanLine(s.lastWatched, 100), seasons: seasons };
+      rating: rating(s.rating, true), notes: u.cleanText(s.notes, 20000), seasonRanking: u.cleanText(s.seasonRanking === undefined ? rankingSeeds[u.cleanLine(s.title, 300).toLowerCase()] : s.seasonRanking, 20000), lastWatched: u.cleanLine(s.lastWatched, 100), seasons: seasons };
   }
   function normalizeList(value) {
     const source = collection(value, App.config.controls.maxTvShows, 'TV shows');
@@ -111,7 +115,7 @@
   }
   function refresh(prior, fresh) {
     if (prior.tmdbId && prior.tmdbId !== fresh.tmdbId) throw new Error('This response belongs to a different TV show.');
-    return normalize(Object.assign({}, fresh, { id: prior.id, status: prior.status, mode: prior.mode, rating: prior.rating, notes: prior.notes, lastWatched: prior.lastWatched, seasons: mergeEntries(prior.seasons, fresh.seasons, mergeSeason) }));
+    return normalize(Object.assign({}, fresh, { id: prior.id, status: prior.status, mode: prior.mode, rating: prior.rating, notes: prior.notes, seasonRanking: prior.seasonRanking, lastWatched: prior.lastWatched, seasons: mergeEntries(prior.seasons, fresh.seasons, mergeSeason) }));
   }
   function content(show) {
     const copy = u.clone(show); delete copy.fetchedAt;
@@ -119,7 +123,7 @@
     (copy.seasons || []).sort(byNumber).forEach(function (s) { delete s.fetchedAt; s.episodes.sort(byNumber); });
     return copy;
   }
-  function searchable(show) { return [show.title, show.originalTitle, show.notes, show.status, seriesStatus(show)].concat(show.genres, show.networks, show.companies).join(' ').toLowerCase(); }
+  function searchable(show) { return [show.title, show.originalTitle, show.type, show.notes, show.seasonRanking, show.status, seriesStatus(show)].concat(show.genres, show.networks, show.companies).join(' ').toLowerCase(); }
   App.tv = { statuses: statuses, modes: modes, showLabels: showLabels, episodeLabels: episodeLabels, normalize: normalize, normalizeList: normalizeList, rating: rating,
     seriesStatus: seriesStatus, averages: averages, fromTmdb: fromTmdb, seasonFromTmdb: seasonFromTmdb, mergeSeason: mergeSeason, refresh: refresh, content: content, searchable: searchable };
 })();

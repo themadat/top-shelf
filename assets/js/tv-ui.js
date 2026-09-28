@@ -2,8 +2,17 @@
   "use strict";
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['rating', 'Rating', 100], ['title', 'Show', 250], ['status', 'My Status', 140], ['firstAirDate', 'First Air', 110], ['lastAirDate', 'Last Air', 110], ['providerStatus', 'Status', 125], ['inProduction', 'In Production', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'Seasons', 80], ['numberOfEpisodes', 'Episodes', 85], ['voteAverage', 'TMDB Ave', 90], ['networks', 'Networks', 160], ['mode', 'Rate By', 110], ['lastWatched', 'Last Watched', 120], ['notes', 'Notes', 140]];
-  let batch = null, resizing = false;
+  const columns = [['rating', 'Rating', 75], ['title', 'Show', 250], ['status', 'My Status', 140], ['providerStatus', 'Show Status', 140], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'S', 65], ['numberOfEpisodes', 'E', 65], ['voteAverage', 'Ave', 75], ['networks', 'Networks', 160], ['mode', 'Rate By', 110], ['notes', 'Notes', 140]];
+  let batch = null, resizing = false, pivot = null;
+  function tone(value) { return ({ Watching: 'blue', 'Caught Up': 'green', Completed: 'purple', Stopped: 'red', Active: 'green', Ended: 'purple', Canceled: 'red', Upcoming: 'blue' })[value] || 'muted'; }
+  function scoreTone(value, max) { return value === null ? 'muted' : value / max >= .8 ? 'purple' : value / max >= .6 ? 'green' : value / max >= .4 ? 'gold' : 'red'; }
+  function renderPivots(shows) {
+    $('#tvPivots').innerHTML = ['type', 'genres', 'networks'].map(function (key) {
+      const groups = new Map();
+      shows.forEach(function (s) { const values = key === 'type' ? [s.type] : s[key]; new Set(values.filter(Boolean)).forEach(function (v) { groups.set(v, (groups.get(v) || 0) + 1); }); });
+      return '<section><h3>' + ({ type: 'Type', genres: 'Genres', networks: 'Networks' })[key] + '</h3>' + Array.from(groups).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }).map(function (entry) { return '<button type="button" class="button small" data-tv-pivot="' + key + '" data-value="' + esc(entry[0]) + '" aria-pressed="' + !!(pivot && pivot.key === key && pivot.value === entry[0]) + '">' + esc(entry[0]) + ' <small>' + entry[1] + '</small></button>'; }).join('') + '</section>';
+    }).join('');
+  }
   function state() { return App.storage.getState(); }
   function saved() { return state().workspace.tvShows.filter(function (s) { return !s.deleted; }); }
   function pref() { return state().ui.tv; }
@@ -12,18 +21,20 @@
   function value(show, key) {
     if (key === 'genres' || key === 'networks') return show[key].join(', ');
     if (key === 'inProduction') return show[key] === null ? null : show[key] ? 'Yes' : 'No';
+    if (key === 'providerStatus') return tv.seriesStatus(show);
     return show[key];
   }
   function render() {
     const shows = saved(), p = pref(), needle = p.query.toLowerCase();
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
-    const rows = shows.filter(function (s) { return (p.filter === 'all' || s.status === p.filter) && (!needle || tv.searchable(s).includes(needle)); });
+    const rows = shows.filter(function (s) { return (p.filter === 'all' || s.status === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
     rows.sort(function (a, b) {
       const av = value(a, p.sort), bv = value(b, p.sort);
       if (av === null || bv === null) return av === bv ? a.title.localeCompare(b.title) : av === null ? 1 : -1;
       const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { numeric: true });
       return cmp * (p.direction === 'asc' ? 1 : -1) || a.title.localeCompare(b.title);
     });
+    renderPivots(shows);
     const widths = columns.map(function (c) { return p.widths[c[0]] || c[2]; });
     $('#tvTable').style.width = widths.reduce(function (a, b) { return a + b; }, 0) + 'px';
     $('#tvTable colgroup').innerHTML = columns.map(function (c, i) { return '<col data-tv-col="' + c[0] + '" style="width:' + widths[i] + 'px">'; }).join('');
@@ -33,10 +44,10 @@
     $('#tvTable tbody').innerHTML = rows.map(function (s) {
       const labels = '<option value="">—</option>' + tv.showLabels.map(function (label, i) { return '<option value="' + i + '"' + (s.rating === i ? ' selected' : '') + '>' + i + ' · ' + esc(label) + '</option>'; }).join('');
       const avg = tv.averages(s), detail = [avg.seasons.count ? 'S ' + avg.seasons.value.toFixed(1) + '/10 (' + avg.seasons.count + ')' : '', avg.episodes.count ? 'E ' + avg.episodes.value.toFixed(1) + '/10 (' + avg.episodes.count + ')' : ''].filter(Boolean).join(' · ');
-      return '<tr data-tv-id="' + s.id + '"><td><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button><small class="tv-table-averages" title="Season and episode averages with rated counts">' + esc(detail) + '</small></td>'
-        + '<td><select data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td>'
-        + ['firstAirDate', 'lastAirDate', 'providerStatus', 'inProduction', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes', 'voteAverage', 'networks'].map(function (key) { const cell = value(s, key); return '<td title="' + esc(cell ?? '') + '">' + esc(cell ?? '—') + '</td>'; }).join('')
-        + '<td><select data-tv-edit="mode" aria-label="Rate by for ' + esc(s.title) + '">' + options(tv.modes, s.mode) + '</select></td><td title="' + esc(s.lastWatched) + '">' + esc(s.lastWatched || '—') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
+      return '<tr data-tv-id="' + s.id + '"><td><span class="tv-rating-select tv-tone-' + scoreTone(s.rating, 5) + '"><span aria-hidden="true">' + (s.rating ?? '—') + '</span><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></span></td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button><small class="tv-table-averages" title="Season and episode averages with rated counts">' + esc(detail) + '</small></td>'
+        + '<td><select class="tv-tone-' + tone(s.status) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td>'
+        + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes', 'voteAverage', 'networks'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'voteAverage' ? scoreTone(s.voteAverage, 10) : key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + esc(cell ?? '—') + '</td>'; }).join('')
+        + '<td><select data-tv-edit="mode" aria-label="Rate by for ' + esc(s.title) + '">' + options(tv.modes, s.mode) + '</select></td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
     }).join('');
     $('#tvCount').textContent = rows.length + ' / ' + shows.length;
     $('#tvEmpty').hidden = rows.length > 0; $('#tvEmpty').textContent = shows.length ? 'No shows match this filter.' : 'Add a show to start your TV library.';
@@ -85,7 +96,22 @@
       message.textContent = (controller.signal.aborted ? 'Stopped. ' : '') + updated + ' of ' + shows.length + ' shows refreshed; ' + skipped + ' skipped because they were being edited or changed. ' + errorMessage;
     }
   }
+  function clearLegacyNotes() {
+    const key = App.config.storage.stateKey + ':tv-notes-cleanup-20260928';
+    try {
+      if (localStorage.getItem(key)) return;
+      if (saved().some(function (s) { return s.notes; })) {
+        if (!App.storage.saveRecovery('Before one-time TV notes cleanup')) throw new Error('Could not save recovery; TV notes were kept.');
+        // Mark first so a failed save or a later recovery never clears new notes again.
+        localStorage.setItem(key, 'done');
+        App.storage.mutate(function (s) { s.workspace.tvShows.forEach(function (show) { if (!show.deleted) show.notes = ''; }); }, { reason: 'tv-notes-cleanup' });
+        if (!App.storage.saveNow()) throw new Error('TV notes cleanup could not be saved. Recovery is available in Settings.');
+      } else localStorage.setItem(key, 'done');
+    } catch (error) { $('#tvBatchStatus').textContent = error.message; }
+  }
   function init() {
+    clearLegacyNotes();
+    $('#tvPivots').addEventListener('click', function (event) { const button = event.target.closest('[data-tv-pivot]'); if (!button) return; const next = { key: button.dataset.tvPivot, value: button.dataset.value }; pivot = pivot && pivot.key === next.key && pivot.value === next.value ? null : next; render(); });
     $('#tvAdd').addEventListener('click', function () { App.tvEditor.open(null, this); });
     $('#tvFilter').addEventListener('change', function () { preference({ filter: this.value }); });
     $('#tvSearch').addEventListener('input', function () { preference({ query: this.value }); });

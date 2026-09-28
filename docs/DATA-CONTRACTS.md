@@ -23,6 +23,10 @@ TMDB series metadata refreshes explicitly; episode lists load per season on dema
 
 Limits: 2,000 shows, 500 seasons/show, 5,000 episodes/season and 30,000 loaded episodes/show; TV input and full backup imports are each capped at 5 MiB. Episode rendering is paged in groups of 50. Keep personal statuses separate from conservatively mapped provider status; conflicting/missing status is Unknown.
 
+`seasonRanking` is a separate plain-text, best-to-worst list (20,000 characters), preserved by normalization, backup, sync, and provider refresh. Exact titles Dexter and The Wire receive the supplied starting rankings only when the field is absent; an explicitly empty field stays empty. Update all app copies before syncing this field, since older clients do not preserve it.
+
+The September 2026 one-time TV notes cleanup runs on the existing local library at startup. It requires a successful recovery snapshot before clearing TV notes, and records a separate local-storage completion marker before mutation so recovery or later notes are never automatically cleared again on that browser. Movies and the main Notes pad are untouched. The marker is local, not synced; later imports are not cleared.
+
 ### Additive TV imports
 
 TV → Import Shows accepts `{format: "top-shelf-tv-import", version: 1, shows: [...]}`. Each row requires a title, nullable integer rating (0–5), and valid viewing status. Optional fields: notes, numeric TMDB TV ID, and seriesStatus (Active/Unknown for unlinked source data). The preview allows excluding rows. A title match without a TMDB ID may receive the imported ID and activity marker while every personal field and nested rating remains unchanged. Other existing titles/IDs and deterministic import-ID tombstones are skipped. Duplicate input identities are rejected. Import validates the complete result and rejects a stale TV snapshot. Because it only adds shows or missing provider IDs and cannot replace personal fields, it does not duplicate the full library into recovery storage. The mutation is saved synchronously and rolled back in memory if persistence fails. Repeating an import does not duplicate shows.

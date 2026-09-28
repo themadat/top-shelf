@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"1.0.0.11","date":"2026-09-28T12:00:00.000Z","title":"Large GitHub Sync Files","summary":"Read GitHub sync data over 1 MiB through the Blob API and compact future uploads below the inline Contents API limit.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.10","date":"2026-09-28T12:00:00.000Z","title":"Storage-efficient TV Import","summary":"Import or link TV shows without duplicating the full library into recovery storage, with an immediate rollback if persistence fails.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.9","date":"2026-09-28T12:00:00.000Z","title":"Reliable Recovery Rotation","summary":"Replace large recovery snapshots without temporarily retaining two copies, allowing safe TV ID re-imports under browser storage pressure.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.8","date":"2026-09-28T12:00:00.000Z","title":"TV Metadata Columns and Safe Re-import","summary":"Show selected TMDB series metadata in sortable columns and let re-imports link IDs without replacing personal TV data.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

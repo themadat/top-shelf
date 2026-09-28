@@ -157,3 +157,17 @@ test('TV lookup reports API errors, cancellation and wrong response identities',
   const c = new AbortController(), pending = B.tmdb.tvDetails(123, c.signal); c.abort();
   await assert.rejects(() => pending, { name: 'AbortError' });
 });
+
+
+test('season rankings seed exact titles once, remain editable, and survive refresh and backup', () => {
+  const dexter = show({ title: 'Dexter' });
+  assert.equal(dexter.seasonRanking.split('\n').length, 8);
+  assert.equal(dexter.seasonRanking.split('\n')[2], 'Season 4: Trinity');
+  assert.equal(show({ title: 'The Wire' }).seasonRanking.split('\n')[0], 'Season 3: The Politics');
+  assert.equal(show({ title: 'Dexter: New Blood' }).seasonRanking, '');
+  assert.equal(show({ title: 'Dexter', seasonRanking: '' }).seasonRanking, '');
+  const custom = show({ seasonRanking: 'Season 2: Favorite\nSeason 1: Next' });
+  assert.equal(tv.refresh(custom, tv.fromTmdb(series())).seasonRanking, custom.seasonRanking);
+  const state = model.createDefaultState(); state.workspace.tvShows = [custom];
+  assert.equal(model.normalize(JSON.parse(JSON.stringify(state))).workspace.tvShows[0].seasonRanking, custom.seasonRanking);
+});
