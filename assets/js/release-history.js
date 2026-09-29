@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"1.0.0.23","date":"2026-09-29T12:00:00.000Z","title":"Fluid TV editor layout","summary":"Use a compact 90% dialog with collapsed show details, an inline section toggle, and full-height notes filling the remaining column space.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.22","date":"2026-09-29T12:00:00.000Z","title":"Compact TV details and resizable episodes","summary":"Tighten compact show details, resize episode columns, rename rating to #, and enlarge episode notes.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.21","date":"2026-09-29T12:00:00.000Z","title":"Compact TV episode editor","summary":"Scan fully rated shows in compact episode tables with inline notes, hidden air-date/watched columns, and matching status input height.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.20","date":"2026-09-29T12:00:00.000Z","title":"TV network pills and pivot resizing","summary":"Move Networks beside Show, use network-colored pills, and resize every TV pivot column with saved widths.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

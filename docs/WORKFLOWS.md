@@ -1,20 +1,22 @@
-# Optional Repository Workflows
+# Optional Workflows
 
-Read only when a named workflow is requested. Do not advance stages implicitly.
+Read only for an explicitly named workflow; do not advance stages implicitly. Default safeguards and verification are in [AGENTS.md](../AGENTS.md).
 
-- **wish**: read context/WISHES.md, use the next ID, capture scope and acceptance criteria, mark Proposed. No implementation.
-- **plan**: investigate a wish, write context/WISH-###-slug-PLAN.md with Resume first, decisions, scope, file map, accessibility, tests and open questions. Mark Planned; no runtime edits.
-- **start**: implement the approved plan; maintain Resume and verify the affected behavior.
-- **continue**: inspect status, diff, recent commits and any active plan's Resume; finish the next incomplete step. No new tracking system.
-- **cut**: finalize the current release, close the wish, update version surfaces and run release checks.
-- **reset**: destructive copied-app workflow only. Obtain app name and replacement icon first. Follow docs/RESET.md and verify the checkout is not the canonical source. Reset to 0.0.1.1; never silently alter Git history or remotes.
+| Request | Action |
+|---|---|
+| wish | Read `context/WISHES.md`; assign the next ID, scope and acceptance criteria. Mark Proposed; no implementation. |
+| plan | Investigate the wish; write a plan with Resume first, decisions, file map, verification and open questions. Mark Planned. |
+| start | Implement the approved plan and maintain its Resume. |
+| continue | Inspect status/diff and the active plan; finish the next incomplete step. |
+| cut | Finalize the release, close completed wishes, refresh stale references and verify release coverage. |
+| reset | Obtain app name/icon, follow `docs/RESET.md`, and verify this is a copied app—not the canonical checkout. Never silently change Git history/remotes. |
 
-## Releases
+## Release command
 
-Versions use major.minor.patch.build. A named major/minor/patch release resets build to 1; otherwise increment build. Batch small changes until the user requests release/deployment/commit or the task is ready to ship. Do not bump solely for documentation or tooling.
+```sh
+node scripts/release.mjs --title "Release title" --summary "User-facing result"
+```
 
-Run `node scripts/release.mjs --title "Short title" --summary "User-facing result"` to increment build, or add `--version 1.1.0` for an explicit promotion. It updates all version surfaces and adds a release entry; it never commits or pushes. Release history is in assets/js/release-history.js; current release is in config.js. Do not maintain a second next-version field in docs.
+Add `--version 2.0.0` for a named promotion or `--dry-run` to preview. Versions use `major.minor.patch.build`; a promotion starts at build 1, otherwise only build increments. The script updates all version surfaces and release history, never commits or pushes.
 
-Run `node scripts/check.mjs`. For releases or changes to the shell, storage, service worker or responsive layout, also verify relevant desktop/mobile/offline paths. Ordinary edits need only focused browser checks. Stop preview servers.
-
-Commit/push only on explicit request. Preserve unrelated edits and stage only task files. When a commit command is useful, use subject `Version - Text`; it is not mandatory after every response.
+Current version: `assets/js/config.js`. Historical release entries: `assets/js/release-history.js`. Do not duplicate next-version fields in docs. See [TESTING.md](TESTING.md) for release checks.

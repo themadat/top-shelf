@@ -1,4 +1,4 @@
-# Top Shelf 1.0
+# Top Shelf
 
 A static, local-first movie and TV library with Wishlist, Watched, Notes and eight movie pivot views. Boardgames and the other shelves remain starter views. No build step, backend, account or runtime dependency.
 
@@ -11,7 +11,7 @@ Serve the repository with `python3 -m http.server 8000`, then open `http://local
 - Wishlist shows TMDB average ratings beside Priority. Update Ratings refreshes scores; Update How checks US availability and bundled streaming estimates.
 - Pivots summarize watched movies. Search each panel, adjust minimums, sort, resize columns and star people/companies/collections into Other Pivots.
 - TV → Import Shows previews additive TV import JSON files; existing shows are preserved.
-- TV tracks Watching, Caught Up, Completed and Stopped separately from series activity. Rate shows 0–5 and seasons/episodes 1–10; calculated averages stay separate from your show score.
+- TV tracks Want to Watch, Watching, Caught Up, Completed and Stopped separately from series activity. Rate shows 0–5, seasons 1–10 and episodes 1–10 with half-points. Episode notes, compact tables and separate Type/Genres/Networks pivot cards remain usable offline.
 - Notes autosaves. Settings offers backup/recovery, appearance, sync, movie-name/details exports and How values.
 - Subgenre Review exports a request for an LLM and previews additive result imports before applying them.
 
@@ -38,8 +38,4 @@ Movie column widths are independent per All/Wishlist/Watched. TV has separate lo
 
 ## Development
 
-Run `node scripts/check.mjs` for tests, syntax, versions, manifests, assets, offline cache coverage and diff checks. It prints one summary on success and details on failure. See [testing](docs/TESTING.md) for focused browser checks.
-
-Batch related edits, then run `node scripts/release.mjs --title "Release title" --summary "User-facing result"`. Add `--version 1.1.0` for a promotion or `--dry-run` to preview. The script updates version surfaces and preserves release history; it never commits or pushes. No version bump is needed for documentation/tooling-only changes.
-
-[AGENTS.md](AGENTS.md) contains the short default instructions. The [reference index](context/LLM_HANDOFF.md) points to topic docs to read only when relevant. Historical release data is separate from config; movie styles and movie batch/column/tools code have focused files. Use a fresh task for unrelated work to avoid carrying completed conversation history.
+Use [AGENTS.md](AGENTS.md) for the short working instructions, [WORKFLOWS.md](docs/WORKFLOWS.md) for release commands, and [TESTING.md](docs/TESTING.md) for verification. The optional [handoff index](context/LLM_HANDOFF.md) maps tasks to code and focused contracts. Current version and history come from the app's release files, not this README.

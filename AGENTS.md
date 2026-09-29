@@ -1,24 +1,23 @@
 # Top Shelf
 
-Static, local-first HTML/CSS/JavaScript. No build step, runtime dependencies, backend or sign-in.
+Static, local-first HTML/CSS/JavaScript; no build step, runtime dependencies, backend or sign-in.
 
-## Work efficiently
+## Work
 
-- Start with `git status --short`; preserve existing edits. Search with `rg`, then read narrow relevant ranges. Do not dump SVG paths or entire large files.
-- Read topic docs only as needed; `context/LLM_HANDOFF.md` is the file/reference index. Do not routinely read the handoff, wish ledger, release history, reset guide or unrelated contracts.
-- Reuse instructions already read in this task. Keep tool output to failures and concise summaries. Use a fresh task for unrelated work; keep follow-up fixes together.
-- For an explicit wish/plan/start/continue/cut/reset request, read `docs/WORKFLOWS.md`. Never infer a destructive reset.
+- Start with `git status --short`; preserve unrelated edits. Use `rg` and narrow reads, not whole-file dumps.
+- Read only the relevant topic doc. `context/LLM_HANDOFF.md` is an optional index, not startup reading. Reuse instructions already read; avoid repeating history or successful tool output.
+- For explicit wish/plan/start/continue/cut/reset requests, follow `docs/WORKFLOWS.md`. Never infer a destructive reset.
 
 ## Preserve
 
-- Movies and pivots, starter shelves, one plain-text Notes modal, Settings Roadmap, local recovery and optional GitHub Sync. Legacy data remains readable. Do not restore removed Records or multi-note/rich-text interfaces without a request.
-- Escape user text; use safe URLs, labelled controls, visible focus and the shared SVG catalog. Preserve mobile/offline usability and custom preferences.
-- Never expose credentials or include them in backups/sync. Recovery precedes destructive changes. Do not overwrite concurrent edits or pick conflict winners by timestamp.
-- Keep the app static and runtime dependency-free. Prefer focused modules over minified code or broad rewrites. GitHub Pages uses the checked-in Actions workflow.
+- Movies/TV and their pivots, starter shelves, plain-text Notes, Settings Roadmap, offline editing, recovery and optional GitHub Sync. Keep legacy data readable; do not revive removed Records or rich-text/multi-note interfaces without a request.
+- Escape user text, validate URLs, label controls, retain visible focus and use the SVG catalog. Preserve mobile usability and local preferences.
+- Recovery precedes destructive changes. Reject concurrent changes; never choose sync winners by timestamp. Exclude credentials from source, logs, backups and sync.
+- Keep modules focused and runtime dependency-free. Personal imports belong in ignored `import-preparation/`. Deploy through the checked-in GitHub Pages workflow.
 
 ## Finish
 
-- Run `node scripts/check.mjs`; add focused browser checks for affected behavior. Full desktop/mobile/offline checks belong to releases or relevant infrastructure changes. Stop preview servers.
-- Batch small changes into releases. Use `node scripts/release.mjs` when ready to ship; see `--help`. No manual multi-file version bookkeeping or next-version text in docs. Documentation/tooling-only edits do not require a version bump.
-- Update docs only for contracts, safeguards or non-obvious behavior—not every cosmetic change.
-- Summarize the result, verification and real limitations briefly. Include a copy-ready command to stage the task files, commit with `Version - Text`, and push to `origin main` in every user-facing message, including progress updates and final responses. Providing the command does not authorize executing it; commit/push only if explicitly requested. Stage only task files and preserve unrelated edits.
+- Run `node scripts/check.mjs` and focused browser checks; use `docs/TESTING.md` for release coverage. Stop preview servers.
+- Batch related edits. Cut releases with `node scripts/release.mjs` (see `--help`); no manual version bookkeeping or documentation-only bumps.
+- Document contracts and safeguards, not every cosmetic edit. Keep current behavior in topic docs and history in Git/release-history.js.
+- Summarize outcome, verification and limitations briefly. Include one copy-ready final command staging only task files, committing as `Version - Text`, and pushing to `origin main`. Execute commit/push only when explicitly requested.
