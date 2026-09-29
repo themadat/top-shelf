@@ -2,7 +2,7 @@
   "use strict";
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['rating', 'Rating', 105], ['title', 'Show', 250], ['status', 'My Status', 140], ['providerStatus', 'Show Status', 140], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'S', 65], ['numberOfEpisodes', 'E', 65], ['voteAverage', 'Ave', 75], ['networks', 'Networks', 160], ['notes', 'Notes', 140]];
+  const columns = [['rating', '#', 105], ['voteAverage', 'Ave', 75], ['title', 'Show', 250], ['status', 'My Status', 140], ['providerStatus', 'Show Status', 140], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'S', 65], ['numberOfEpisodes', 'E', 65], ['networks', 'Networks', 160], ['notes', 'Notes', 140]];
   let batch = null, resizing = false, pivot = null;
   function tone(value) { return ({ 'Want to Watch': 'gold', Watching: 'blue', 'Caught Up': 'green', Completed: 'purple', Stopped: 'red', Active: 'green', Ended: 'purple', Canceled: 'red', Upcoming: 'blue' })[value] || 'muted'; }
   function balanceFilters() {
@@ -43,6 +43,9 @@
   }
   function render() {
     const shows = saved(), p = pref(), needle = p.query.toLowerCase();
+    const filtersView = p.view === 'filters';
+    $('#tvListView').hidden = filtersView; $('#tvFiltersView').hidden = !filtersView;
+    document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.tvView === (filtersView ? 'filters' : 'list'))); });
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
     const rows = shows.filter(function (s) { return (p.filter === 'all' || s.status === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
     rows.sort(function (a, b) {
@@ -66,9 +69,9 @@
       const episodeRated = s.seasons.some(function (season) { return season.episodes.some(function (episode) { return episode.rating !== null; }); });
       const indicators = (seasonRated ? '<span title="Season ratings or ranking saved" aria-label="Season ratings or ranking saved">S</span>' : '') + (episodeRated ? '<span title="Episode ratings saved" aria-label="Episode ratings saved">E</span>' : '');
       const detail = [avg.seasons.count ? 'Seasons: ' + avg.seasons.value.toFixed(1) + '/10' : '', avg.episodes.count ? 'Episodes: ' + avg.episodes.value.toFixed(1) + '/10' : '', s.seasonRanking.trim() ? 'Season ranking saved' : ''].filter(Boolean).join(' · ');
-      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (s.rating === null ? '' : 'movie-score') + '" style="' + (s.rating === null ? '' : 'background:' + App.movies.color(s.rating, false)) + '" aria-hidden="true">' + (s.rating ?? '—') + '</span><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td>'
+      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (s.rating === null ? '' : 'movie-score') + '" style="' + (s.rating === null ? '' : 'background:' + App.movies.color(s.rating, false)) + '" aria-hidden="true">' + (s.rating ?? '—') + '</span><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td>'
         + '<td><select class="tv-tone-' + tone(s.status) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td>'
-        + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes', 'voteAverage', 'networks'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + (key === 'voteAverage' && s.voteAverage !== null ? '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '">' + cell + '</span>' : esc(cell ?? '—')) + '</td>'; }).join('')
+        + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes', 'networks'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + (key === 'voteAverage' && s.voteAverage !== null ? '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '">' + cell + '</span>' : esc(cell ?? '—')) + '</td>'; }).join('')
         + '<td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
     }).join('');
     $('#tvCount').textContent = rows.length + ' / ' + shows.length;
@@ -78,9 +81,18 @@
   function update(id, field, value) {
     App.storage.mutate(function (s) { const show = s.workspace.tvShows.find(function (x) { return x.id === id && !x.deleted; }); if (show) show[field] = value; }, { reason: 'tv-edit' });
   }
-  function setWidth(key, width) {
-    const widths = Object.assign({}, pref().widths, { [key]: Math.round(Math.max(65, Math.min(2000, width))) }); preference({ widths: widths });
+  function resizedWidths(key, width) {
+    const widths = Object.fromEntries(columns.map(function (c) { return [c[0], pref().widths[c[0]] || c[2]]; }));
+    const index = columns.findIndex(function (c) { return c[0] === key; }), right = columns[index + 1]?.[0];
+    let next = Math.round(Math.max(65, Math.min(2000, width)));
+    if (right) {
+      const delta = Math.max(widths[right] - 2000, Math.min(widths[right] - 65, next - widths[key]));
+      next = widths[key] + delta; widths[right] -= delta;
+    }
+    widths[key] = next;
+    return widths;
   }
+  function setWidth(key, width) { preference({ widths: resizedWidths(key, width) }); }
   function fit(key) {
     const index = columns.findIndex(function (c) { return c[0] === key; });
     const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'); ctx.font = getComputedStyle($('#tvTable')).font;
@@ -118,25 +130,33 @@
       message.textContent = (controller.signal.aborted ? 'Stopped. ' : '') + updated + ' of ' + shows.length + ' shows refreshed; ' + skipped + ' skipped because they were being edited or changed. ' + errorMessage;
     }
   }
-  function clearLegacyNotes() {
-    const key = App.config.storage.stateKey + ':tv-notes-cleanup-20260928';
+  async function clearLegacyNotes() {
+    const key = App.config.storage.stateKey + ':tv-notes-cleanup-20260929';
+    let marked = false;
     try {
       if (localStorage.getItem(key)) return;
       if (saved().some(function (s) { return s.notes; })) {
-        if (!App.storage.saveRecovery('Before one-time TV notes cleanup')) throw new Error('Could not save recovery; TV notes were kept.');
-        // Mark first so a failed save or a later recovery never clears new notes again.
-        localStorage.setItem(key, 'done');
-        App.storage.mutate(function (s) { s.workspace.tvShows.forEach(function (show) { if (!show.deleted) show.notes = ''; }); }, { reason: 'tv-notes-cleanup' });
-        if (!App.storage.saveNow()) throw new Error('TV notes cleanup could not be saved. Recovery is available in Settings.');
+        const before = u.stableJson(state());
+        if (!await App.storage.saveRecoveryAsync('Before September 29 TV notes reset')) throw new Error('Could not save recovery; TV notes were kept.');
+        if (u.stableJson(state()) !== before) throw new Error('TV notes reset paused because data changed. Reload to retry.');
+        const next = u.clone(state());
+        next.workspace.tvShows.forEach(function (show) { if (!show.deleted) show.notes = ''; });
+        // Mark before replacement so recovery never causes a second cleanup.
+        localStorage.setItem(key, 'done'); marked = true;
+        App.storage.replace(next, { saveRecovery: false, reason: 'tv-notes-cleanup' });
       } else localStorage.setItem(key, 'done');
-    } catch (error) { $('#tvBatchStatus').textContent = error.message; }
+    } catch (error) {
+      // Failed replacements leave the original state intact and may safely retry.
+      if (marked) localStorage.removeItem(key);
+      $('#tvBatchStatus').textContent = error.message;
+    }
   }
-  function init() {
-    clearLegacyNotes();
+  async function init() {
+    await clearLegacyNotes();
     let lastFilterWidth = 0;
     new ResizeObserver(function (entries) { const width = entries[0].contentRect.width; if (width !== lastFilterWidth) { lastFilterWidth = width; requestAnimationFrame(balanceFilters); } }).observe($('#tvPivots'));
-    $('.tv-pivots').addEventListener('toggle', balanceFilters);
-    $('#tvPivots').addEventListener('click', function (event) { const button = event.target.closest('[data-tv-pivot]'); if (!button) return; const next = { key: button.dataset.tvPivot, value: button.dataset.value }; pivot = pivot && pivot.key === next.key && pivot.value === next.value ? null : next; render(); });
+    document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.addEventListener('click', function () { preference({ view: button.dataset.tvView }); }); });
+    $('#tvPivots').addEventListener('click', function (event) { const button = event.target.closest('[data-tv-pivot]'); if (!button) return; const next = { key: button.dataset.tvPivot, value: button.dataset.value }; pivot = pivot && pivot.key === next.key && pivot.value === next.value ? null : next; preference({ view: 'list' }); });
     $('#tvAdd').addEventListener('click', function () { App.tvEditor.open(null, this); });
     $('#tvFilter').addEventListener('change', function () { preference({ filter: this.value }); });
     $('#tvSearch').addEventListener('input', function () { preference({ query: this.value }); });
@@ -162,10 +182,14 @@
     });
     $('#tvTable').addEventListener('pointerdown', function (event) {
       const h = event.target.closest('[data-tv-resize]'); if (!h || event.button !== 0) return;
-      event.preventDefault(); const key = h.dataset.tvResize, start = event.clientX, width = h.closest('th').offsetWidth, total = $('#tvTable').offsetWidth;
-      const col = $('#tvTable').querySelector('[data-tv-col="' + key + '"]'); let next = width;
+      event.preventDefault(); const key = h.dataset.tvResize, start = event.clientX, width = h.closest('th').offsetWidth;
+      let next = width;
       resizing = true; h.setPointerCapture(event.pointerId);
-      const move = function (e) { next = Math.max(65, Math.min(2000, width + e.clientX - start)); col.style.width = next + 'px'; $('#tvTable').style.width = total + next - width + 'px'; };
+      const move = function (e) {
+        const widths = resizedWidths(key, width + e.clientX - start); next = widths[key];
+        columns.forEach(function (c) { $('#tvTable').querySelector('[data-tv-col="' + c[0] + '"]').style.width = widths[c[0]] + 'px'; });
+        $('#tvTable').style.width = Object.values(widths).reduce(function (a, b) { return a + b; }, 0) + 'px';
+      };
       const end = function () { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', end); h.removeEventListener('pointercancel', end); resizing = false; if (next !== width) setWidth(key, next); };
       h.addEventListener('pointermove', move); h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
     });

@@ -19,9 +19,37 @@
       if (titles.has(key) || (row.tmdbId && ids.has(row.tmdbId))) throw new Error(prefix + 'duplicate show in the file. Resolve duplicates before importing.');
       titles.add(key); if (row.tmdbId) ids.add(row.tmdbId);
       const id = 'tv-import-' + u.fingerprint(key);
-      return App.tv.normalize({ id: id, title: title, tmdbId: row.tmdbId || null, rating: row.rating, status: row.status, mode: 'Show', notes: row.notes || '',
+      return App.tv.normalize({ id: id, title: title, tmdbId: row.tmdbId || null, rating: row.rating, status: row.status, mode: 'Show', notes: row.notes || '', seasons: row.seasons,
         providerStatus: row.seriesStatus === 'Active' ? 'Imported: Active' : '', inProduction: null });
     });
+  }
+  function addDetails(prior, incoming) {
+    const next = u.clone(prior);
+    incoming.seasons.forEach(function (season) {
+      let target = next.seasons.find(function (s) { return !s.orphaned && ((season.tmdbId && s.tmdbId === season.tmdbId) || s.number === season.number); });
+      if (!target) { next.seasons.push(u.clone(season)); return; }
+      if (!target.notes) target.notes = season.notes;
+      if (target.rating === null) target.rating = season.rating;
+      season.episodes.forEach(function (episode) {
+        let saved = target.episodes.find(function (e) { return !e.orphaned && ((episode.tmdbId && e.tmdbId === episode.tmdbId) || (episode.title && titleKey(e.title) === titleKey(episode.title))); });
+        if (!saved) {
+          saved = target.episodes.find(function (e) { return !e.orphaned && e.number === episode.number; });
+          if (saved && saved.title && episode.title && titleKey(saved.title) !== titleKey(episode.title)) throw new Error('Episode title mismatch in season ' + season.number + ', episode ' + episode.number + '. Review the numbering before importing.');
+        }
+        if (!saved) { target.episodes.push(u.clone(episode)); return; }
+        if (!saved.notes) saved.notes = episode.notes;
+        if (!saved.title) saved.title = episode.title;
+        if (saved.rating === null && episode.rating !== null) { saved.rating = episode.rating; saved.watched = episode.watched; }
+      });
+      target.episodeCount = Math.max(target.episodeCount, target.episodes.length);
+    });
+    return App.tv.normalize(next);
+  }
+  function updateShow(prior, incoming) {
+    const next = addDetails(prior, incoming);
+    if (!next.tmdbId) next.tmdbId = incoming.tmdbId;
+    if (!next.providerStatus) next.providerStatus = incoming.providerStatus;
+    return App.tv.normalize(next);
   }
   function preview(existing, input) {
     const imported = rows(input), keys = new Map(), ids = new Map(), providers = new Map();
@@ -29,12 +57,13 @@
     const entries = imported.map(function (show) {
       const match = ids.get(show.id) || (show.tmdbId && providers.get(show.tmdbId)) || keys.get(titleKey(show.title));
       const link = match && !match.deleted && !match.tmdbId && show.tmdbId;
-      return { show: show, matchId: match?.id || '', action: link ? 'link' : match ? 'skip' : 'add', skip: !!match && !link,
-        reason: link ? 'Link TMDB ID · keep personal data' : match ? (match.deleted ? 'Previously deleted · skipped' : 'Already in library · kept unchanged') : 'Add' };
+      const details = match && !match.deleted && show.seasons.length && u.stableJson(addDetails(match, show)) !== u.stableJson(match);
+      return { show: show, matchId: match?.id || '', action: details ? 'details' : link ? 'link' : match ? 'skip' : 'add', skip: !!match && !link && !details,
+        reason: details ? 'Add missing episode ratings/notes · existing values kept' : link ? 'Link TMDB ID · keep personal data' : match ? (match.deleted ? 'Previously deleted · skipped' : 'Already in library · kept unchanged') : 'Add' };
     });
     const additions = entries.filter(function (e) { return e.action === 'add'; }).map(function (e) { return e.show; });
-    const links = new Map(entries.filter(function (e) { return e.action === 'link'; }).map(function (e) { return [e.matchId, e.show]; }));
-    App.tv.normalizeList(existing.map(function (s) { const incoming = links.get(s.id); return incoming ? App.tv.normalize(Object.assign({}, s, { tmdbId: incoming.tmdbId, providerStatus: s.providerStatus || incoming.providerStatus })) : s; }).concat(additions));
+    const links = new Map(entries.filter(function (e) { return ['link', 'details'].includes(e.action); }).map(function (e) { return [e.matchId, e.show]; }));
+    App.tv.normalizeList(existing.map(function (s) { const incoming = links.get(s.id); return incoming ? updateShow(s, incoming) : s; }).concat(additions));
     return { entries: entries, snapshot: u.stableJson(existing) };
   }
   function apply(existing, input, snapshot, selectedIds) {
@@ -42,8 +71,8 @@
     const result = preview(existing, input), selected = new Set(selectedIds);
     const chosen = result.entries.filter(function (e) { return !e.skip && selected.has(e.show.id); });
     if (!chosen.length) throw new Error('Select at least one show to add or link.');
-    const links = new Map(chosen.filter(function (e) { return e.action === 'link'; }).map(function (e) { return [e.matchId, e.show]; }));
-    const linked = existing.map(function (s) { const incoming = links.get(s.id); return incoming ? App.tv.normalize(Object.assign({}, s, { tmdbId: incoming.tmdbId, providerStatus: s.providerStatus || incoming.providerStatus })) : s; });
+    const links = new Map(chosen.filter(function (e) { return ['link', 'details'].includes(e.action); }).map(function (e) { return [e.matchId, e.show]; }));
+    const linked = existing.map(function (s) { const incoming = links.get(s.id); return incoming ? updateShow(s, incoming) : s; });
     const added = chosen.filter(function (e) { return e.action === 'add'; }).map(function (e) { return e.show; });
     return { shows: App.tv.normalizeList(linked.concat(added)), count: added.length, linked: links.size };
   }

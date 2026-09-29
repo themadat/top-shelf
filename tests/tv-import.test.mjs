@@ -57,3 +57,18 @@ test('bulk import validates before applying, blocks stale previews and respects 
   assert.throws(() => A.stateModel.prepare(data), /Use TV → Import Shows/);
   const before = JSON.stringify(data); importer.preview([], data); assert.equal(JSON.stringify(data), before);
 });
+
+test('episode imports preserve half-points and notes, merge missing details, and keep conflicts', () => {
+  const existing = [A.tv.normalize({id:'show',title:'Example',rating:5,status:'Stopped',seasons:[{number:1,episodes:[{number:1,title:'First',rating:4,notes:'Keep my review'}]}]})];
+  const data = file([row('Example',{seasons:[{number:1,notes:'Season review',episodes:[{number:1,title:'First',rating:9.5,notes:'Imported review'},{number:2,title:'Second',rating:6.5,watched:true,notes:'<script>literal text</script>'}]}]})]);
+  const p=importer.preview(existing,data); assert.equal(p.entries[0].action,'details');
+  const result=importer.apply(existing,data,p.snapshot,[p.entries[0].show.id]).shows[0];
+  assert.equal(result.status,'Stopped');assert.equal(result.rating,5);
+  assert.equal(result.seasons[0].episodes[0].rating,4);assert.equal(result.seasons[0].episodes[0].notes,'Keep my review');
+  assert.equal(result.seasons[0].episodes[1].rating,6.5);assert.equal(result.seasons[0].notes,'Season review');
+  assert.equal(importer.preview([result],data).entries[0].skip,true);
+  const fresh=A.tv.normalize({title:'Example',seasons:[{number:1,loaded:true,episodes:[{number:1,title:'First'},{number:2,title:'Second'}]}]});
+  const refreshed=A.tv.refresh(result,fresh);
+  assert.equal(refreshed.seasons[0].notes,'Season review');assert.equal(refreshed.seasons[0].episodes[1].rating,6.5);assert.equal(refreshed.seasons[0].episodes[1].notes,'<script>literal text</script>');
+  assert.throws(()=>A.tv.normalize({title:'Bad',seasons:[{number:1,episodes:[{number:1,rating:6.25}]}]}),/rating/);
+});

@@ -19,12 +19,17 @@
     }).join('') + '<button type="button" class="button small" ' + attributes + ' data-score="" aria-label="Clear rating">Clear</button>';
   }
   function episodeRating(value) {
-    return '<option value="">— Unrated</option>' + tv.episodeLabels.map(function (label, score) { return label ? '<option value="' + score + '"' + (value === score ? ' selected' : '') + '>' + score + ' · ' + esc(label) + '</option>' : ''; }).join('');
+    return '<option value="">— Unrated</option>' + Array.from({ length: 19 }, function (_, i) {
+      const score = 1 + i / 2, label = tv.episodeLabels[score] || 'Between ' + Math.floor(score) + ' and ' + Math.ceil(score);
+      return '<option value="' + score + '"' + (value === score ? ' selected' : '') + '>' + score + ' · ' + esc(label) + '</option>';
+    }).join('');
   }
   function averages() {
     const a = tv.averages(draft);
     const text = function (label, value) { return label + ': ' + (value.count ? value.value.toFixed(2) + '/10 · ' + value.count + ' rated of ' + value.total + ' saved' : 'unrated'); };
-    $('#tvAverages').textContent = text('Season average', a.seasons) + '  |  ' + text('Episode average', a.episodes);
+    const all = draft.seasons.flatMap(function (s) { return s.episodes; }).filter(function (e) { return e.rating !== null; });
+    const includingSpecials = draft.seasons.some(function (s) { return s.number === 0 && s.episodes.some(function (e) { return e.rating !== null; }); }) && all.length ? '  |  Including specials: ' + (all.reduce(function (n, e) { return n + e.rating; }, 0) / all.length).toFixed(1) + '/10' : '';
+    $('#tvAverages').textContent = text('Season average', a.seasons) + '  |  ' + text('Episode average', a.episodes) + includingSpecials;
   }
   function metadata() {
     $('#tvMetadata').innerHTML = '<p><strong>Series: ' + esc(tv.seriesStatus(draft)) + '</strong> · ' + esc(draft.firstAirDate || 'Unknown first air date') + (draft.lastAirDate ? ' – ' + esc(draft.lastAirDate) : '') + '</p>'
@@ -38,13 +43,14 @@
   function seasonContent(s) {
     const key = seasonKey(s), count = pages.get(key) || 50;
     let html = '<fieldset class="tv-rating-field"><legend>Season rating · 1–10</legend><div class="tv-rating-buttons">' + ratingButtons(s.rating, false, 'data-season-rating="' + key + '"') + '</div></fieldset>';
+    html += '<label class="tv-notes-label">Season notes<textarea data-season-notes="' + key + '" maxlength="20000">' + esc(s.notes) + '</textarea></label>';
     html += '<div class="tv-season-tools">' + (draft.tmdbId && !s.orphaned ? '<button type="button" class="button small" data-load-season="' + key + '">' + (s.loaded ? 'Refresh episodes' : 'Load episodes') + '</button>' : '')
       + '<small>' + (s.loaded ? 'Episode details saved for offline use.' : 'Episode details have not been fetched.') + '</small></div>';
     if (s.episodes.length) {
       html += '<div class="tv-table-scroll"><table class="tv-episodes"><thead><tr><th>Episode</th><th>Air date</th><th>Watched</th><th>Rating · 1–10</th></tr></thead><tbody>';
       html += s.episodes.slice(0, count).map(function (e) {
         const attr = ' data-season="' + key + '" data-episode="' + episodeKey(e) + '"';
-        return '<tr><td><strong>' + e.number + '</strong> · ' + esc(e.title || 'Untitled episode') + (e.orphaned ? '<small class="tv-orphan">Retained · missing from latest response</small>' : '') + '</td><td>' + esc(e.airDate || '—') + '</td><td><input type="checkbox" data-episode-watched' + attr + (e.watched ? ' checked' : '') + ' aria-label="Watched episode ' + e.number + '"></td><td><select data-episode-rating' + attr + ' aria-label="Rating for episode ' + e.number + '">' + episodeRating(e.rating) + '</select></td></tr>';
+        return '<tr><td><strong>' + e.number + '</strong> · ' + esc(e.title || 'Untitled episode') + (e.orphaned ? '<small class="tv-orphan">Retained · missing from latest response</small>' : '') + '<details class="tv-episode-notes"><summary>Episode notes' + (e.notes ? ' · saved' : '') + '</summary><label>Notes<textarea maxlength="20000" data-episode-notes' + attr + '>' + esc(e.notes) + '</textarea></label></details></td><td>' + esc(e.airDate || '—') + '</td><td><input type="checkbox" data-episode-watched' + attr + (e.watched ? ' checked' : '') + ' aria-label="Watched episode ' + e.number + '"></td><td><select data-episode-rating' + attr + ' aria-label="Rating for episode ' + e.number + '">' + episodeRating(e.rating) + '</select></td></tr>';
       }).join('') + '</tbody></table></div>';
       if (count < s.episodes.length) html += '<button type="button" class="button small" data-more-episodes="' + key + '">Show next 50 episodes (' + count + '/' + s.episodes.length + ')</button>';
     }
@@ -54,7 +60,9 @@
   function renderSeasons() {
     $('#tvSeasons').innerHTML = draft.seasons.map(function (s) {
       const key = seasonKey(s);
-      return '<details class="tv-season" data-season-key="' + key + '"' + (openSeasons.has(key) ? ' open' : '') + '><summary>' + esc(s.number === 0 ? 'Specials' : 'Season ' + s.number) + (s.title && s.title !== 'Season ' + s.number ? ' · ' + esc(s.title) : '') + ' <small>' + s.episodeCount + ' episodes · ' + (s.rating === null ? 'Unrated' : s.rating + '/10') + (s.orphaned ? ' · Retained: missing from latest response' : '') + '</small></summary><div class="tv-season-body">' + (openSeasons.has(key) ? seasonContent(s) : '') + '</div></details>';
+      const rated = s.episodes.filter(function (e) { return e.rating !== null; });
+      const average = rated.length ? ' · Episode average ' + (rated.reduce(function (n, e) { return n + e.rating; }, 0) / rated.length).toFixed(1) + '/10' : '';
+      return '<details class="tv-season" data-season-key="' + key + '"' + (openSeasons.has(key) ? ' open' : '') + '><summary>' + esc(s.number === 0 ? 'Specials' : 'Season ' + s.number) + (s.title && s.title !== 'Season ' + s.number ? ' · ' + esc(s.title) : '') + ' <small>' + s.episodeCount + ' episodes · ' + (s.rating === null ? 'Unrated' : s.rating + '/10') + average + (s.orphaned ? ' · Retained: missing from latest response' : '') + '</small></summary><div class="tv-season-body">' + (openSeasons.has(key) ? seasonContent(s) : '') + '</div></details>';
     }).join('') || '<p>No seasons saved. Fetch show details or add a season manually.</p>';
   }
   function readFields() {
@@ -205,8 +213,11 @@
       }
     });
     $('#tvSeasons').addEventListener('change', function (event) {
-      const el = event.target, s = seasonByKey(el.dataset.season); if (!s) return;
+      const el = event.target;
+      if (el.dataset.seasonNotes) { const season = seasonByKey(el.dataset.seasonNotes); if (season) season.notes = el.value; return; }
+      const s = seasonByKey(el.dataset.season); if (!s) return;
       const e = s.episodes.find(function (e) { return episodeKey(e) === el.dataset.episode; }); if (!e) return;
+      if (el.hasAttribute('data-episode-notes')) e.notes = el.value;
       if (el.hasAttribute('data-episode-watched')) e.watched = el.checked;
       if (el.hasAttribute('data-episode-rating')) { e.rating = el.value === '' ? null : Number(el.value); if (e.rating !== null) { e.watched = e.rating > 1; el.closest('tr').querySelector('input').checked = e.watched; } }
       averages();

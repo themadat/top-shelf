@@ -116,7 +116,7 @@
         selectedDocumentId: documents[0] ? documents[0].id : "",
         selectedShelf: config.shelves[0].id,
         movieSorts: {},
-        tv: { sort: "title", direction: "asc", widths: {}, filter: "all", query: "" },
+        tv: { view: "list", sort: "title", direction: "asc", widths: {}, filter: "all", query: "" },
         movieColumnWidths: { all: {}, wishlist: {}, watched: {} },
         pivotColumnWidths: {}, pivotLocalSettings: {}, pivotSubsectionSorts: {},
         search: "",
@@ -485,6 +485,7 @@
         search: u.cleanLine(sourceUi.search, 200),
         movieColumnWidths: movieWidths(sourceUi.movieColumnWidths),
         tv: {
+          view: sourceUi.tv?.view === "filters" ? "filters" : "list",
           sort: ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"].includes(sourceUi.tv?.sort) ? sourceUi.tv.sort : "title",
           direction: sourceUi.tv?.direction === "desc" ? "desc" : "asc",
           widths: columnWidths(sourceUi.tv?.widths, ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"], 2000),

@@ -8,7 +8,7 @@
   function counts() {
     const count = selected().length;
     $('#tvImportApply').disabled = !count;
-    $('#tvImportSummary').textContent = count + ' shows selected to add or link · ' + preview.entries.filter(function (e) { return e.skip; }).length + ' existing/deleted shows skipped. Existing ratings, statuses, notes, and detailed scores stay unchanged.';
+    $('#tvImportSummary').textContent = count + ' shows selected to add or update · ' + preview.entries.filter(function (e) { return e.skip; }).length + ' existing/deleted shows skipped. Existing values stay unchanged; missing episode ratings and notes are filled.';
   }
   async function read(file) {
     const sequence = ++generation; input = null; preview = null;
@@ -21,7 +21,7 @@
       const result = App.tvImport.preview(state(), parsed); input = parsed; preview = result;
       $('#tvImportRows').innerHTML = result.entries.map(function (entry) {
         const s = entry.show;
-        return '<tr><td><input type="checkbox" value="' + s.id + '" aria-label="Import ' + esc(s.title) + '"' + (entry.skip ? ' disabled' : ' checked') + '></td><td>' + esc(s.title) + '</td><td>' + (s.rating === null ? 'Unrated' : s.rating + ' · ' + esc(App.tv.showLabels[s.rating])) + '</td><td>' + esc(s.status) + '</td><td>' + esc(App.tv.seriesStatus(s)) + '</td><td class="tv-import-notes">' + esc(s.notes) + '</td><td>' + entry.reason + '</td></tr>';
+        return '<tr><td><input type="checkbox" value="' + s.id + '" aria-label="Import ' + esc(s.title) + '"' + (entry.skip ? ' disabled' : ' checked') + '></td><td>' + esc(s.title) + '</td><td>' + (s.rating === null ? 'Unrated' : s.rating + ' · ' + esc(App.tv.showLabels[s.rating])) + '</td><td>' + esc(s.status) + '</td><td>' + esc(App.tv.seriesStatus(s)) + '</td><td class="tv-import-notes">' + esc(s.notes) + (s.seasons.length ? '<details><summary>' + s.seasons.reduce(function (n, season) { return n + season.episodes.length; }, 0) + ' episodes · review details</summary>' + s.seasons.map(function (season) { return '<p><strong>' + esc(season.title || 'Season ' + season.number) + '</strong><br>' + esc(season.notes) + '</p>' + season.episodes.map(function (e) { return '<p><strong>' + e.number + ' · ' + esc(e.title) + ' · ' + (e.rating ?? 'Unrated') + '</strong><br>' + esc(e.notes) + '</p>'; }).join(''); }).join('') + '</details>' : '') + '</td><td>' + entry.reason + '</td></tr>';
       }).join('');
       counts();
     } catch (error) { $('#tvImportError').textContent = error.message; }
@@ -38,7 +38,7 @@
         throw new Error('Browser storage could not save the imported TV IDs. The in-memory change was rolled back; your saved library is unchanged.');
       }
       App.components.closeDialog('#tvImportDialog');
-      App.components.toast('Added ' + result.count + ' shows and linked ' + result.linked + ' existing shows. Use Refresh Show Data to fetch TMDB columns.', { title: 'TV import complete', kind: 'success' });
+      App.components.toast('Added ' + result.count + ' shows and updated ' + result.linked + ' existing shows. Use Refresh Show Data to fetch TMDB columns.', { title: 'TV import complete', kind: 'success' });
     } catch (error) { $('#tvImportError').textContent = error.message; $('#tvImportApply').disabled = true; }
   }
   function init() {

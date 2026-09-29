@@ -10,9 +10,9 @@
     'the wire': 'Season 3: The Politics\nSeason 1: The Corner\nSeason 2: The Docks\nSeason 4: The Schools\nSeason 5: The Media'
   };
   function integer(value, min, max) { return Number.isInteger(value) && value >= min && value <= max; }
-  function rating(value, show) {
+  function rating(value, show, halfSteps) {
     if (value === null || value === undefined || value === '') return null;
-    if (!integer(value, show ? 0 : 1, show ? 5 : 10)) throw new Error('Invalid TV rating. Use a whole number on the selected scale.');
+    if (!(halfSteps ? typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 10 && Number.isInteger(value * 2) : integer(value, show ? 0 : 1, show ? 5 : 10))) throw new Error('Invalid TV rating. Episodes accept half-points from 1–10; other ratings use whole numbers on their scale.');
     return value;
   }
   function providerId(value) { return integer(value, 1, Number.MAX_SAFE_INTEGER) ? value : null; }
@@ -35,7 +35,7 @@
   function average(value) { return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 10 ? value : null; }
   function episode(input) {
     const s = u.plainObject(input);
-    return { tmdbId: providerId(s.tmdbId), number: number(s.number, 1), title: u.cleanLine(s.title, 300), airDate: date(s.airDate), rating: rating(s.rating), watched: s.watched === true, orphaned: s.orphaned === true };
+    return { tmdbId: providerId(s.tmdbId), number: number(s.number, 1), title: u.cleanLine(s.title, 300), airDate: date(s.airDate), rating: rating(s.rating, false, true), notes: u.cleanText(s.notes, 20000), watched: s.watched === true, orphaned: s.orphaned === true };
   }
   function season(input) {
     const s = u.plainObject(input);
@@ -43,13 +43,36 @@
     unique(episodes, function (e) { return e.tmdbId; }, 'episode ID');
     unique(episodes.filter(function (e) { return !e.orphaned; }), function (e) { return e.number; }, 'episode number');
     return { tmdbId: providerId(s.tmdbId), number: number(s.number, 0), title: u.cleanLine(s.title, 300), airDate: date(s.airDate), episodeCount: integer(s.episodeCount, 0, 100000) ? s.episodeCount : episodes.length,
-      rating: rating(s.rating), loaded: s.loaded === true, orphaned: s.orphaned === true, fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', episodes: episodes };
+      rating: rating(s.rating), notes: u.cleanText(s.notes, 20000), loaded: s.loaded === true, orphaned: s.orphaned === true, fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', episodes: episodes };
+  }
+  const sherlockEpisodes = [
+    [1, 1, 'A Study in Pink', 6], [1, 2, 'The Blind Banker', 6], [1, 3, 'The Great Game', 8],
+    [2, 1, 'A Scandal in Belgravia', 10], [2, 2, 'The Hounds of Baskerville', 4], [2, 3, 'The Reichenbach Fall', 9],
+    [3, 1, 'The Empty Hearse', 6], [3, 2, 'The Sign of Three', 10], [3, 3, 'His Last Vow', 9],
+    [0, 1, 'The Abominable Bride', 8],
+    [4, 1, 'The Six Thatchers', 9], [4, 2, 'The Lying Detective', 6], [4, 3, 'The Final Problem', 6]
+  ];
+  function addSherlockRatings(seasons) {
+    sherlockEpisodes.forEach(function (row) {
+      let target = seasons.find(function (item) { return item.number === row[0] && !item.orphaned; });
+      if (!target) { target = season({ number: row[0], title: row[0] ? 'Season ' + row[0] : 'Specials' }); seasons.push(target); }
+      let item = target.episodes.find(function (entry) { return entry.number === row[1] && !entry.orphaned; });
+      if (!item) { item = episode({ number: row[1], title: row[2], rating: row[3], watched: true }); target.episodes.push(item); }
+      else {
+        if (!item.title) item.title = row[2];
+        if (item.rating === null) { item.rating = row[3]; item.watched = true; }
+      }
+      target.episodeCount = Math.max(target.episodeCount, target.episodes.length);
+    });
+    seasons.sort(function (a, b) { return a.number - b.number; });
   }
   function normalize(input) {
     const s = u.plainObject(input), id = u.cleanLine(s.id, 100);
     if (id && !/^[a-z0-9_-]+$/i.test(id)) throw new Error('Invalid TV record ID.');
     if (s.deleted) return { id: id || u.uid('tv'), tmdbId: providerId(s.tmdbId), deleted: true };
     const seasons = collection(s.seasons, 500, 'Seasons').map(season);
+    const sherlockRatingsAdded = s.sherlockRatingsAdded === true || u.cleanLine(s.title, 300).toLowerCase() === 'sherlock';
+    if (sherlockRatingsAdded && s.sherlockRatingsAdded !== true) addSherlockRatings(seasons);
     unique(seasons, function (s) { return s.tmdbId; }, 'season ID');
     unique(seasons.filter(function (s) { return !s.orphaned; }), function (s) { return s.number; }, 'season number');
     if (seasons.reduce(function (n, s) { return n + s.episodes.length; }, 0) > 30000) throw new Error('A show may contain up to 30,000 loaded episodes.');
@@ -59,7 +82,7 @@
       numberOfSeasons: count(s.numberOfSeasons), numberOfEpisodes: count(s.numberOfEpisodes), voteAverage: average(s.voteAverage),
       providerStatus: u.cleanLine(s.providerStatus, 100), inProduction: typeof s.inProduction === 'boolean' ? s.inProduction : null,
       fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', status: statuses.includes(s.status) ? s.status : 'Watching', mode: modes.includes(s.mode) ? s.mode : 'Show',
-      rating: rating(s.rating, true), notes: u.cleanText(s.notes, 20000), seasonRanking: u.cleanText(s.seasonRanking === undefined ? rankingSeeds[u.cleanLine(s.title, 300).toLowerCase()] : s.seasonRanking, 20000), lastWatched: u.cleanLine(s.lastWatched, 100), seasons: seasons };
+      rating: rating(s.rating, true), notes: u.cleanText(s.notes, 20000), seasonRanking: u.cleanText(s.seasonRanking === undefined ? rankingSeeds[u.cleanLine(s.title, 300).toLowerCase()] : s.seasonRanking, 20000), lastWatched: u.cleanLine(s.lastWatched, 100), sherlockRatingsAdded: sherlockRatingsAdded, seasons: seasons };
   }
   function normalizeList(value) {
     const source = collection(value, App.config.controls.maxTvShows, 'TV shows');
@@ -109,13 +132,13 @@
     return result.sort(function (a, b) { return a.number - b.number; });
   }
   function mergeSeason(prior, fresh) {
-    return season(Object.assign({}, fresh, { rating: prior.rating, loaded: fresh.loaded || prior.loaded,
+    return season(Object.assign({}, fresh, { rating: prior.rating, notes: prior.notes, loaded: fresh.loaded || prior.loaded,
       fetchedAt: fresh.loaded ? fresh.fetchedAt : prior.fetchedAt,
-      episodes: fresh.loaded ? mergeEntries(prior.episodes, fresh.episodes, function (a, b) { return Object.assign({}, b, { rating: a.rating, watched: a.watched }); }) : prior.episodes }));
+      episodes: fresh.loaded ? mergeEntries(prior.episodes, fresh.episodes, function (a, b) { return Object.assign({}, b, { rating: a.rating, notes: a.notes, watched: a.watched }); }) : prior.episodes }));
   }
   function refresh(prior, fresh) {
     if (prior.tmdbId && prior.tmdbId !== fresh.tmdbId) throw new Error('This response belongs to a different TV show.');
-    return normalize(Object.assign({}, fresh, { id: prior.id, status: prior.status, mode: prior.mode, rating: prior.rating, notes: prior.notes, seasonRanking: prior.seasonRanking, lastWatched: prior.lastWatched, seasons: mergeEntries(prior.seasons, fresh.seasons, mergeSeason) }));
+    return normalize(Object.assign({}, fresh, { id: prior.id, status: prior.status, mode: prior.mode, rating: prior.rating, notes: prior.notes, seasonRanking: prior.seasonRanking, sherlockRatingsAdded: prior.sherlockRatingsAdded, lastWatched: prior.lastWatched, seasons: mergeEntries(prior.seasons, fresh.seasons, mergeSeason) }));
   }
   function content(show) {
     const copy = u.clone(show); delete copy.fetchedAt;

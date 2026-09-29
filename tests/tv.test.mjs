@@ -171,3 +171,17 @@ test('season rankings seed exact titles once, remain editable, and survive refre
   const state = model.createDefaultState(); state.workspace.tvShows = [custom];
   assert.equal(model.normalize(JSON.parse(JSON.stringify(state))).workspace.tvShows[0].seasonRanking, custom.seasonRanking);
 });
+
+
+test('Sherlock supplied episode ratings seed once, preserve existing scores, and keep specials separate', () => {
+  const s = show({ title: 'Sherlock' });
+  assert.equal(s.seasons.flatMap(x => x.episodes).length, 13);
+  assert.deepEqual(Array.from(s.seasons, x => (x.episodes.reduce((n,e)=>n+e.rating,0)/x.episodes.length).toFixed(1)), ['8.0','6.7','7.7','8.3','7.0']);
+  assert.equal(tv.averages(s).episodes.count, 12);
+  s.seasons[1].episodes[0].rating = null;
+  assert.equal(tv.normalize(s).seasons[1].episodes[0].rating, null);
+  const existing = show({ title: 'Sherlock', seasons: [{ number: 1, episodes: [{ number: 1, rating: 3 }] }] });
+  assert.equal(existing.seasons[1].episodes[0].rating, 3);
+  assert.equal(tv.normalize({ ...s, deleted: true }).seasons, undefined);
+  assert.equal(show({ title: 'Sherlock Holmes' }).seasons.length, 0);
+});

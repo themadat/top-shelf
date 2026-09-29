@@ -1055,7 +1055,7 @@
     bindShelfNavigation();
     App.moviesUI.init();
     App.tvEditor.init();
-    App.tvUI.init();
+    await App.tvUI.init();
     App.tvImportUI.init();
     App.subgenresUI.init();
     App.pivotsUI.init();
