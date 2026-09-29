@@ -42,3 +42,5 @@ Episode and season notes are plain text, capped at 20,000 characters each, escap
 TV List retains the collapsible metadata Filters; TV Pivots is a separate view with Type, Genres, and Networks cards. Pivots include all saved shows, independent of list filters, count each show once per group, and average only nonblank personal show ratings (0 counts). Adjusted scores reuse the movie pivot formula with baseline 3 and weight 5, using rated-show count. Card searches/minimums/sorts are session-local.
 
 TV pivot column widths persist per card and column in local TV preferences, independently of movie pivots. Dragging or arrow keys resize only the selected pivot column; double-click/Enter fits visible values. Wide cards retain horizontal scrolling on small screens.
+
+The TV editor opens in compact episode mode when all saved episode ratings are present and known season/episode counts are covered. Compact mode opens saved seasons and collapses season-management controls; a view toggle remains available. Episode tables show title, rating and editable notes. Air dates and watched flags remain stored even though their columns are hidden.

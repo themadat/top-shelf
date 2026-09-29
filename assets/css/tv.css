@@ -112,3 +112,20 @@
 #tvPivotCards thead th { position: sticky; overflow: visible; padding-right: 7px; }
 #tvPivotCards tbody th, #tvPivotCards tbody td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #tvPivotCards .pivot-resizer { right: 0; }
+
+.tv-fields input, .tv-fields select { height: 2.6rem; min-height: 2.6rem; box-sizing: border-box; }
+.tv-episodes { table-layout: fixed; min-width: 580px; }
+.tv-episodes th:first-child { width: 34%; }
+.tv-episodes th:nth-child(2) { width: 95px; }
+.tv-episodes td { vertical-align: top; }
+.tv-episode-note-input { display: block; width: 100%; min-height: 1.8rem; height: 1.8rem; padding: .2rem .35rem; font-size: .8rem; line-height: 1.3; resize: vertical; }
+.tv-episode-note-input:focus { height: 8rem; }
+.tv-episode-score { display: inline-flex; align-items: center; position: relative; min-width: 2.4rem; height: 1.8rem; }
+.tv-episode-score select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.tv-episode-score:focus-within { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+.tv-episode-score .movie-score { padding: .12rem .35rem; }
+.tv-compact-episodes .tv-season-body { padding: .2rem; }
+.tv-compact-episodes .tv-season > summary { padding: .3rem .5rem; font-size: .85rem; }
+.tv-compact-episodes .tv-episodes { margin: .15rem 0; font-size: .8rem; }
+.tv-compact-episodes .tv-episodes td, .tv-compact-episodes .tv-episodes th { padding: .12rem .3rem; }
+.tv-season-edit-tools > summary { padding: .25rem; font-size: .75rem; color: var(--muted); cursor: pointer; }
