@@ -45,4 +45,4 @@ TV pivot column widths persist per card and column in local TV preferences, inde
 
 The TV editor opens in compact episode mode when all saved episode ratings are present and known season/episode counts are covered. Compact mode opens saved seasons and collapses season-management controls; a view toggle remains available. Episode tables show title, rating and editable notes. Air dates and watched flags remain stored even though their columns are hidden.
 
-Episode column widths are shared across seasons and saved locally in TV preferences. Compact mode collapses show metadata/rankings/notes under a disclosure while keeping episode notes visible.
+Episode column widths are shared across seasons and saved locally in TV preferences. Show metadata/rankings/notes start collapsed in both editor views. Episode notes remain visible, fill the width left after Episode and #, and grow to fit their text after editing or resizing. Resizing Notes adjusts the Episode width; only Episode and # widths need persistence.

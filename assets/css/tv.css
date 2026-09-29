@@ -143,3 +143,20 @@
 .tv-episodes .pivot-resizer { right: 0; }
 .tv-episode-note-input { height: 4rem; min-height: 4rem; }
 .tv-episode-note-input:focus { height: 8rem; }
+
+#tvDialog { width: 90vw; height: 90dvh; max-width: 90vw; max-height: 90dvh; margin: auto; }
+#tvDialog .dialog-header, #tvDialog .dialog-footer { padding: .5rem .75rem; }
+#tvDialog .dialog-body { padding: .5rem .75rem; }
+#tvDialog .tv-fields { margin: .3rem 0; gap: .4rem; }
+#tvDialog .tv-fields label { gap: .15rem; }
+#tvDialog .tv-rating-field { margin: .3rem 0; padding: .3rem; }
+#tvDialog .tv-rating-buttons { gap: .2rem; }
+#tvDialog #tvShowRating .tv-rating-button { padding: .2rem; }
+#tvDialog .tv-averages, #tvDialog .setting-note { margin: .3rem 0; }
+#tvDialog .tv-lookup-row { padding: .3rem 0; }
+#tvDialog .tv-notes-label { margin: .4rem 0; }
+.tv-episodes-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin: .4rem 0; }
+.tv-episodes-heading h3 { margin: 0; }
+.tv-episodes-heading .button { flex: 0 0 auto; }
+#tvDialog .tv-episode-note-input, #tvDialog .tv-episode-note-input:focus { min-height: 1.8rem; height: auto; overflow-y: hidden; resize: none; }
+#tvDialog .tv-episodes td:first-child, #tvDialog .tv-episodes td:nth-child(2) { vertical-align: middle; }
