@@ -485,9 +485,9 @@
         search: u.cleanLine(sourceUi.search, 200),
         movieColumnWidths: movieWidths(sourceUi.movieColumnWidths),
         tv: {
-          sort: ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "mode", "notes"].includes(sourceUi.tv?.sort) ? sourceUi.tv.sort : "title",
+          sort: ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"].includes(sourceUi.tv?.sort) ? sourceUi.tv.sort : "title",
           direction: sourceUi.tv?.direction === "desc" ? "desc" : "asc",
-          widths: columnWidths(sourceUi.tv?.widths, ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "mode", "notes"], 2000),
+          widths: columnWidths(sourceUi.tv?.widths, ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"], 2000),
           filter: App.tv.statuses.includes(sourceUi.tv?.filter) ? sourceUi.tv.filter : "all", query: u.cleanLine(sourceUi.tv?.query, 200)
         },
         pivotColumnWidths: columnWidths(sourceUi.pivotColumnWidths, ['ratings','years','genres','other','collections','actors','directors','productionCompanies'], 1200),

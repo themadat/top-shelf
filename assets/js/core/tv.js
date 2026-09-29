@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const App = window.LocalApp, u = App.utils;
-  const statuses = ['Watching', 'Caught Up', 'Completed', 'Stopped'];
+  const statuses = ['Want to Watch', 'Watching', 'Caught Up', 'Completed', 'Stopped'];
   const modes = ['Show', 'Season', 'Episode'];
   const showLabels = ['Terrible', 'Below Average', 'Average', 'Above Average', 'Elite', 'Legendary'];
   const episodeLabels = ['', 'Did not Finish', 'Wtf did I just watch', 'Horrible', 'Bad', 'Meh', 'Average', 'Good', 'Great', 'Phenomenal', 'Best of the Best'];

@@ -2,16 +2,33 @@
   "use strict";
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['rating', 'Rating', 75], ['title', 'Show', 250], ['status', 'My Status', 140], ['providerStatus', 'Show Status', 140], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'S', 65], ['numberOfEpisodes', 'E', 65], ['voteAverage', 'Ave', 75], ['networks', 'Networks', 160], ['mode', 'Rate By', 110], ['notes', 'Notes', 140]];
+  const columns = [['rating', 'Rating', 105], ['title', 'Show', 250], ['status', 'My Status', 140], ['providerStatus', 'Show Status', 140], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'S', 65], ['numberOfEpisodes', 'E', 65], ['voteAverage', 'Ave', 75], ['networks', 'Networks', 160], ['notes', 'Notes', 140]];
   let batch = null, resizing = false, pivot = null;
-  function tone(value) { return ({ Watching: 'blue', 'Caught Up': 'green', Completed: 'purple', Stopped: 'red', Active: 'green', Ended: 'purple', Canceled: 'red', Upcoming: 'blue' })[value] || 'muted'; }
-  function scoreTone(value, max) { return value === null ? 'muted' : value / max >= .8 ? 'purple' : value / max >= .6 ? 'green' : value / max >= .4 ? 'gold' : 'red'; }
+  function tone(value) { return ({ 'Want to Watch': 'gold', Watching: 'blue', 'Caught Up': 'green', Completed: 'purple', Stopped: 'red', Active: 'green', Ended: 'purple', Canceled: 'red', Upcoming: 'blue' })[value] || 'muted'; }
+  function balanceFilters() {
+    const grid = $('#tvPivots'), sections = Array.from(grid.children), available = grid.clientWidth - 32;
+    if (!grid.clientWidth || grid.clientWidth < 680) { grid.style.gridTemplateColumns = ''; return; }
+    const widths = sections.map(function (section) { return Array.from(section.querySelectorAll('button')).map(function (button) { return button.offsetWidth; }); });
+    const rowsAt = function (items, width) { let rows = 1, used = 0; items.forEach(function (w) { if (used && used + 6 + w > width) { rows++; used = w; } else used += (used ? 6 : 0) + w; }); return rows; };
+    let sizes;
+    for (let rows = 1; rows <= Math.max(1, ...widths.map(function (items) { return items.length; })); rows++) {
+      sizes = widths.map(function (items) {
+        let low = Math.max(110, ...items), high = Math.max(low, items.reduce(function (a, b) { return a + b + 6; }, 0));
+        while (high - low > 1) { const mid = Math.floor((low + high) / 2); if (rowsAt(items, mid) <= rows) high = mid; else low = mid + 1; }
+        return high;
+      });
+      if (sizes.reduce(function (a, b) { return a + b; }, 0) <= available) break;
+    }
+    const extra = Math.max(0, available - sizes.reduce(function (a, b) { return a + b; }, 0)) / 3;
+    grid.style.gridTemplateColumns = sizes.map(function (size) { return (size + extra) + 'px'; }).join(' ');
+  }
   function renderPivots(shows) {
     $('#tvPivots').innerHTML = ['type', 'genres', 'networks'].map(function (key) {
       const groups = new Map();
       shows.forEach(function (s) { const values = key === 'type' ? [s.type] : s[key]; new Set(values.filter(Boolean)).forEach(function (v) { groups.set(v, (groups.get(v) || 0) + 1); }); });
-      return '<section><h3>' + ({ type: 'Type', genres: 'Genres', networks: 'Networks' })[key] + '</h3>' + Array.from(groups).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }).map(function (entry) { return '<button type="button" class="button small" data-tv-pivot="' + key + '" data-value="' + esc(entry[0]) + '" aria-pressed="' + !!(pivot && pivot.key === key && pivot.value === entry[0]) + '">' + esc(entry[0]) + ' <small>' + entry[1] + '</small></button>'; }).join('') + '</section>';
+      return '<section><h3>' + ({ type: 'Type', genres: 'Genres', networks: 'Networks' })[key] + '</h3><div class="tv-filter-pills">' + Array.from(groups).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }).map(function (entry) { return '<button type="button" class="button small" data-tv-pivot="' + key + '" data-value="' + esc(entry[0]) + '" aria-pressed="' + !!(pivot && pivot.key === key && pivot.value === entry[0]) + '">' + esc(entry[0]) + ' <small>' + entry[1] + '</small></button>'; }).join('') + '</div></section>';
     }).join('');
+    requestAnimationFrame(balanceFilters);
   }
   function state() { return App.storage.getState(); }
   function saved() { return state().workspace.tvShows.filter(function (s) { return !s.deleted; }); }
@@ -30,9 +47,10 @@
     const rows = shows.filter(function (s) { return (p.filter === 'all' || s.status === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
     rows.sort(function (a, b) {
       const av = value(a, p.sort), bv = value(b, p.sort);
-      if (av === null || bv === null) return av === bv ? a.title.localeCompare(b.title) : av === null ? 1 : -1;
+      const tie = function () { return (p.sort === 'rating' ? 0 : (b.rating ?? -1) - (a.rating ?? -1)) || a.title.localeCompare(b.title); };
+      if (av === null || bv === null) return av === bv ? tie() : av === null ? 1 : -1;
       const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { numeric: true });
-      return cmp * (p.direction === 'asc' ? 1 : -1) || a.title.localeCompare(b.title);
+      return cmp * (p.direction === 'asc' ? 1 : -1) || tie();
     });
     renderPivots(shows);
     const widths = columns.map(function (c) { return p.widths[c[0]] || c[2]; });
@@ -43,11 +61,15 @@
     }).join('') + '</tr>';
     $('#tvTable tbody').innerHTML = rows.map(function (s) {
       const labels = '<option value="">—</option>' + tv.showLabels.map(function (label, i) { return '<option value="' + i + '"' + (s.rating === i ? ' selected' : '') + '>' + i + ' · ' + esc(label) + '</option>'; }).join('');
-      const avg = tv.averages(s), detail = [avg.seasons.count ? 'S ' + avg.seasons.value.toFixed(1) + '/10 (' + avg.seasons.count + ')' : '', avg.episodes.count ? 'E ' + avg.episodes.value.toFixed(1) + '/10 (' + avg.episodes.count + ')' : ''].filter(Boolean).join(' · ');
-      return '<tr data-tv-id="' + s.id + '"><td><span class="tv-rating-select tv-tone-' + scoreTone(s.rating, 5) + '"><span aria-hidden="true">' + (s.rating ?? '—') + '</span><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></span></td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button><small class="tv-table-averages" title="Season and episode averages with rated counts">' + esc(detail) + '</small></td>'
+      const avg = tv.averages(s);
+      const seasonRated = s.seasons.some(function (season) { return season.rating !== null; }) || !!s.seasonRanking.trim();
+      const episodeRated = s.seasons.some(function (season) { return season.episodes.some(function (episode) { return episode.rating !== null; }); });
+      const indicators = (seasonRated ? '<span title="Season ratings or ranking saved" aria-label="Season ratings or ranking saved">S</span>' : '') + (episodeRated ? '<span title="Episode ratings saved" aria-label="Episode ratings saved">E</span>' : '');
+      const detail = [avg.seasons.count ? 'Seasons: ' + avg.seasons.value.toFixed(1) + '/10' : '', avg.episodes.count ? 'Episodes: ' + avg.episodes.value.toFixed(1) + '/10' : '', s.seasonRanking.trim() ? 'Season ranking saved' : ''].filter(Boolean).join(' · ');
+      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (s.rating === null ? '' : 'movie-score') + '" style="' + (s.rating === null ? '' : 'background:' + App.movies.color(s.rating, false)) + '" aria-hidden="true">' + (s.rating ?? '—') + '</span><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td>'
         + '<td><select class="tv-tone-' + tone(s.status) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td>'
-        + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes', 'voteAverage', 'networks'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'voteAverage' ? scoreTone(s.voteAverage, 10) : key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + esc(cell ?? '—') + '</td>'; }).join('')
-        + '<td><select data-tv-edit="mode" aria-label="Rate by for ' + esc(s.title) + '">' + options(tv.modes, s.mode) + '</select></td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
+        + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes', 'voteAverage', 'networks'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + (key === 'voteAverage' && s.voteAverage !== null ? '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '">' + cell + '</span>' : esc(cell ?? '—')) + '</td>'; }).join('')
+        + '<td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
     }).join('');
     $('#tvCount').textContent = rows.length + ' / ' + shows.length;
     $('#tvEmpty').hidden = rows.length > 0; $('#tvEmpty').textContent = shows.length ? 'No shows match this filter.' : 'Add a show to start your TV library.';
@@ -111,6 +133,9 @@
   }
   function init() {
     clearLegacyNotes();
+    let lastFilterWidth = 0;
+    new ResizeObserver(function (entries) { const width = entries[0].contentRect.width; if (width !== lastFilterWidth) { lastFilterWidth = width; requestAnimationFrame(balanceFilters); } }).observe($('#tvPivots'));
+    $('.tv-pivots').addEventListener('toggle', balanceFilters);
     $('#tvPivots').addEventListener('click', function (event) { const button = event.target.closest('[data-tv-pivot]'); if (!button) return; const next = { key: button.dataset.tvPivot, value: button.dataset.value }; pivot = pivot && pivot.key === next.key && pivot.value === next.value ? null : next; render(); });
     $('#tvAdd').addEventListener('click', function () { App.tvEditor.open(null, this); });
     $('#tvFilter').addEventListener('change', function () { preference({ filter: this.value }); });

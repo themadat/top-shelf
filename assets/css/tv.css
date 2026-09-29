@@ -23,7 +23,7 @@
 .tv-dialog .dialog-body { min-height: 0; overflow-y: auto; }
 .tv-dialog .dialog-footer { flex-wrap: wrap; }
 #tvEditorStatus { flex: 1 1 220px; font-size: .85rem; overflow-wrap: anywhere; }
-.tv-fields { display: grid; grid-template-columns: minmax(200px, 2fr) 1fr 1fr 1.2fr; gap: .7rem; margin: 1rem 0; }
+.tv-fields { display: grid; grid-template-columns: minmax(200px, 2fr) 1fr 1.2fr; gap: .7rem; margin: 1rem 0; }
 .tv-fields label, .tv-lookup-row label, .tv-notes-label, .tv-manual-row label { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; }
 .tv-fields input, .tv-fields select, .tv-notes-label textarea { width: 100%; min-width: 0; }
 .tv-notes-label { margin: .8rem 0; }
@@ -83,8 +83,20 @@
 #tvTable .tv-tone-muted { color: var(--muted); }
 .tv-pivots { margin: .5rem 0; }
 #tvPivots { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-#tvPivots button { margin: .2rem; }
+#tvPivots button { margin: 0; white-space: nowrap; }
 #tvPivots button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-strong); }
 
 .tv-search { position: relative; display: flex; align-items: center; }
 .tv-search kbd { position: absolute; right: .65rem; color: var(--muted); font: inherit; font-size: .8rem; }
+
+#tvTable td { padding: .12rem .4rem; height: 1.8rem; }
+#tvTable td select { min-height: 0; height: 1.5rem; padding: 0 .2rem; }
+#tvTable .movie-score { font-size: .7rem; padding: .08rem .2rem; }
+.tv-rating-cell { display: flex; align-items: center; gap: .3rem; }
+.tv-rating-select { display: inline-flex; align-items: center; padding: 0; min-width: 1.4rem; height: 1.5rem; }
+.tv-rating-indicators { display: inline-flex; gap: .18rem; border: 0; padding: .1rem; background: transparent; color: var(--accent-strong); font-size: .62rem; }
+.tv-rating-indicators span { border: 1px solid var(--line-strong); border-radius: 3px; padding: 0 .15rem; }
+.tv-filter-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+#tvPivots section { min-width: 0; }
+#tvPivots h3 { margin: .5rem 0; }
+@media (max-width: 700px) { #tvPivots { grid-template-columns: 1fr; } }

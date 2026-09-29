@@ -59,11 +59,11 @@
   }
   function readFields() {
     if (!draft) return;
-    draft.title = $('#tvName').value.trim(); draft.status = $('#tvStatus').value; draft.mode = $('#tvMode').value;
+    draft.title = $('#tvName').value.trim(); draft.status = $('#tvStatus').value;
     draft.lastWatched = $('#tvLastWatched').value; draft.notes = $('#tvNotes').value; draft.seasonRanking = $('#tvSeasonRanking').value;
   }
   function fill() {
-    $('#tvName').value = draft.title; $('#tvStatus').innerHTML = options(tv.statuses, draft.status); $('#tvMode').innerHTML = options(tv.modes, draft.mode);
+    $('#tvName').value = draft.title; $('#tvStatus').innerHTML = options(tv.statuses, draft.status);
     $('#tvLastWatched').value = draft.lastWatched; $('#tvNotes').value = draft.notes; $('#tvSeasonRanking').value = draft.seasonRanking;
     $('#tvShowRating').innerHTML = ratingButtons(draft.rating, true, 'data-show-rating');
     metadata(); renderSeasons();
@@ -82,7 +82,7 @@
     $('#tvLookup').open = !show; $('#tvLookupQuery').value = ''; $('#tvLookupResults').innerHTML = '';
     $('#tvDelete').hidden = !show; status(''); fill();
     App.components.openDialog('#tvDialog', { trigger: trigger, focus: show ? '#tvName' : '#tvLookupQuery' });
-    if (draft.mode === 'Episode' && first && !first.loaded && !first.orphaned && draft.tmdbId) loadSeason(seasonKey(first));
+
   }
   async function close() {
     readFields();
@@ -169,13 +169,6 @@
     $('#tvLookupButton').addEventListener('click', search);
     $('#tvLookupQuery').addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); search(); } });
     $('#tvDelete').addEventListener('click', remove); $('#tvRefreshOne').addEventListener('click', refresh);
-    $('#tvMode').addEventListener('change', function () {
-      readFields(); openSeasons.clear();
-      const first = draft.seasons.find(function (s) { return s.number > 0; }) || draft.seasons[0];
-      if (draft.mode !== 'Show' && first) openSeasons.add(seasonKey(first));
-      renderSeasons();
-      if (draft.mode === 'Episode' && first && !first.loaded && !first.orphaned && draft.tmdbId) loadSeason(seasonKey(first));
-    });
     $('#tvAddSeason').addEventListener('click', function () {
       const number = Number($('#tvSeasonNumber').value);
       if ($('#tvSeasonNumber').value === '' || !Number.isInteger(number) || number < 0 || number > 100000 || draft.seasons.some(function (s) { return s.number === number; })) { status('Enter an unused season number (0 for specials).'); return; }
@@ -189,7 +182,7 @@
       if (!details.open) { openSeasons.delete(key); return; }
       openSeasons.add(key);
       const body = details.querySelector('.tv-season-body'), season = seasonByKey(key);
-      if (!body.innerHTML) { body.innerHTML = seasonContent(season); if (draft.mode === 'Episode' && !season.loaded && draft.tmdbId && !controller) loadSeason(key); }
+      if (!body.innerHTML) body.innerHTML = seasonContent(season);
     }, true);
     $('#tvForm').addEventListener('click', function (event) {
       const button = event.target.closest('button'); if (!button || !draft) return;

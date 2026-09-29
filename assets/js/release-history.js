@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"1.0.0.13","date":"2026-09-28T12:00:00.000Z","title":"Restore cloud data with full local storage","summary":"Save cloud-restore recovery outside localStorage and preserve the current library if the replacement cannot be saved.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.12","date":"2026-09-28T12:00:00.000Z","title":"TV table and season rankings","summary":"Streamline TV columns, color ratings and statuses, add metadata pivots and editable season rankings, and clear existing TV notes once with recovery.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.11","date":"2026-09-28T12:00:00.000Z","title":"Large GitHub Sync Files","summary":"Read GitHub sync data over 1 MiB through the Blob API and compact future uploads below the inline Contents API limit.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.10","date":"2026-09-28T12:00:00.000Z","title":"Storage-efficient TV Import","summary":"Import or link TV shows without duplicating the full library into recovery storage, with an immediate rollback if persistence fails.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
