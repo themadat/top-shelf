@@ -485,7 +485,7 @@
         search: u.cleanLine(sourceUi.search, 200),
         movieColumnWidths: movieWidths(sourceUi.movieColumnWidths),
         tv: {
-          view: sourceUi.tv?.view === "filters" ? "filters" : "list",
+          view: sourceUi.tv?.view === "pivots" ? "pivots" : "list",
           sort: ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"].includes(sourceUi.tv?.sort) ? sourceUi.tv.sort : "title",
           direction: sourceUi.tv?.direction === "desc" ? "desc" : "asc",
           widths: columnWidths(sourceUi.tv?.widths, ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"], 2000),

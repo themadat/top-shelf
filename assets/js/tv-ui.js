@@ -43,9 +43,9 @@
   }
   function render() {
     const shows = saved(), p = pref(), needle = p.query.toLowerCase();
-    const filtersView = p.view === 'filters';
-    $('#tvListView').hidden = filtersView; $('#tvFiltersView').hidden = !filtersView;
-    document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.tvView === (filtersView ? 'filters' : 'list'))); });
+    const filtersView = p.view === 'pivots';
+    $('#tvListView').hidden = filtersView; $('#tvPivotsView').hidden = !filtersView;
+    document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.tvView === (filtersView ? 'pivots' : 'list'))); });
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
     const rows = shows.filter(function (s) { return (p.filter === 'all' || s.status === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
     rows.sort(function (a, b) {
@@ -56,6 +56,7 @@
       return cmp * (p.direction === 'asc' ? 1 : -1) || tie();
     });
     renderPivots(shows);
+    App.tvPivotsUI.render(shows);
     const widths = columns.map(function (c) { return p.widths[c[0]] || c[2]; });
     $('#tvTable').style.width = widths.reduce(function (a, b) { return a + b; }, 0) + 'px';
     $('#tvTable colgroup').innerHTML = columns.map(function (c, i) { return '<col data-tv-col="' + c[0] + '" style="width:' + widths[i] + 'px">'; }).join('');
@@ -153,6 +154,8 @@
   }
   async function init() {
     await clearLegacyNotes();
+    App.tvPivotsUI.init();
+    $('#tvFiltersDisclosure').addEventListener('toggle', balanceFilters);
     let lastFilterWidth = 0;
     new ResizeObserver(function (entries) { const width = entries[0].contentRect.width; if (width !== lastFilterWidth) { lastFilterWidth = width; requestAnimationFrame(balanceFilters); } }).observe($('#tvPivots'));
     document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.addEventListener('click', function () { preference({ view: button.dataset.tvView }); }); });
