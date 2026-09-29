@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.",
-      "version": "1.0.0.21",
-      "buildId": "1.0.0.21",
+      "version": "1.0.0.22",
+      "buildId": "1.0.0.22",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -159,7 +159,7 @@
       "danger": "#a74747"
     },
     "releases": [
-      {"version":"1.0.0.21","date":"2026-09-29T12:00:00.000Z","title":"Compact TV episode editor","summary":"Scan fully rated shows in compact episode tables with inline notes, hidden air-date/watched columns, and matching status input height.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
+      {"version":"1.0.0.22","date":"2026-09-29T12:00:00.000Z","title":"Compact TV details and resizable episodes","summary":"Tighten compact show details, resize episode columns, rename rating to #, and enlarge episode notes.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
     ],
     "roadmap": [{"id": "movie-people-lookup", "title": "Look Up Movies By Actor Or Director", "description": "From the spreadsheet backlog: look up movies by actors and directors and sort the results.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 2, "createdAt": "2026-09-13"}, {"id": "movie-selection-link", "title": "Open A TMDB Search For Selected Text", "description": "From the spreadsheet backlog: add a lookup button that opens a TMDB link using the current text.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 1, "createdAt": "2026-09-13"}],
     "help": [

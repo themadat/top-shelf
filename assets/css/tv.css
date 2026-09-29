@@ -129,3 +129,17 @@
 .tv-compact-episodes .tv-episodes { margin: .15rem 0; font-size: .8rem; }
 .tv-compact-episodes .tv-episodes td, .tv-compact-episodes .tv-episodes th { padding: .12rem .3rem; }
 .tv-season-edit-tools > summary { padding: .25rem; font-size: .75rem; color: var(--muted); cursor: pointer; }
+
+.tv-compact-dialog { width: min(1300px, calc(100vw - 2rem)); }
+.tv-compact-dialog .tv-fields { margin: .4rem 0; gap: .5rem; }
+.tv-compact-dialog #tvShowRating .tv-rating-button { flex-direction: row; gap: .25rem; padding: .2rem; }
+.tv-compact-dialog .tv-rating-field { margin: .3rem 0; padding: .3rem; }
+.tv-compact-dialog .tv-averages { margin: .35rem 0; padding: .3rem .5rem; }
+#tvShowDetails > summary { padding: .35rem 0; font-size: .85rem; cursor: pointer; }
+.tv-compact-dialog .tv-seasons-section > h3 { margin: .5rem 0 .3rem; }
+.tv-episodes { min-width: 0; }
+.tv-episodes th:first-child, .tv-episodes th:nth-child(2) { width: auto; }
+.tv-episodes thead th { position: relative; padding-right: 9px; }
+.tv-episodes .pivot-resizer { right: 0; }
+.tv-episode-note-input { height: 4rem; min-height: 4rem; }
+.tv-episode-note-input:focus { height: 8rem; }

@@ -41,15 +41,29 @@
     $('#tvRefreshOne').hidden = !draft.tmdbId;
     averages();
   }
+  const episodeColumns = ['episode', 'rating', 'notes'];
+  function episodeWidths() {
+    const saved = App.storage.getState().ui.tv.episodeWidths || {};
+    return episodeColumns.map(function (key, i) { return saved[key] || [240, 64, 650][i]; });
+  }
+  function resizeEpisodeColumn(index, width, persist) {
+    const widths = episodeWidths(); widths[index] = Math.round(Math.max(index === 1 ? 45 : 100, Math.min(2000, width)));
+    document.querySelectorAll('.tv-episodes').forEach(function (table) {
+      table.style.width = widths.reduce(function (a, b) { return a + b; }, 0) + 'px';
+      table.querySelectorAll('col').forEach(function (col, i) { col.style.width = widths[i] + 'px'; });
+      table.querySelectorAll('[data-episode-resize]').forEach(function (handle, i) { handle.setAttribute('aria-valuenow', widths[i]); });
+    });
+    if (persist) App.storage.mutate(function (state) { state.ui.tv.episodeWidths = Object.assign({}, state.ui.tv.episodeWidths, { [episodeColumns[index]]: widths[index] }); }, { reason: 'tv-episode-width', touch: false });
+  }
   function seasonContent(s) {
-    const key = seasonKey(s), count = pages.get(key) || 50;
+    const key = seasonKey(s), count = pages.get(key) || 50, widths = episodeWidths();
     let tools = '<fieldset class="tv-rating-field"><legend>Season rating · 1–10</legend><div class="tv-rating-buttons">' + ratingButtons(s.rating, false, 'data-season-rating="' + key + '"') + '</div></fieldset>';
     tools += '<label class="tv-notes-label">Season notes<textarea data-season-notes="' + key + '" maxlength="20000">' + esc(s.notes) + '</textarea></label>';
     tools += '<div class="tv-season-tools">' + (draft.tmdbId && !s.orphaned ? '<button type="button" class="button small" data-load-season="' + key + '">' + (s.loaded ? 'Refresh episodes' : 'Load episodes') + '</button>' : '')
       + '<small>' + (s.loaded ? 'Episode details saved for offline use.' : 'Episode details have not been fetched.') + '</small></div>';
     let html = '';
     if (s.episodes.length) {
-      html += '<div class="tv-table-scroll"><table class="tv-episodes"><thead><tr><th scope="col">Episode</th><th scope="col">Rating · 1–10</th><th scope="col">Notes</th></tr></thead><tbody>';
+      html += '<div class="tv-table-scroll"><table class="tv-episodes" style="width:' + widths.reduce(function (a, b) { return a + b; }, 0) + 'px"><colgroup>' + widths.map(function (width) { return '<col style="width:' + width + 'px">'; }).join('') + '</colgroup><thead><tr>' + ['Episode', '#', 'Notes'].map(function (label, i) { return '<th scope="col">' + label + '<span class="pivot-resizer" role="separator" tabindex="0" data-episode-resize="' + i + '" aria-orientation="vertical" aria-label="Resize ' + episodeColumns[i] + ' column" aria-valuenow="' + widths[i] + '" title="Drag or use arrow keys to resize">' + '</span></th>'; }).join('') + '</tr></thead><tbody>';
       html += s.episodes.slice(0, count).map(function (e) {
         const attr = ' data-season="' + key + '" data-episode="' + episodeKey(e) + '"';
         return '<tr><td><strong>' + e.number + '</strong> · ' + esc(e.title || 'Untitled episode') + (e.orphaned ? '<small class="tv-orphan">Retained · missing from latest response</small>' : '') + '</td><td><span class="tv-episode-score"><span class="movie-score" style="background:' + (e.rating === null ? 'var(--surface-2)' : App.movies.color(e.rating / 2, false)) + ';color:' + (e.rating === null ? 'var(--text)' : '#fff') + '" aria-hidden="true">' + (e.rating ?? '—') + '</span><select data-episode-rating' + attr + ' aria-label="Rating for episode ' + e.number + '">' + episodeRating(e.rating) + '</select></span></td><td><textarea class="tv-episode-note-input" rows="1" maxlength="20000" data-episode-notes' + attr + ' aria-label="Notes for episode ' + e.number + '" placeholder="Add notes…">' + esc(e.notes) + '</textarea></td></tr>' ;
@@ -60,6 +74,7 @@
     return compactEpisodes ? html + '<details class="tv-season-edit-tools"><summary>Season rating, notes &amp; episode tools</summary>' + tools + '</details>' : tools + html;
   }
   function renderSeasons() {
+    $('#tvDialog').classList.toggle('tv-compact-dialog', compactEpisodes);
     $('#tvSeasons').classList.toggle('tv-compact-episodes', compactEpisodes);
     $('#tvEpisodeView').textContent = compactEpisodes ? 'Detailed view' : 'Compact view';
     $('#tvEpisodeView').setAttribute('aria-pressed', String(compactEpisodes));
@@ -79,6 +94,7 @@
     $('#tvName').value = draft.title; $('#tvStatus').innerHTML = options(tv.statuses, draft.status);
     $('#tvLastWatched').value = draft.lastWatched; $('#tvNotes').value = draft.notes; $('#tvSeasonRanking').value = draft.seasonRanking;
     $('#tvShowRating').innerHTML = ratingButtons(draft.rating, true, 'data-show-rating');
+    $('#tvShowDetails').open = !compactEpisodes;
     metadata(); renderSeasons();
   }
   function open(id, trigger) {
@@ -220,7 +236,21 @@
         try { draft = tv.normalize(next); pages.set(key, s.episodes.length + 1); renderSeasons(); averages(); } catch (error) { status(error.message); }
       }
     });
-    $('#tvEpisodeView').addEventListener('click', function () { compactEpisodes = !compactEpisodes; draft.seasons.forEach(function (s) { openSeasons.add(seasonKey(s)); }); renderSeasons(); });
+    $('#tvSeasons').addEventListener('keydown', function (event) {
+      const handle = event.target.closest('[data-episode-resize]');
+      if (!handle || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault(); const index = Number(handle.dataset.episodeResize);
+      resizeEpisodeColumn(index, episodeWidths()[index] + (event.key === 'ArrowRight' ? 12 : -12), true);
+    });
+    $('#tvSeasons').addEventListener('pointerdown', function (event) {
+      const handle = event.target.closest('[data-episode-resize]'); if (!handle || event.button !== 0) return;
+      event.preventDefault(); const index = Number(handle.dataset.episodeResize), start = event.clientX, width = episodeWidths()[index]; let next = width;
+      handle.setPointerCapture(event.pointerId);
+      const move = function (e) { next = width + e.clientX - start; resizeEpisodeColumn(index, next, false); };
+      const end = function () { handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', end); handle.removeEventListener('pointercancel', end); resizeEpisodeColumn(index, next, true); };
+      handle.addEventListener('pointermove', move); handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end);
+    });
+    $('#tvEpisodeView').addEventListener('click', function () { compactEpisodes = !compactEpisodes; $('#tvShowDetails').open = !compactEpisodes; draft.seasons.forEach(function (s) { openSeasons.add(seasonKey(s)); }); renderSeasons(); });
     $('#tvSeasons').addEventListener('change', function (event) {
       const el = event.target;
       if (el.dataset.seasonNotes) { const season = seasonByKey(el.dataset.seasonNotes); if (season) season.notes = el.value; return; }

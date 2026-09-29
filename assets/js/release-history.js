@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"1.0.0.21","date":"2026-09-29T12:00:00.000Z","title":"Compact TV episode editor","summary":"Scan fully rated shows in compact episode tables with inline notes, hidden air-date/watched columns, and matching status input height.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.20","date":"2026-09-29T12:00:00.000Z","title":"TV network pills and pivot resizing","summary":"Move Networks beside Show, use network-colored pills, and resize every TV pivot column with saved widths.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.19","date":"2026-09-29T12:00:00.000Z","title":"TV pivot cards and list filters","summary":"Restore the list's Filters disclosure and add separate movie-style Type, Genres, and Networks pivot cards.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.18","date":"2026-09-29T12:00:00.000Z","title":"Episode ratings and notes import","summary":"Support half-point episode scores, editable episode/season notes, and additive detailed TV imports.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
