@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 function harness(fetch = async () => { throw new Error('Unexpected request'); }) {
   const context = vm.createContext({ window: {}, URL, TextEncoder, TextDecoder, Uint8Array, structuredClone, AbortController, DOMException, setTimeout, clearTimeout, navigator: { onLine: true }, localStorage: { getItem: () => 'private-token' }, sessionStorage: { getItem: () => null }, fetch });
-  for (const path of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/tmdb.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + path, import.meta.url), 'utf8'), context);
+  for (const path of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/books.js', 'core/tmdb.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + path, import.meta.url), 'utf8'), context);
   const App = context.window.LocalApp;
   App.utils.sanitizeRichHtml = String; App.utils.richTextToPlainText = String;
   vm.runInContext(readFileSync(new URL('../assets/js/core/state.js', import.meta.url), 'utf8'), context);
@@ -104,7 +104,7 @@ test('TV sync fingerprints ignore device preferences and check timestamps', () =
   assert.equal(model.syncHash(state), hash);
   assert.equal(model.syncHash(model.prepareSync(model.syncPayload(state)).state), hash);
   state.workspace.tvShows[0].rating = 0; assert.notEqual(model.syncHash(state), hash);
-  const payload = model.syncPayload(state); assert.equal(payload.syncVersion, 6); assert.equal(payload.schemaVersion, 10);
+  const payload = model.syncPayload(state); assert.equal(payload.syncVersion, 7); assert.equal(payload.schemaVersion, 11);
   assert.throws(() => model.prepareSync({ ...payload, syncVersion: 5, schemaVersion: 9 }), /invalid/);
 });
 

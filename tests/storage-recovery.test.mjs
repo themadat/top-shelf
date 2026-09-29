@@ -16,7 +16,7 @@ test('recovery rotation handles browsers that cannot replace a large stored valu
   };
   const window = { addEventListener() {}, dispatchEvent() {} };
   const context = vm.createContext({ window, localStorage, sessionStorage: localStorage, navigator: {}, CustomEvent: class {}, Blob, TextEncoder, structuredClone, setTimeout, clearTimeout });
-  for (const file of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
+  for (const file of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/books.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
   window.LocalApp.utils.richTextToPlainText = String; window.LocalApp.utils.sanitizeRichHtml = String;
   for (const file of ['core/state.js', 'core/storage.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
   const storage = window.LocalApp.storage;
@@ -39,11 +39,15 @@ test('failed replacement preserves live and persisted state and emits no replace
   };
   const window = { addEventListener() {}, dispatchEvent(event) { events.push(event); } };
   const context = vm.createContext({ window, localStorage, sessionStorage: localStorage, navigator: {}, CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } }, Blob, TextEncoder, structuredClone, setTimeout, clearTimeout });
-  for (const file of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
+  for (const file of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/books.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
   window.LocalApp.utils.richTextToPlainText = String; window.LocalApp.utils.sanitizeRichHtml = String;
   for (const file of ['core/state.js', 'core/storage.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
   const { storage, utils } = window.LocalApp;
-  const original = utils.clone(storage.load()), persisted = values.get('topShelf.state.v5');
+  storage.load();
+  const withBooks = utils.clone(storage.getState()); withBooks.workspace.books = [window.LocalApp.books.normalize({ id: 'book-one', title: 'Keep book', notes: 'Personal notes' })];
+  storage.replace(withBooks, { saveRecovery: false });
+  events.length = 0;
+  const original = utils.clone(storage.getState()), persisted = values.get('topShelf.state.v5');
   const next = utils.clone(original); next.workspace.title = 'Cloud replacement';
   full = true;
   assert.throws(() => storage.replace(next), /Current data was kept/);

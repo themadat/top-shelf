@@ -2,9 +2,9 @@
 
 ## Local preferences and data contracts
 
-Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 7. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v6/schema 10 and accepts earlier v1–v5 cloud envelopes. Keep namespace compatibility. TV uses a new envelope version so earlier clients reject TV-bearing data.
+Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 8. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v7/schema 11 and accepts earlier v1–v6 cloud envelopes. Keep namespace compatibility. Books uses a new envelope version so earlier clients reject Books-bearing data; earlier TV-bearing v6 envelopes remain readable.
 
-Device-local ui fields (full backups, excluded from content sync): tv (view/sort/direction/widths/pivotWidths/episodeWidths/filter/query); movieSorts by all/wishlist/watched; movieColumnWidths with separate maps per tab; pivotColumnWidths; pivotLocalSettings; pivotSubsectionSorts. Old flat movie widths migrate to independent copies. Old workspace.pivotSettings is a fallback until locally overridden; scoring baseline/weight remain shared. Reset preferences clears local overrides.
+Device-local ui fields (full backups, excluded from content sync): books (view/query/sort/direction/widths/status/ownership/kind/format/pivotQuery/minimum/pivotSort/pivotDirection); tv (view/sort/direction/widths/pivotWidths/episodeWidths/filter/query); movieSorts by all/wishlist/watched; movieColumnWidths with separate maps per tab; pivotColumnWidths; pivotLocalSettings; pivotSubsectionSorts. Old flat movie widths migrate to independent copies. Old workspace.pivotSettings is a fallback until locally overridden; scoring baseline/weight remain shared. Reset preferences clears local overrides.
 
 GitHub target is fixed: themadat/app-data/main/data/top-shelf.json. Imports cannot redirect it. Never write that separate repo without explicit authorization. Tokens are browser-only and excluded from config, exports, diagnostics and content sync. Provisioning instructions: docs/RESET.md. Never request tokens in chat. Keep origin git@github.com:themadat/top-shelf.git; machine SSH setup belongs in user configuration.
 
@@ -16,3 +16,5 @@ Notes buffers typing 300ms before normalization; flush on blur/close/hidden/page
 
 
 TV model, editor, imports and one-time data behavior: [TV.md](TV.md).
+
+Books model, catalog lookup, wishlist and pivots: [BOOKS.md](BOOKS.md).

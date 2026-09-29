@@ -115,10 +115,11 @@
     });
     $("#moviesWorkspace").hidden = selected.id !== "movies";
     $("#tvWorkspace").hidden = selected.id !== "tv";
-    $(".shelf-starter").hidden = ["movies", "tv"].includes(selected.id);
+    $("#booksWorkspace").hidden = selected.id !== "books";
+    $(".shelf-starter").hidden = ["movies", "tv", "books"].includes(selected.id);
     $("#shelfTitle").textContent = selected.label;
     icons.set($("#shelfSymbol"), selected.symbol);
-    $("#shelfDescription").textContent = selected.id === "movies" || selected.id === "tv" ? "Your " + selected.label.toLowerCase() + " ratings will live here. List entry and scoring are coming next." : "A place for your " + selected.label.toLowerCase() + " ratings. We’re starting with movies and TV.";
+    $("#shelfDescription").textContent = selected.id === "movies" || selected.id === "tv" ? "Your " + selected.label.toLowerCase() + " ratings will live here. List entry and scoring are coming next." : "A place for your " + selected.label.toLowerCase() + " ratings. Movies, TV and Books are available now.";
   }
 
   function selectShelf(id, focusContent) {
@@ -127,7 +128,7 @@
     renderShelves();
     const button = $('[data-shelf="' + id + '"]');
     button.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
-    if (focusContent) $(id === "movies" ? "#moviesTitle" : id === "tv" ? "#tvTitle" : "#shelfTitle").focus({ preventScroll: true });
+    if (focusContent) $(id === "movies" ? "#moviesTitle" : id === "tv" ? "#tvTitle" : id === "books" ? "#booksTitle" : "#shelfTitle").focus({ preventScroll: true });
   }
 
   function bindShelfNavigation() {
@@ -315,6 +316,7 @@
     if (!needle) return [];
     const results = [];
     state().workspace.movies.filter(function (movie) { return !movie.deleted && App.movies.searchable(movie).includes(needle); }).slice(0, 6).forEach(function (movie) { results.push({ type: "movie", id: movie.id, title: movie.title, meta: "Movies · " + movie.status }); });
+    state().workspace.books.filter(function (book) { return !book.deleted && App.books.searchable(book).includes(needle); }).slice(0, 6).forEach(function (book) { results.push({ type: "book", id: book.id, title: book.title, meta: "Books · " + book.status }); });
     state().workspace.tvShows.filter(function (show) { return !show.deleted && App.tv.searchable(show).includes(needle); }).slice(0, 6).forEach(function (show) { results.push({ type: "tv", id: show.id, title: show.title, meta: "TV · " + show.status }); });
     const notes = state().workspace.documents[0];
     if (config.features.documents && notes && (`notes ${documentText(notes)}`).toLowerCase().includes(needle)) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Local notes" });
@@ -344,11 +346,12 @@
     container.hidden = false;
     container.innerHTML = results.length ? results.map(function (result, index) {
       return '<button type="button" role="option" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '"><span><strong>' + highlightedSearchText(result.title, query) + '</strong><small>' + highlightedSearchText(result.meta, query) + "</small></span><span aria-hidden=\"true\">" + icons.markup("chevronRight") + "</span></button>";
-    }).join("") : '<div class="search-empty">No matching movies, TV shows, notes, or support content.</div>';
+    }).join("") : '<div class="search-empty">No matching movies, TV shows, books, notes, or support content.</div>';
   }
 
   function activateGlobalSearchResult(type, id) {
     if (type === "movie") { selectShelf("movies", false); App.moviesUI.open(id, $("#globalSearch")); }
+    else if (type === "book") { selectShelf("books", false); App.booksEditor.open(id, $("#globalSearch")); }
     else if (type === "tv") { selectShelf("tv", false); App.tvEditor.open(id, $("#globalSearch")); }
     else if (type === "notes") openNotes($("#globalSearch"));
     else if (type === "help") { openSupport("help"); setInputValue($("#helpSearch"), config.help.find(function (topic) { return topic.id === id; })?.title || ""); renderHelp(); }
@@ -591,16 +594,16 @@
   }
 
   async function resetPreferences() {
-    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, filters, panel layout, view state, and dismissed hints will return to defaults. Movies and Notes will be preserved.", confirmLabel: "Reset preferences", danger: true });
+    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, filters, panel layout, view state, and dismissed hints will return to defaults. Movies, TV, Books and Notes will be preserved.", confirmLabel: "Reset preferences", danger: true });
     if (!accepted) return;
     try { storage.replace(model.resetPreferences(state()), { recoveryReason: "Before resetting preferences", reason: "reset-preferences", touch: false }); }
     catch (error) { components.message("Preferences kept", error.message); return; }
     renderAll();
-    components.toast("Preferences were reset; movies, TV shows, and notes were preserved.", { title: "Preferences reset", kind: "success" });
+    components.toast("Preferences were reset; movies, TV shows, books, and notes were preserved.", { title: "Preferences reset", kind: "success" });
   }
 
   async function eraseAllData() {
-    const accepted = await components.confirm({ title: "Erase all application data?", message: "This permanently removes movies, TV shows, notes, preferences, sync settings, stored GitHub and TMDB tokens, and recovery data from this browser. Export a backup first if anything should be kept.", confirmLabel: "Erase everything", cancelLabel: "Keep my data", danger: true });
+    const accepted = await components.confirm({ title: "Erase all application data?", message: "This permanently removes movies, TV shows, books, notes, preferences, sync settings, stored GitHub and TMDB tokens, and recovery data from this browser. Export a backup first if anything should be kept.", confirmLabel: "Erase everything", cancelLabel: "Keep my data", danger: true });
     if (!accepted) return;
     try { await storage.clearAll(); }
     catch (error) { components.toast(error.message, { title: "Erase failed", kind: "danger" }); return; }
@@ -885,7 +888,7 @@
     }
     if (event.key === "." && (state().ui.selectedShelf !== "movies" || $("#moviePivotsView").hidden) && !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey && !$("dialog[open]") && (!u.isEditableTarget(event.target) || event.target === $("#globalSearch"))) {
       runShortcut(event, function () {
-        const target = state().ui.selectedShelf === "movies" ? ($("#moviePivotsView").hidden ? $("#movieSearch") : $('[data-pivot-min="ratings"]')) : state().ui.selectedShelf === "tv" ? $("#tvSearch") : $('#mainContent');
+        const target = state().ui.selectedShelf === "movies" ? ($("#moviePivotsView").hidden ? $("#movieSearch") : $('[data-pivot-min="ratings"]')) : state().ui.selectedShelf === "tv" ? $("#tvSearch") : state().ui.selectedShelf === "books" ? (state().ui.books.view === "pivots" ? $("#booksPivotSearch") : $("#booksSearch")) : $('#mainContent');
         if (!target.hasAttribute('tabindex') && !target.matches('input,select,button')) target.tabIndex = -1;
         target.focus();
       }); return;
@@ -1054,6 +1057,8 @@
     portability.init();
     bindShelfNavigation();
     App.moviesUI.init();
+    App.booksEditor.init();
+    App.booksUI.init();
     App.tvEditor.init();
     await App.tvUI.init();
     App.tvImportUI.init();

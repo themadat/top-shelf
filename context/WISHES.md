@@ -2,11 +2,11 @@
 
 Developer backlog only; excluded from app data/backups. Read for named wish workflows, not routine fixes.
 
-Next ID: `WISH-002`
+Next ID: `WISH-003`
 
 ## Active
 
-None.
+- **WISH-002 — Books Library, Wishlist and Pivots** — **Active**. Priority: next requested feature; effort: large. Replace the Books starter with manual/Open Library entry, reading year, personal/provider ratings, ownership and formats, fiction/nonfiction, genres, short review, longer notes, prioritized wishlist, and author/genre/read-year pivots. Affects Books modules, shell, persistence/recovery/sync, offline assets and tests. Acceptance: every requested field survives offline edits and backup/sync round trips; lookup is optional and cannot overwrite personal data; wishlist priority and pivots work with missing metadata. Static/no-key lookup and legacy compatibility are constraints. Implemented with 0–5 half-point ratings, one year read and separate Audiobook/Audible indicators; [plan and verification](WISH-002-books-PLAN.md). Implementation complete; awaiting a requested release cut.
 
 ## Completed
 

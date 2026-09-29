@@ -1,6 +1,6 @@
 # Top Shelf
 
-A static, local-first movie and TV library with Wishlist, Watched, Notes and eight movie pivot views. Boardgames and the other shelves remain starter views. No build step, backend, account or runtime dependency.
+A static, local-first movie, TV and book library with Wishlist, Watched, Notes and eight movie pivot views. Boardgames and the other shelves remain starter views. No build step, backend, account or runtime dependency.
 
 ## Use
 
@@ -12,6 +12,7 @@ Serve the repository with `python3 -m http.server 8000`, then open `http://local
 - Pivots summarize watched movies. Search each panel, adjust minimums, sort, resize columns and star people/companies/collections into Other Pivots.
 - TV → Import Shows previews additive TV import JSON files; existing shows are preserved.
 - TV tracks Want to Watch, Watching, Caught Up, Completed and Stopped separately from series activity. Rate shows 0–5, seasons 1–10 and episodes 1–10 with half-points. Episode notes, compact tables and separate Type/Genres/Networks pivot cards remain usable offline.
+- Books supports Open Library title/author/ISBN lookup, optional community ratings, year read, ownership, Ebook/Audiobook/Audible, reviews, notes, a prioritized wishlist and author/genre/year-read pivots. No lookup key is needed. See [Books](docs/BOOKS.md).
 - Notes autosaves. Settings offers backup/recovery, appearance, sync, movie-name/details exports and How values.
 - Subgenre Review exports a request for an LLM and previews additive result imports before applying them.
 
@@ -25,7 +26,7 @@ This product uses the TMDB API but is not endorsed or certified by TMDB. Streami
 
 ## Storage and sync
 
-Browser storage holds movies, TV shows, Notes and local preferences. Export regular full JSON backups in Settings. Recovery copies precede destructive replacements. Local schema is 7; cloud format is top-shelf-app-data v6/schema 10. Prior formats remain readable. Update all devices before syncing; older clients reject the TV format.
+Browser storage holds movies, TV shows, books, Notes and local preferences. Export regular full JSON backups in Settings. Recovery copies precede destructive replacements. Local schema is 8; cloud format is top-shelf-app-data v7/schema 11. Prior formats remain readable. Update all devices before syncing; older clients reject the Books format.
 
 GitHub Sync targets `themadat/app-data/main/data/top-shelf.json`. To provision it:
 

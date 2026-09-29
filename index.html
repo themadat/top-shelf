@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, starting with movies and TV.">
+  <meta name="description" content="A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV and Books available.">
   <meta name="theme-color" content="#f5f3ed">
   <meta name="theme-color" content="#f5f3ed" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121616" media="(prefers-color-scheme: dark)">
@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="assets/css/app.css?v=2.0.0.1">
   <link rel="stylesheet" href="assets/css/movies.css?v=2.0.0.1">
   <link rel="stylesheet" href="assets/css/tv.css?v=2.0.0.1">
+  <link rel="stylesheet" href="assets/css/books.css?v=2.0.0.1">
   <script defer src="assets/js/config.js?v=2.0.0.1"></script>
   <script defer src="assets/js/release-history.js?v=2.0.0.1"></script>
   <script defer src="assets/js/icons.js?v=2.0.0.1"></script>
@@ -30,6 +31,8 @@
   <script defer src="assets/js/core/tmdb.js?v=2.0.0.1"></script>
   <script defer src="assets/js/core/tv.js?v=2.0.0.1"></script>
   <script defer src="assets/js/core/tv-import.js?v=2.0.0.1"></script>
+  <script defer src="assets/js/core/books.js?v=2.0.0.1"></script>
+  <script defer src="assets/js/core/open-library.js?v=2.0.0.1"></script>
   <script defer src="assets/js/core/state.js?v=2.0.0.1"></script>
   <script defer src="assets/js/core/storage.js?v=2.0.0.1"></script>
   <script defer src="assets/js/core/components.js?v=2.0.0.1"></script>
@@ -47,6 +50,9 @@
   <script defer src="assets/js/tv-pivots-ui.js?v=2.0.0.1"></script>
   <script defer src="assets/js/tv-ui.js?v=2.0.0.1"></script>
   <script defer src="assets/js/tv-import-ui.js?v=2.0.0.1"></script>
+  <script defer src="assets/js/books-editor.js?v=2.0.0.1"></script>
+  <script defer src="assets/js/books-pivots-ui.js?v=2.0.0.1"></script>
+  <script defer src="assets/js/books-ui.js?v=2.0.0.1"></script>
   <script defer src="assets/js/app.js?v=2.0.0.1"></script>
 </head>
 <body>
@@ -70,8 +76,8 @@
     <nav id="shelfNavigation" class="shelf-nav" aria-label="Rating lists"></nav>
     <div class="global-search-wrap" data-shortcut="/">
       <span class="search-icon" aria-hidden="true" data-symbol="search"></span>
-      <label class="visually-hidden" for="globalSearch">Search movies, TV, Notes, and application support</label>
-      <input id="globalSearch" type="search" autocomplete="off" placeholder="Search movies, TV, Notes, and Help" aria-haspopup="listbox" aria-controls="globalSearchResults" aria-keyshortcuts="/ Control+Alt+Shift+/">
+      <label class="visually-hidden" for="globalSearch">Search movies, TV, Books, Notes, and application support</label>
+      <input id="globalSearch" type="search" autocomplete="off" placeholder="Search movies, TV, Books, Notes, and Help" aria-haspopup="listbox" aria-controls="globalSearchResults" aria-keyshortcuts="/ Control+Alt+Shift+/">
       <kbd aria-hidden="true">/</kbd>
       <div id="globalSearchResults" class="global-search-results" role="listbox" aria-label="Search results" hidden></div>
     </div>
@@ -110,7 +116,7 @@
 
   <aside id="contextHint" class="context-hint" data-hint-key="shell-basics" hidden>
     <span class="context-hint-icon" aria-hidden="true" data-symbol="info"></span>
-    <p>Press <kbd>/</kbd> to search movies, TV, Notes, and Help, or <kbd>N</kbd> to open Notes.</p>
+    <p>Press <kbd>/</kbd> to search movies, TV, Books, Notes, and Help, or <kbd>N</kbd> to open Notes.</p>
     <button type="button" class="icon-button" data-dismiss-hint="shell-basics" aria-label="Dismiss hint"><span aria-hidden="true" data-symbol="close"></span></button>
   </aside>
 
@@ -147,6 +153,28 @@
       <div class="tv-batch"><span id="tvBatchStatus" role="status"></span><button id="tvStop" class="button small" type="button" hidden>Stop</button></div>
       <section id="tvListView" aria-label="TV List"><details id="tvFiltersDisclosure" class="tv-pivots"><summary>Filters · Type, Genres, Networks</summary><div id="tvPivots"></div></details><div class="tv-table-scroll" tabindex="0" aria-label="TV shows table"><table id="tvTable"><colgroup></colgroup><thead></thead><tbody></tbody></table></div>
       <p id="tvEmpty" class="empty-state">Add a show to start your TV library.</p></section>
+    </section>
+    <section id="booksWorkspace" class="books-workspace" aria-labelledby="booksTitle" hidden>
+      <h1 id="booksTitle" class="visually-hidden" tabindex="-1">Books</h1>
+      <div class="books-toolbar">
+        <div class="segmented books-views" aria-label="Books view"><button type="button" data-books-view="all" aria-pressed="true">All Books</button><button type="button" data-books-view="read" aria-pressed="false">Read</button><button type="button" data-books-view="wishlist" aria-pressed="false">Wishlist</button><button type="button" data-books-view="pivots" aria-pressed="false">Pivots</button></div>
+        <button id="booksAdd" class="button primary action-button" type="button"><span class="button-icon" data-symbol="add" aria-hidden="true"></span><span class="button-label">Add Book</span></button>
+      </div>
+      <section id="booksListView" aria-label="Books list">
+        <div class="books-filters">
+          <label class="books-search">Search books<input id="booksSearch" type="search" maxlength="200" placeholder="Title, author, genre, review or notes" aria-keyshortcuts="."></label>
+          <label>Status<select id="booksFilterStatus"></select></label><label>Ownership<select id="booksFilterOwnership"></select></label><label>Format<select id="booksFilterFormat"></select></label><label>Fiction / nonfiction<select id="booksFilterKind"></select></label>
+          <button id="booksClear" class="button small" type="button">Clear filters</button>
+        </div>
+        <p id="booksCount" class="setting-note" role="status"></p><p id="booksGroup" class="setting-note" hidden></p>
+        <div class="books-table-scroll" tabindex="0" aria-label="Books table; scroll for more columns"><table id="booksTable"><colgroup></colgroup><thead></thead><tbody></tbody></table></div>
+        <p id="booksEmpty" class="empty-state">Add your first book, or search Open Library to find it.</p>
+      </section>
+      <section id="booksPivotsView" aria-label="Book pivots" hidden>
+        <p class="setting-note">Completed books only · Year Read is when you finished the book. Averages use your ratings; unrated books count toward totals but not averages. Books may appear in several author or genre groups.</p>
+        <div class="books-filters"><label>Find a group<input id="booksPivotSearch" type="search" maxlength="200"></label><label>Minimum books<input id="booksPivotMin" type="number" min="1" max="5000" value="1"></label><label>Sort groups<select id="booksPivotSort"><option value="count">Book count</option><option value="average">My average rating</option><option value="label">Name / year</option></select></label><button id="booksPivotDirection" class="button small" type="button">Descending</button></div>
+        <p id="booksPivotCount" class="setting-note"></p><div id="booksPivotCards" class="books-pivot-grid"></div>
+      </section>
     </section>
     <section class="shelf-starter" aria-labelledby="shelfTitle">
       <span id="shelfSymbol" class="shelf-starter-icon" aria-hidden="true"></span>
@@ -225,6 +253,27 @@
     </div>
   </dialog>
 
+  <dialog id="bookDialog" class="app-dialog book-dialog" aria-labelledby="bookDialogTitle" data-backdrop-close="false">
+    <div class="dialog-shell">
+      <header class="dialog-header"><h2 id="bookDialogTitle">Book</h2><button id="bookClose" type="button" class="icon-button" aria-label="Close book"><span data-symbol="close" aria-hidden="true"></span></button></header>
+      <form id="bookForm" class="dialog-body">
+        <details id="bookLookup"><summary>Find a book on Open Library</summary><div class="books-lookup-row"><label>Search by<select id="bookLookupMode"><option value="title">Title</option><option value="author">Author</option><option value="isbn">ISBN</option></select></label><label>Title, author or ISBN<input id="bookLookupQuery" type="search" maxlength="200" autocomplete="off"></label><button id="bookLookupSearch" class="button" type="button">Search</button><button id="bookLookupCancel" class="button small" type="button" hidden>Stop</button></div><p class="setting-note">Choose a match to fill book information. Your reading details stay private in this library.</p><div id="bookLookupResults" class="books-lookup-results"></div></details>
+        <div class="book-fields">
+          <label class="book-wide">Book name<input id="bookName" required maxlength="500" autocomplete="off"></label>
+          <label class="book-wide">Authors <small>One author per line</small><textarea id="bookAuthors" rows="2" maxlength="20000"></textarea></label>
+          <label>Reading status<select id="bookStatus"></select></label><label>Year read<input id="bookYear" type="number" min="1000" max="9999" step="1" placeholder="Unknown"></label>
+          <label>My rating · 0–5<input id="bookRating" type="number" min="0" max="5" step="0.5" placeholder="Unrated"></label><label>Wishlist priority<select id="bookPriority"><option value="">No priority</option><option value="1">1 · Highest</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 · Lowest</option></select></label>
+          <label>Ownership<select id="bookOwnership"></select></label><label>Fiction / nonfiction<select id="bookKind"></select></label>
+          <fieldset class="book-wide book-formats"><legend>Your formats</legend><label><input id="bookPrint" type="checkbox">Print</label><label><input id="bookEbook" type="checkbox">Ebook</label><label><input id="bookAudio" type="checkbox">Audiobook</label><label><input id="bookAudible" type="checkbox">Listened via Audible</label></fieldset>
+          <label class="book-wide">Genres <small>Separate with commas; edit suggested genres as needed</small><input id="bookGenres" maxlength="20000"></label>
+          <label class="book-wide">Short review<textarea id="bookReview" rows="3" maxlength="1000"></textarea></label>
+          <label class="book-wide">Longer notes<textarea id="bookNotes" rows="7" maxlength="20000"></textarea></label>
+        </div>
+        <section class="book-source" aria-label="Catalog information"><div id="bookMetadata"></div><div class="books-toolbar"><button id="bookRefresh" class="button small" type="button">Refresh Open Library information</button><button id="bookUnlink" class="button small" type="button">Unlink catalog match</button></div></section>
+      </form>
+      <footer class="dialog-footer"><span id="bookEditorStatus" role="status" aria-live="polite"></span><button id="bookDelete" class="button danger-text" type="button">Delete</button><button id="bookCancel" class="button" type="button">Cancel</button><button id="bookSave" class="button primary" type="submit" form="bookForm">Save Book</button></footer>
+    </div>
+  </dialog>
   <dialog id="tvDialog" class="app-dialog tv-dialog" aria-labelledby="tvDialogTitle" data-backdrop-close="false">
     <div class="dialog-shell">
       <header class="dialog-header"><h2 id="tvDialogTitle">TV Show</h2><button id="tvClose" type="button" class="icon-button" aria-label="Close TV show"><span data-symbol="close" aria-hidden="true"></span></button></header>
@@ -288,9 +337,9 @@
 
             <div class="settings-section">
               <div class="section-heading"><div><span class="eyebrow">Data safety</span><h3>Backup, Restore & Reset</h3></div></div>
-              <p class="section-intro">JSON backups include movies, TV shows, notes, preferences, and module settings. Tokens are excluded.</p>
+              <p class="section-intro">JSON backups include movies, TV shows, books, notes, preferences, and module settings. Tokens are excluded.</p>
               <div class="button-row"><button id="exportButton" class="button primary" type="button">Export JSON</button><button id="importButton" class="button" type="button">Import JSON</button><input id="importFileInput" type="file" accept="application/json,.json" hidden></div>
-              <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep movies, TV shows, and notes, but restore appearance, filters, and hints.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset Preferences</button></div>
+              <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep movies, TV shows, books, and notes, but restore appearance, filters, and hints.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset Preferences</button></div>
               <div class="danger-zone"><div><strong>Erase all application data</strong><small>Permanently remove content, preferences, sync settings, token, and recovery data from this browser.</small></div><button id="eraseAllButton" class="button danger" type="button">Erase All Data</button></div>
             </div>
           </section>
@@ -383,7 +432,7 @@
       <header class="dialog-header"><div><span class="eyebrow">Validated backup</span><h2 id="importPreviewTitle">Review Import</h2></div><button type="button" class="icon-button" data-close-dialog="importPreviewDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header>
       <div class="dialog-body">
         <p><strong data-import-file></strong> passed parsing, migration, sanitization, normalization, and validation.</p>
-        <dl class="preview-grid"><div><dt>Workspace</dt><dd data-import-workspace></dd></div><div><dt>Notes</dt><dd data-import-documents></dd></div><div><dt>Movies</dt><dd data-import-movies></dd></div><div><dt>TV shows</dt><dd data-import-tv></dd></div><div><dt>Versions</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div><div data-import-migrations-row><dt>Migrations</dt><dd data-import-migrations></dd></div></dl>
+        <dl class="preview-grid"><div><dt>Workspace</dt><dd data-import-workspace></dd></div><div><dt>Notes</dt><dd data-import-documents></dd></div><div><dt>Movies</dt><dd data-import-movies></dd></div><div><dt>TV shows</dt><dd data-import-tv></dd></div><div><dt>Books</dt><dd data-import-books></dd></div><div><dt>Versions</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div><div data-import-migrations-row><dt>Migrations</dt><dd data-import-migrations></dd></div></dl>
         <p class="inline-status warning" data-import-warning hidden></p>
         <p class="inline-status"><span aria-hidden="true" data-symbol="restore"></span><span>The current data will be saved as a local recovery copy before replacement.</span></p>
       </div>
