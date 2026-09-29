@@ -2,7 +2,7 @@
   'use strict';
   const App = window.LocalApp, books = App.books, esc = App.utils.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['title','Book',240],['authors','Authors',190],['yearRead','Year read',110],['rating','My rating',110],['average','Open Library / 5',145],['priority','Priority',100],['status','Status',130],['ownership','Ownership',120],['formats','Formats',160],['kind','Fiction / nonfiction',140],['genres','Genres',180],['review','Short review',260]];
+  const columns = [['title','Book',240],['authors','Authors',190],['yearRead','Year read',110],['rating','My rating',110],['average','Open Library / 5',145],['priority','Priority',100],['status','Status',130],['ownership','Ownership',120],['formats','Formats',160],['kind','Type',140],['genres','Genres',180],['review','Short review',260]];
   let group = null;
   function state() { return App.storage.getState(); }
   function pref() { return state().ui.books; }
@@ -29,6 +29,7 @@
     });
     $('#booksGroup').hidden = !group; $('#booksGroup').textContent = group ? 'Completed books in ' + group.label + ' · Clear filters to leave this group.' : '';
     $('#booksCount').textContent = rows.length + ' of ' + all.length + ' books' + (p.view === 'wishlist' ? ' · Priority 1 is highest; blank means unprioritized.' : '');
+    $('#booksSearchCount').textContent = rows.length + ' / ' + all.length;
     $('#booksEmpty').hidden = rows.length > 0; $('#booksEmpty').textContent = all.length ? 'No books match this view. Try clearing filters.' : 'Add your first book, or search Open Library to find it.';
     const ordered = p.view === 'wishlist' ? [columns[5]].concat(columns.filter(function (c) { return c[0] !== 'priority'; })) : columns;
     $('#booksTable colgroup').innerHTML = ordered.map(function (c) { return '<col style="width:' + (p.widths[c[0]] || c[2]) + 'px">'; }).join('');
@@ -40,7 +41,8 @@
       if (c[0] === 'average') return '<td title="' + esc(b.catalog.average === null ? 'Not available' : b.catalog.ratingsCount + ' ratings · fetched ' + b.catalog.ratingsFetchedAt.slice(0, 10)) + '">' + (v === null ? 'Not available' : '<a href="https://openlibrary.org/works/' + b.catalog.workId + '" target="_blank" rel="noopener noreferrer">' + v.toFixed(2) + '</a>') + '</td>';
       return '<td title="' + esc(v ?? '') + '">' + esc(v === null || v === '' ? '—' : v) + '</td>';
     }).join('') + '</tr>'; }).join('');
-    App.booksPivotsUI.render(all, p);
+    const pivotCounts = App.booksPivotsUI.render(all, p);
+    $('#booksPivotSearchCount').textContent = pivotCounts.shown + ' / ' + pivotCounts.total;
     const tab = $('[data-shelf="books"]'); if (tab) { tab.querySelector('.shelf-tab-count').textContent = all.length; tab.setAttribute('aria-label', 'Books, ' + all.length + ' books'); }
   }
   function init() {

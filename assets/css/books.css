@@ -4,7 +4,12 @@
 .books-views { flex-wrap: wrap; }
 .books-filters label, .books-lookup-row label, .book-fields > label { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; min-width: 0; }
 .books-filters label { flex: 1 1 130px; }
-.books-filters .books-search { flex: 3 1 240px; }
+.books-filters .books-search { flex: 3 1 240px; flex-direction: row; align-items: center; gap: .4rem; height: var(--control-height); padding: 0 .55rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.books-filters .books-search:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.books-filters .books-search input { flex: 1 1 auto; height: 100%; min-height: 0; padding: .4rem 0; border: 0; background: transparent; box-shadow: none; }
+.books-search [role="status"] { flex: 0 0 auto; color: var(--muted); font-size: .72rem; white-space: nowrap; }
+.books-search > kbd { flex: 0 0 auto; min-width: 22px; padding: 2px 5px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); color: var(--muted); font-size: .68rem; text-align: center; }
+.books-search[data-shortcut]::after { content: none; }
 .books-filters input, .books-filters select, .books-lookup-row input, .books-lookup-row select, .book-fields input, .book-fields select, .book-fields textarea { width: 100%; min-width: 0; }
 .books-lookup-row label:nth-child(2) { flex: 1 1 220px; }
 .books-table-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: .5rem; }

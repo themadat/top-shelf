@@ -162,8 +162,8 @@
       </div>
       <section id="booksListView" aria-label="Books list">
         <div class="books-filters">
-          <label class="books-search">Search books<input id="booksSearch" type="search" maxlength="200" placeholder="Title, author, genre, review or notes" aria-keyshortcuts="."></label>
-          <label>Status<select id="booksFilterStatus"></select></label><label>Ownership<select id="booksFilterOwnership"></select></label><label>Format<select id="booksFilterFormat"></select></label><label>Fiction / nonfiction<select id="booksFilterKind"></select></label>
+          <label class="books-search" data-shortcut="."><span class="visually-hidden">Search books</span><input id="booksSearch" type="search" maxlength="200" placeholder="Title, author, genre, review or notes" aria-keyshortcuts="."><span id="booksSearchCount" role="status"></span><kbd aria-hidden="true">.</kbd></label>
+          <label>Status<select id="booksFilterStatus"></select></label><label>Ownership<select id="booksFilterOwnership"></select></label><label>Format<select id="booksFilterFormat"></select></label><label>Type<select id="booksFilterKind"></select></label>
           <button id="booksClear" class="button small" type="button">Clear filters</button>
         </div>
         <p id="booksCount" class="setting-note" role="status"></p><p id="booksGroup" class="setting-note" hidden></p>
@@ -172,7 +172,7 @@
       </section>
       <section id="booksPivotsView" aria-label="Book pivots" hidden>
         <p class="setting-note">Completed books only · Year Read is when you finished the book. Averages use your ratings; unrated books count toward totals but not averages. Books may appear in several author or genre groups.</p>
-        <div class="books-filters"><label>Find a group<input id="booksPivotSearch" type="search" maxlength="200"></label><label>Minimum books<input id="booksPivotMin" type="number" min="1" max="5000" value="1"></label><label>Sort groups<select id="booksPivotSort"><option value="count">Book count</option><option value="average">My average rating</option><option value="label">Name / year</option></select></label><button id="booksPivotDirection" class="button small" type="button">Descending</button></div>
+        <div class="books-filters"><label class="books-search" data-shortcut="."><span class="visually-hidden">Find a group</span><input id="booksPivotSearch" type="search" maxlength="200" placeholder="Find a group…" aria-keyshortcuts="."><span id="booksPivotSearchCount" role="status"></span><kbd aria-hidden="true">.</kbd></label><label>Minimum books<input id="booksPivotMin" type="number" min="1" max="5000" value="1"></label><label>Sort groups<select id="booksPivotSort"><option value="count">Book count</option><option value="average">My average rating</option><option value="label">Name / year</option></select></label><button id="booksPivotDirection" class="button small" type="button">Descending</button></div>
         <p id="booksPivotCount" class="setting-note"></p><div id="booksPivotCards" class="books-pivot-grid"></div>
       </section>
     </section>
@@ -263,7 +263,7 @@
           <label class="book-wide">Authors <small>One author per line</small><textarea id="bookAuthors" rows="2" maxlength="20000"></textarea></label>
           <label>Reading status<select id="bookStatus"></select></label><label>Year read<input id="bookYear" type="number" min="1000" max="9999" step="1" placeholder="Unknown"></label>
           <label>My rating · 0–5<input id="bookRating" type="number" min="0" max="5" step="0.5" placeholder="Unrated"></label><label>Wishlist priority<select id="bookPriority"><option value="">No priority</option><option value="1">1 · Highest</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 · Lowest</option></select></label>
-          <label>Ownership<select id="bookOwnership"></select></label><label>Fiction / nonfiction<select id="bookKind"></select></label>
+          <label>Ownership<select id="bookOwnership"></select></label><label>Type<select id="bookKind"></select></label>
           <fieldset class="book-wide book-formats"><legend>Your formats</legend><label><input id="bookPrint" type="checkbox">Print</label><label><input id="bookEbook" type="checkbox">Ebook</label><label><input id="bookAudio" type="checkbox">Audiobook</label><label><input id="bookAudible" type="checkbox">Listened via Audible</label></fieldset>
           <label class="book-wide">Genres <small>Separate with commas; edit suggested genres as needed</small><input id="bookGenres" maxlength="20000"></label>
           <label class="book-wide">Short review<textarea id="bookReview" rows="3" maxlength="1000"></textarea></label>

@@ -1,12 +1,12 @@
 # Books
 
-Books is independent of Movies/TV. All Books includes every nondeleted entry; Read includes completed books; Wishlist includes Want to Read. Reading and Stopped remain available in All Books. Wishlist defaults to priority ascending (1 highest, 5 lowest, blanks last), then title. Clicking a column changes sorting. Table widths, sorting, search, filters and pivot preferences stay device-local; full backups include them.
+Books is independent of Movies/TV. All Books includes every nondeleted entry; Read includes completed books; Wishlist includes Want to Read. Reading and Stopped remain available in All Books. Wishlist defaults to priority ascending (1 highest, 5 lowest, blanks last), then title. Clicking a column changes sorting. List search shows matching books out of all books; pivot search shows matching groups out of all author, genre and year groups. The `.` shortcut focuses the active Books search. Table widths, sorting, search, filters and pivot preferences stay device-local; full backups include them.
 
 ## Personal fields
 
 A title is required. Authors support multiple names, one per line, with optional Open Library author identities. Year read is one optional completion year (1000–9999), separate from the catalog's first publication year. My rating is optional 0–5 in half-points; zero counts and blank is unrated. Ownership is Owned / Not owned / Unknown. Print, Ebook and Audiobook may coexist; Listened via Audible implies Audiobook. Catalog ebook availability never sets personal format or ownership.
 
-Fiction / Nonfiction / Unknown and comma-separated genres are editable. Review (1,000 characters) and longer notes (20,000) are separate plain text, with line breaks preserved. Oversized imported text is rejected rather than silently truncated. Mark read opens the editor without guessing a completion year or rating. Priority remains saved after reading. Multiple reading events and per-format ownership are not modeled.
+Type (Fiction / Nonfiction / Unknown) and comma-separated genres are editable. Review (1,000 characters) and longer notes (20,000) are separate plain text, with line breaks preserved. Oversized imported text is rejected rather than silently truncated. Mark read opens the editor without guessing a completion year or rating. Priority remains saved after reading. Multiple reading events and per-format ownership are not modeled.
 
 ## Open Library
 
