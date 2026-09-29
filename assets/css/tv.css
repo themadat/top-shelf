@@ -104,3 +104,11 @@
 .tv-episode-notes { margin-top: .25rem; }
 .tv-episode-notes label { display: grid; gap: .3rem; }
 .tv-episode-notes textarea { width: 100%; min-width: 240px; min-height: 10rem; white-space: pre-wrap; }
+
+.tv-network-pills { display: inline-flex; gap: .25rem; align-items: center; }
+.tv-network-pill { display: inline-block; padding: .1rem .4rem; border-radius: 999px; background: var(--surface-2); color: var(--text); border: 1px solid var(--line-strong); font-size: .68rem; line-height: 1.25; white-space: nowrap; }
+#tvPivotCards .pivot-card { max-width: 100%; }
+#tvPivotCards table th, #tvPivotCards table td { width: auto; min-width: 0; max-width: none; }
+#tvPivotCards thead th { position: sticky; overflow: visible; padding-right: 7px; }
+#tvPivotCards tbody th, #tvPivotCards tbody td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#tvPivotCards .pivot-resizer { right: 0; }

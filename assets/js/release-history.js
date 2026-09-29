@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"1.0.0.19","date":"2026-09-29T12:00:00.000Z","title":"TV pivot cards and list filters","summary":"Restore the list's Filters disclosure and add separate movie-style Type, Genres, and Networks pivot cards.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.18","date":"2026-09-29T12:00:00.000Z","title":"Episode ratings and notes import","summary":"Support half-point episode scores, editable episode/season notes, and additive detailed TV imports.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.17","date":"2026-09-29T12:00:00.000Z","title":"TV list and filters tabs","summary":"Put Ave beside # and add TV List and Filters views with a remembered local selection.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"1.0.0.16","date":"2026-09-29T12:00:00.000Z","title":"One-time TV notes reset","summary":"Clear existing TV show notes once after saving recovery; preserve ratings, season rankings, movie notes and the main Notes pad.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

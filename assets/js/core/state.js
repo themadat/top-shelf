@@ -488,6 +488,7 @@
           view: sourceUi.tv?.view === "pivots" ? "pivots" : "list",
           sort: ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"].includes(sourceUi.tv?.sort) ? sourceUi.tv.sort : "title",
           direction: sourceUi.tv?.direction === "desc" ? "desc" : "asc",
+          pivotWidths: columnWidths(sourceUi.tv?.pivotWidths, ["type-name", "type-count", "type-average", "type-score", "genres-name", "genres-count", "genres-average", "genres-score", "networks-name", "networks-count", "networks-average", "networks-score"], 1200),
           widths: columnWidths(sourceUi.tv?.widths, ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"], 2000),
           filter: App.tv.statuses.includes(sourceUi.tv?.filter) ? sourceUi.tv.filter : "all", query: u.cleanLine(sourceUi.tv?.query, 200)
         },

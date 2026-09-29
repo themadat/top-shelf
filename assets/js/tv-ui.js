@@ -2,8 +2,25 @@
   "use strict";
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['rating', '#', 105], ['voteAverage', 'Ave', 75], ['title', 'Show', 250], ['status', 'My Status', 140], ['providerStatus', 'Show Status', 140], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'S', 65], ['numberOfEpisodes', 'E', 65], ['networks', 'Networks', 160], ['notes', 'Notes', 140]];
+  const columns = [['rating', '#', 105], ['voteAverage', 'Ave', 75], ['title', 'Show', 250], ['networks', 'Networks', 160], ['status', 'My Status', 140], ['providerStatus', 'Show Status', 140], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['numberOfSeasons', 'S', 65], ['numberOfEpisodes', 'E', 65], ['notes', 'Notes', 140]];
   let batch = null, resizing = false, pivot = null;
+  const networkColors = {
+    'netflix': ['#e50914', '#fff'], 'hbo': ['#171717', '#fff'], 'hbo max': ['#5822b4', '#fff'], 'max': ['#002be7', '#fff'],
+    'bbc': ['#111', '#fff'], 'bbc one': ['#b90016', '#fff'], 'bbc two': ['#007f80', '#fff'], 'bbc three': ['#ed008c', '#fff'],
+    'abc': ['#171717', '#fff'], 'cbs': ['#003b70', '#fff'], 'nbc': ['#653c91', '#fff'], 'fox': ['#003b71', '#fff'],
+    'fx': ['#171717', '#fff'], 'fxx': ['#171717', '#fff'], 'amc': ['#ead36b', '#25220f'], 'showtime': ['#b60019', '#fff'],
+    'starz': ['#171717', '#fff'], 'hulu': ['#1ce783', '#073b25'], 'prime video': ['#00a8e1', '#082f49'], 'amazon': ['#ff9900', '#171717'],
+    'amazon prime video': ['#00a8e1', '#082f49'], 'apple tv+': ['#171717', '#fff'], 'apple tv': ['#171717', '#fff'],
+    'disney+': ['#006e78', '#fff'], 'disney channel': ['#1769c2', '#fff'], 'paramount+': ['#0064ff', '#fff'],
+    'peacock': ['#171717', '#fff'], 'the cw': ['#c43e00', '#fff'], 'channel 4': ['#14786c', '#fff'], 'itv': ['#cbea3b', '#253300'],
+    'adult swim': ['#171717', '#fff'], 'cartoon network': ['#171717', '#fff'], 'comedy central': ['#ffeb00', '#171717'],
+    'syfy': ['#cfef00', '#252b00'], 'usa network': ['#124bb2', '#fff'], 'tnt': ['#c51526', '#fff'], 'tbs': ['#0058a8', '#fff'],
+    'pbs': ['#2638c4', '#fff'], 'discovery': ['#1465a0', '#fff'], 'national geographic': ['#ffcc00', '#171717']
+  };
+  function networkPill(name) {
+    const palette = networkColors[name.trim().toLowerCase()];
+    return '<span class="tv-network-pill"' + (palette ? ' style="background:' + palette[0] + ';color:' + palette[1] + '"' : '') + '>' + esc(name) + '</span>';
+  }
   function tone(value) { return ({ 'Want to Watch': 'gold', Watching: 'blue', 'Caught Up': 'green', Completed: 'purple', Stopped: 'red', Active: 'green', Ended: 'purple', Canceled: 'red', Upcoming: 'blue' })[value] || 'muted'; }
   function balanceFilters() {
     const grid = $('#tvPivots'), sections = Array.from(grid.children), available = grid.clientWidth - 32;
@@ -70,9 +87,9 @@
       const episodeRated = s.seasons.some(function (season) { return season.episodes.some(function (episode) { return episode.rating !== null; }); });
       const indicators = (seasonRated ? '<span title="Season ratings or ranking saved" aria-label="Season ratings or ranking saved">S</span>' : '') + (episodeRated ? '<span title="Episode ratings saved" aria-label="Episode ratings saved">E</span>' : '');
       const detail = [avg.seasons.count ? 'Seasons: ' + avg.seasons.value.toFixed(1) + '/10' : '', avg.episodes.count ? 'Episodes: ' + avg.episodes.value.toFixed(1) + '/10' : '', s.seasonRanking.trim() ? 'Season ranking saved' : ''].filter(Boolean).join(' · ');
-      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (s.rating === null ? '' : 'movie-score') + '" style="' + (s.rating === null ? '' : 'background:' + App.movies.color(s.rating, false)) + '" aria-hidden="true">' + (s.rating ?? '—') + '</span><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td>'
+      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (s.rating === null ? '' : 'movie-score') + '" style="' + (s.rating === null ? '' : 'background:' + App.movies.color(s.rating, false)) + '" aria-hidden="true">' + (s.rating ?? '—') + '</span><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
         + '<td><select class="tv-tone-' + tone(s.status) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td>'
-        + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes', 'networks'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + (key === 'voteAverage' && s.voteAverage !== null ? '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '">' + cell + '</span>' : esc(cell ?? '—')) + '</td>'; }).join('')
+        + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + (key === 'voteAverage' && s.voteAverage !== null ? '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '">' + cell + '</span>' : esc(cell ?? '—')) + '</td>'; }).join('')
         + '<td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
     }).join('');
     $('#tvCount').textContent = rows.length + ' / ' + shows.length;
@@ -202,5 +219,5 @@
     });
     render();
   }
-  App.tvUI = { init: init, render: render };
+  App.tvUI = { init: init, render: render, networkPill: networkPill };
 })();
