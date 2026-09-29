@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const App = window.LocalApp, u = App.utils;
-  const statuses = ['Want to Watch', 'Watching', 'Caught Up', 'Completed', 'Stopped'];
+  const statuses = ['Watching', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
   const modes = ['Show', 'Season', 'Episode'];
   const showLabels = ['Terrible', 'Below Average', 'Average', 'Above Average', 'Elite', 'Legendary'];
   const episodeLabels = ['', 'Did not Finish', 'Wtf did I just watch', 'Horrible', 'Bad', 'Meh', 'Average', 'Good', 'Great', 'Phenomenal', 'Best of the Best'];
@@ -12,8 +12,30 @@
   function integer(value, min, max) { return Number.isInteger(value) && value >= min && value <= max; }
   function rating(value, show, halfSteps) {
     if (value === null || value === undefined || value === '') return null;
-    if (!(halfSteps ? typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 10 && Number.isInteger(value * 2) : integer(value, show ? 0 : 1, show ? 5 : 10))) throw new Error('Invalid TV rating. Episodes accept half-points from 1–10; other ratings use whole numbers on their scale.');
+    if (!(halfSteps || show ? typeof value === 'number' && Number.isFinite(value) && value >= (show ? 0 : 1) && value <= (show ? 5 : 10) && Number.isInteger(value * 2) : integer(value, show ? 0 : 1, show ? 5 : 10))) throw new Error('Invalid TV rating. Shows accept half-points from 0–5, episodes from 1–10; seasons use whole numbers from 1–10.');
     return value;
+  }
+  function priority(value) {
+    if (value === undefined || value === null || value === '') return null;
+    if (!integer(value, 1, 5)) throw new Error('TV priority must be a whole number from 1–5, or blank.');
+    return value;
+  }
+  function showRatingLabel(value) { return showLabels[value] || 'Between ' + Math.floor(value) + ' and ' + Math.ceil(value); }
+  function compareScore(a, b, direction) {
+    const wishA = a.status === 'Want to Watch', wishB = b.status === 'Want to Watch';
+    if (wishA !== wishB) return wishA ? 1 : -1;
+    const av = wishA ? a.priority : a.rating, bv = wishB ? b.priority : b.rating;
+    if (av === null || bv === null) return av === bv ? 0 : av === null ? 1 : -1;
+    return (av - bv) * (direction === 'desc' ? -1 : 1);
+  }
+  function compare(a, b, key, direction) {
+    const tie = function () { return compareScore(a, b, a.status === 'Want to Watch' ? 'asc' : 'desc') || a.title.localeCompare(b.title); };
+    if (key === 'rating') return compareScore(a, b, direction) || a.title.localeCompare(b.title);
+    const get = function (s) { if (key === 'status') return statuses.indexOf(s.status); if (key === 'providerStatus') return seriesStatus(s); return Array.isArray(s[key]) ? s[key].join(', ') : s[key]; };
+    const av = get(a), bv = get(b);
+    if (av === null || bv === null) return av === bv ? tie() : av === null ? 1 : -1;
+    const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { numeric: true });
+    return cmp * (direction === 'desc' ? -1 : 1) || tie();
   }
   function providerId(value) { return integer(value, 1, Number.MAX_SAFE_INTEGER) ? value : null; }
   function number(value, min) {
@@ -82,7 +104,7 @@
       numberOfSeasons: count(s.numberOfSeasons), numberOfEpisodes: count(s.numberOfEpisodes), voteAverage: average(s.voteAverage),
       providerStatus: u.cleanLine(s.providerStatus, 100), inProduction: typeof s.inProduction === 'boolean' ? s.inProduction : null,
       fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', status: statuses.includes(s.status) ? s.status : 'Watching', mode: modes.includes(s.mode) ? s.mode : 'Show',
-      rating: rating(s.rating, true), notes: u.cleanText(s.notes, 20000), seasonRanking: u.cleanText(s.seasonRanking === undefined ? rankingSeeds[u.cleanLine(s.title, 300).toLowerCase()] : s.seasonRanking, 20000), lastWatched: u.cleanLine(s.lastWatched, 100), sherlockRatingsAdded: sherlockRatingsAdded, seasons: seasons };
+      rating: rating(s.rating, true), priority: priority(s.priority), notes: u.cleanText(s.notes, 20000), seasonRanking: u.cleanText(s.seasonRanking === undefined ? rankingSeeds[u.cleanLine(s.title, 300).toLowerCase()] : s.seasonRanking, 20000), lastWatched: u.cleanLine(s.lastWatched, 100), sherlockRatingsAdded: sherlockRatingsAdded, seasons: seasons };
   }
   function normalizeList(value) {
     const source = collection(value, App.config.controls.maxTvShows, 'TV shows');
@@ -138,7 +160,7 @@
   }
   function refresh(prior, fresh) {
     if (prior.tmdbId && prior.tmdbId !== fresh.tmdbId) throw new Error('This response belongs to a different TV show.');
-    return normalize(Object.assign({}, fresh, { id: prior.id, status: prior.status, mode: prior.mode, rating: prior.rating, notes: prior.notes, seasonRanking: prior.seasonRanking, sherlockRatingsAdded: prior.sherlockRatingsAdded, lastWatched: prior.lastWatched, seasons: mergeEntries(prior.seasons, fresh.seasons, mergeSeason) }));
+    return normalize(Object.assign({}, fresh, { id: prior.id, status: prior.status, mode: prior.mode, rating: prior.rating, priority: prior.priority, notes: prior.notes, seasonRanking: prior.seasonRanking, sherlockRatingsAdded: prior.sherlockRatingsAdded, lastWatched: prior.lastWatched, seasons: mergeEntries(prior.seasons, fresh.seasons, mergeSeason) }));
   }
   function content(show) {
     const copy = u.clone(show); delete copy.fetchedAt;
@@ -147,6 +169,6 @@
     return copy;
   }
   function searchable(show) { return [show.title, show.originalTitle, show.type, show.notes, show.seasonRanking, show.status, seriesStatus(show)].concat(show.genres, show.networks, show.companies).join(' ').toLowerCase(); }
-  App.tv = { statuses: statuses, modes: modes, showLabels: showLabels, episodeLabels: episodeLabels, normalize: normalize, normalizeList: normalizeList, rating: rating,
+  App.tv = { priority: priority, compare: compare, showRatingLabel: showRatingLabel, statuses: statuses, modes: modes, showLabels: showLabels, episodeLabels: episodeLabels, normalize: normalize, normalizeList: normalizeList, rating: rating,
     seriesStatus: seriesStatus, averages: averages, fromTmdb: fromTmdb, seasonFromTmdb: seasonFromTmdb, mergeSeason: mergeSeason, refresh: refresh, content: content, searchable: searchable };
 })();

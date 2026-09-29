@@ -14,8 +14,8 @@
   function options(values, selected) { return values.map(function (s) { return '<option' + (s === selected ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join(''); }
   function ratingButtons(value, show, attributes) {
     const labels = show ? tv.showLabels : tv.episodeLabels;
-    return labels.map(function (label, score) {
-      if (!label) return '';
+    return (show ? Array.from({ length: 11 }, function (_, i) { return i / 2; }) : labels.map(function (_, i) { return i; }).slice(1)).map(function (score) {
+      const label = show ? tv.showRatingLabel(score) : labels[score];
       return '<button type="button" class="tv-rating-button" ' + attributes + ' data-score="' + score + '" aria-pressed="' + (value === score) + '" title="' + esc(label) + '"><strong>' + score + '</strong><small>' + esc(label) + '</small></button>';
     }).join('') + '<button type="button" class="button small" ' + attributes + ' data-score="" aria-label="Clear rating">Clear</button>';
   }
@@ -45,7 +45,7 @@
   function episodeWidths() {
     const saved = App.storage.getState().ui.tv.episodeWidths || {};
     const name = saved.episode || 240, rating = saved.rating || 64;
-    return [name, rating, Math.max(160, ($('#tvSeasons').clientWidth || 1000) - 8 - name - rating)];
+    return [name, rating, saved.notes || Math.max(160, ($('#tvSeasons').clientWidth || 1000) - 8 - name - rating)];
   }
   function fitNoteHeight(input) {
     if (!input.getClientRects().length) return;
@@ -61,13 +61,12 @@
     document.querySelectorAll('.tv-episode-note-input').forEach(fitNoteHeight);
   }
   function resizeEpisodeColumn(index, width, persist) {
-    const widths = episodeWidths(), available = Math.max(404, $('#tvSeasons').clientWidth - 8);
-    if (index === 2) widths[0] = Math.max(100, available - widths[1] - Math.max(160, width));
-    else widths[index] = Math.round(Math.max(index === 1 ? 45 : 100, Math.min(2000, width)));
-    widths[2] = Math.max(160, available - widths[0] - widths[1]);
+    const widths = episodeWidths();
+    widths[index] = Math.round(Math.max(index === 1 ? 45 : index === 2 ? 160 : 100, Math.min(2000, width)));
     layoutEpisodes(widths);
-    if (persist) App.storage.mutate(function (state) { state.ui.tv.episodeWidths = { episode: widths[0], rating: widths[1] }; }, { reason: 'tv-episode-width', touch: false });
+    if (persist) App.storage.mutate(function (state) { state.ui.tv.episodeWidths = { episode: widths[0], rating: widths[1], notes: widths[2] }; }, { reason: 'tv-episode-width', touch: false });
   }
+
   function seasonContent(s) {
     const key = seasonKey(s), count = pages.get(key) || 50, widths = episodeWidths();
     let tools = '<fieldset class="tv-rating-field"><legend>Season rating · 1–10</legend><div class="tv-rating-buttons">' + ratingButtons(s.rating, false, 'data-season-rating="' + key + '"') + '</div></fieldset>';
@@ -102,11 +101,15 @@
   function readFields() {
     if (!draft) return;
     draft.title = $('#tvName').value.trim(); draft.status = $('#tvStatus').value;
+    draft.priority = $('#tvPriority').value === '' ? null : Number($('#tvPriority').value);
     draft.lastWatched = $('#tvLastWatched').value; draft.notes = $('#tvNotes').value; draft.seasonRanking = $('#tvSeasonRanking').value;
   }
   function fill() {
     $('#tvName').value = draft.title; $('#tvStatus').innerHTML = options(tv.statuses, draft.status);
     $('#tvLastWatched').value = draft.lastWatched; $('#tvNotes').value = draft.notes; $('#tvSeasonRanking').value = draft.seasonRanking;
+    $('#tvPriority').value = draft.priority ?? '';
+    $('#tvPriorityField').hidden = draft.status !== 'Want to Watch';
+    $('#tvShowRatingField').hidden = draft.status === 'Want to Watch';
     $('#tvShowRating').innerHTML = ratingButtons(draft.rating, true, 'data-show-rating');
     $('#tvShowDetails').open = false;
     metadata(); renderSeasons();
@@ -211,6 +214,7 @@
     new ResizeObserver(function (entries) { const width = entries[0].contentRect.width; if (width !== lastEpisodeWidth) { lastEpisodeWidth = width; requestAnimationFrame(function () { layoutEpisodes(); }); } }).observe($('#tvSeasons'));
     $('#tvSeasons').addEventListener('input', function (event) { if (event.target.matches('.tv-episode-note-input')) fitNoteHeight(event.target); });
     $('#tvForm').addEventListener('submit', save);
+    $('#tvStatus').addEventListener('change', function () { readFields(); $('#tvPriorityField').hidden = draft.status !== 'Want to Watch'; $('#tvShowRatingField').hidden = draft.status === 'Want to Watch'; });
     ['#tvClose', '#tvCancel'].forEach(function (s) { $(s).addEventListener('click', close); });
     $('#tvDialog').addEventListener('cancel', function (event) { event.preventDefault(); close(); });
     $('#tvDialog').addEventListener('keydown', function (event) { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); } });

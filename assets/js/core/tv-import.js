@@ -10,8 +10,8 @@
       const prefix = 'Show ' + (index + 1) + ': ';
       if (!row || typeof row.title !== 'string' || !row.title.trim() || row.title.length > 300) throw new Error(prefix + 'enter a title (up to 300 characters).');
       if (!App.tv.statuses.includes(row.status)) throw new Error(prefix + 'choose a valid viewing status.');
-      if (!Object.hasOwn(row, 'rating')) throw new Error(prefix + 'rating must be 0–5 or null for unrated.');
-      if (row.rating !== null && (!Number.isInteger(row.rating) || row.rating < 0 || row.rating > 5)) throw new Error(prefix + 'rating must be 0–5 or null for unrated.');
+      if (!Object.hasOwn(row, 'rating')) throw new Error(prefix + 'rating must be 0–5 in half-points or null for unrated.');
+      if (row.rating !== null && ((typeof row.rating !== 'number' || !Number.isInteger(row.rating * 2)) || row.rating < 0 || row.rating > 5)) throw new Error(prefix + 'rating must be 0–5 in half-points or null for unrated.');
       if (row.notes !== undefined && (typeof row.notes !== 'string' || row.notes.length > 20000)) throw new Error(prefix + 'notes must be text up to 20,000 characters.');
       if (row.tmdbId !== undefined && row.tmdbId !== null && (!Number.isSafeInteger(row.tmdbId) || row.tmdbId < 1)) throw new Error(prefix + 'invalid TMDB TV ID.');
       if (row.seriesStatus !== undefined && !['Active', 'Unknown'].includes(row.seriesStatus)) throw new Error(prefix + 'imported series status must be Active or Unknown.');
@@ -19,7 +19,7 @@
       if (titles.has(key) || (row.tmdbId && ids.has(row.tmdbId))) throw new Error(prefix + 'duplicate show in the file. Resolve duplicates before importing.');
       titles.add(key); if (row.tmdbId) ids.add(row.tmdbId);
       const id = 'tv-import-' + u.fingerprint(key);
-      return App.tv.normalize({ id: id, title: title, tmdbId: row.tmdbId || null, rating: row.rating, status: row.status, mode: 'Show', notes: row.notes || '', seasons: row.seasons,
+      return App.tv.normalize({ id: id, title: title, tmdbId: row.tmdbId || null, rating: row.rating, priority: row.priority, status: row.status, mode: 'Show', notes: row.notes || '', seasons: row.seasons,
         providerStatus: row.seriesStatus === 'Active' ? 'Imported: Active' : '', inProduction: null });
     });
   }

@@ -143,7 +143,7 @@
       <h1 id="tvTitle" class="visually-hidden" tabindex="-1">TV</h1>
       <div class="tv-toolbar">
         <div class="segmented tv-view-switch" aria-label="TV View"><button type="button" data-tv-view="list" aria-pressed="true" aria-controls="tvListView">TV List</button><button type="button" data-tv-view="pivots" aria-pressed="false" aria-controls="tvPivotsView">Pivots</button></div>
-        <label><span class="visually-hidden">Filter TV by my status</span><select id="tvFilter"><option value="all">All shows</option><option>Want to Watch</option><option>Watching</option><option>Caught Up</option><option>Completed</option><option>Stopped</option></select></label>
+        <label><span class="visually-hidden">Filter TV by my status</span><select id="tvFilter"><option value="all">All shows</option><option>Watching</option><option>Caught Up</option><option>Want to Watch</option><option>Completed</option><option>Stopped</option></select></label>
         <label class="tv-search movie-search" data-shortcut="."><span class="visually-hidden">Search TV</span><input id="tvSearch" type="search" placeholder="Search TV…" maxlength="200" aria-keyshortcuts="."><span id="tvCount" role="status"></span><kbd aria-hidden="true">.</kbd></label>
         <button id="tvRefresh" class="button action-button" type="button"><span class="button-icon" data-symbol="updateApp" aria-hidden="true"></span><span class="button-label">Refresh Show Data</span></button>
         <button id="tvImportButton" class="button" type="button">Import Shows</button>
@@ -280,7 +280,8 @@
       <form id="tvForm" class="dialog-body">
         <details id="tvLookup"><summary>Find or link on TMDB</summary><div class="tv-lookup-row"><label>Title or TMDB TV ID<input id="tvLookupQuery" type="search" maxlength="200" autocomplete="off"></label><button id="tvLookupButton" type="button" class="button">Search</button></div><div id="tvLookupResults" class="tv-lookup-results"></div></details>
         <div class="tv-fields"><label class="tv-title-field">Show title<input id="tvName" required maxlength="300" autocomplete="off"></label><label>My Status<select id="tvStatus"></select></label><label>Last Watched<input id="tvLastWatched" maxlength="100" placeholder="e.g. S2 E4 (optional)"></label></div>
-        <fieldset class="tv-rating-field"><legend>My show rating · 0–5</legend><div id="tvShowRating" class="tv-rating-buttons"></div></fieldset>
+        <label id="tvPriorityField" class="tv-notes-label" hidden>Wishlist priority<select id="tvPriority"><option value="">No priority</option><option value="1">1 · Highest</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 · Lowest</option></select></label>
+        <fieldset id="tvShowRatingField" class="tv-rating-field"><legend>My show rating · 0–5 in half-points</legend><div id="tvShowRating" class="tv-rating-buttons"></div></fieldset>
         <p id="tvAverages" class="tv-averages"></p>
         <details id="tvShowDetails"><summary>Show details, season ranking &amp; notes</summary>
         <div id="tvMetadata" class="tv-metadata"></div>

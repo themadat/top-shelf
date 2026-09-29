@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 7;
-  // Older builds reject Books-bearing envelopes instead of silently dropping books.
-  const SYNC_SCHEMA_VERSION = 11;
+  const SYNC_VERSION = 8;
+  // Older builds reject TV priorities and half-point show scores instead of dropping data.
+  const SYNC_SCHEMA_VERSION = 12;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -298,7 +298,11 @@
     source.workspace = Object.assign({}, source.workspace, { books: [] });
     return source;
   }
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8 };
+  function migrate8to9(input) {
+    const source = u.clone(input); source.schemaVersion = 9;
+    return source;
+  }
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -668,10 +672,11 @@
     const priorReview = input.syncFormat === SYNC_FORMAT && input.syncVersion === 4 && input.schemaVersion === 8;
     const priorSubgenres = input.syncFormat === SYNC_FORMAT && input.syncVersion === 5 && input.schemaVersion === 9;
     const priorTv = input.syncFormat === SYNC_FORMAT && input.syncVersion === 6 && input.schemaVersion === 10;
-    if (!priorTv && !legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const priorBooks = input.syncFormat === SYNC_FORMAT && input.syncVersion === 7 && input.schemaVersion === 11;
+    if (!priorBooks && !priorTv && !legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(priorTv || input.syncVersion === SYNC_VERSION ? ["tvShows"] : []).concat(input.syncVersion === SYNC_VERSION ? ["books"] : [])).includes(key); })
+      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(priorBooks || priorTv || input.syncVersion === SYNC_VERSION ? ["tvShows"] : []).concat(priorBooks || input.syncVersion === SYNC_VERSION ? ["books"] : [])).includes(key); })
       || ("notes" in data && (typeof data.notes !== "string" || data.notes.length > config.controls.maxDocumentHtmlLength))
       || ("records" in data && (!Array.isArray(data.records) || data.records.length > config.controls.maxRecords))) {
       throw new Error("The cloud file contains invalid or unsupported content.");
@@ -691,7 +696,7 @@
         records: data.records || []
       }
     });
-    return { state: state, legacy: priorTv || legacyContent || priorMovies || priorPivots || priorReview || priorSubgenres, migrations: [], validation: validate(state) };
+    return { state: state, legacy: priorBooks || priorTv || legacyContent || priorMovies || priorPivots || priorReview || priorSubgenres, migrations: [], validation: validate(state) };
   }
 
   function applySync(localState, remoteState) {

@@ -65,13 +65,7 @@
     document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.tvView === (filtersView ? 'pivots' : 'list'))); });
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
     const rows = shows.filter(function (s) { return (p.filter === 'all' || s.status === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
-    rows.sort(function (a, b) {
-      const av = value(a, p.sort), bv = value(b, p.sort);
-      const tie = function () { return (p.sort === 'rating' ? 0 : (b.rating ?? -1) - (a.rating ?? -1)) || a.title.localeCompare(b.title); };
-      if (av === null || bv === null) return av === bv ? tie() : av === null ? 1 : -1;
-      const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { numeric: true });
-      return cmp * (p.direction === 'asc' ? 1 : -1) || tie();
-    });
+    rows.sort(function (a, b) { return tv.compare(a, b, p.sort, p.direction); });
     renderPivots(shows);
     App.tvPivotsUI.render(shows);
     const widths = columns.map(function (c) { return p.widths[c[0]] || c[2]; });
@@ -81,13 +75,15 @@
       return '<th scope="col" aria-sort="' + (p.sort === c[0] ? (p.direction === 'asc' ? 'ascending' : 'descending') : 'none') + '"><button type="button" data-tv-sort="' + c[0] + '">' + c[1] + (p.sort === c[0] ? (p.direction === 'asc' ? ' ↑' : ' ↓') : '') + '</button><button type="button" class="tv-resize" data-tv-resize="' + c[0] + '" aria-label="Resize ' + c[1] + ' column" title="Drag to resize. Double-click to fit. Arrow keys resize; Enter fits."></button></th>';
     }).join('') + '</tr>';
     $('#tvTable tbody').innerHTML = rows.map(function (s) {
-      const labels = '<option value="">—</option>' + tv.showLabels.map(function (label, i) { return '<option value="' + i + '"' + (s.rating === i ? ' selected' : '') + '>' + i + ' · ' + esc(label) + '</option>'; }).join('');
+      const wishlist = s.status === 'Want to Watch', field = wishlist ? 'priority' : 'rating', score = s[field];
+      const choices = wishlist ? [1, 2, 3, 4, 5] : Array.from({ length: 11 }, function (_, i) { return i / 2; });
+      const labels = '<option value="">—</option>' + choices.map(function (n) { const label = wishlist ? (n === 1 ? 'Highest' : n === 5 ? 'Lowest' : 'Priority') : tv.showRatingLabel(n); return '<option value="' + n + '"' + (score === n ? ' selected' : '') + '>' + n + ' · ' + esc(label) + '</option>'; }).join('');
       const avg = tv.averages(s);
       const seasonRated = s.seasons.some(function (season) { return season.rating !== null; }) || !!s.seasonRanking.trim();
       const episodeRated = s.seasons.some(function (season) { return season.episodes.some(function (episode) { return episode.rating !== null; }); });
       const indicators = (seasonRated ? '<span title="Season ratings or ranking saved" aria-label="Season ratings or ranking saved">S</span>' : '') + (episodeRated ? '<span title="Episode ratings saved" aria-label="Episode ratings saved">E</span>' : '');
       const detail = [avg.seasons.count ? 'Seasons: ' + avg.seasons.value.toFixed(1) + '/10' : '', avg.episodes.count ? 'Episodes: ' + avg.episodes.value.toFixed(1) + '/10' : '', s.seasonRanking.trim() ? 'Season ranking saved' : ''].filter(Boolean).join(' · ');
-      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (s.rating === null ? '' : 'movie-score') + '" style="' + (s.rating === null ? '' : 'background:' + App.movies.color(s.rating, false)) + '" aria-hidden="true">' + (s.rating ?? '—') + '</span><select data-tv-edit="rating" aria-label="Show rating for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
+      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (score === null ? '' : wishlist ? 'movie-priority' : 'movie-score') + '" style="' + (score === null ? '' : 'background:' + App.movies.color(score, wishlist)) + '" aria-hidden="true">' + (score ?? '—') + '</span><select data-tv-edit="' + field + '" aria-label="' + (wishlist ? 'Priority' : 'Show rating') + ' for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
         + '<td><select class="tv-tone-' + tone(s.status) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td>'
         + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + (key === 'voteAverage' && s.voteAverage !== null ? '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '">' + cell + '</span>' : esc(cell ?? '—')) + '</td>'; }).join('')
         + '<td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
@@ -101,13 +97,7 @@
   }
   function resizedWidths(key, width) {
     const widths = Object.fromEntries(columns.map(function (c) { return [c[0], pref().widths[c[0]] || c[2]]; }));
-    const index = columns.findIndex(function (c) { return c[0] === key; }), right = columns[index + 1]?.[0];
-    let next = Math.round(Math.max(65, Math.min(2000, width)));
-    if (right) {
-      const delta = Math.max(widths[right] - 2000, Math.min(widths[right] - 65, next - widths[key]));
-      next = widths[key] + delta; widths[right] -= delta;
-    }
-    widths[key] = next;
+    widths[key] = Math.round(Math.max(65, Math.min(2000, width)));
     return widths;
   }
   function setWidth(key, width) { preference({ widths: resizedWidths(key, width) }); }
@@ -170,6 +160,7 @@
     }
   }
   async function init() {
+    $('#tvFilter').innerHTML = '<option value="all">All shows</option>' + options(tv.statuses, pref().filter);
     await clearLegacyNotes();
     App.tvPivotsUI.init();
     $('#tvFiltersDisclosure').addEventListener('toggle', balanceFilters);
@@ -188,7 +179,7 @@
     $('#tvTable').addEventListener('change', function (event) {
       const field = event.target.dataset.tvEdit; if (!field) return;
       const id = event.target.closest('[data-tv-id]').dataset.tvId;
-      update(id, field, field === 'rating' ? (event.target.value === '' ? null : Number(event.target.value)) : event.target.value);
+      update(id, field, ['rating', 'priority'].includes(field) ? (event.target.value === '' ? null : Number(event.target.value)) : event.target.value);
       const control = $('#tvTable').querySelector('[data-tv-id="' + id + '"] [data-tv-edit="' + field + '"]'); control?.focus();
     });
     $('#tvTable').addEventListener('dblclick', function (event) { const h = event.target.closest('[data-tv-resize]'); if (h) fit(h.dataset.tvResize); });

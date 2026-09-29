@@ -72,3 +72,13 @@ test('episode imports preserve half-points and notes, merge missing details, and
   assert.equal(refreshed.seasons[0].notes,'Season review');assert.equal(refreshed.seasons[0].episodes[1].rating,6.5);assert.equal(refreshed.seasons[0].episodes[1].notes,'<script>literal text</script>');
   assert.throws(()=>A.tv.normalize({title:'Bad',seasons:[{number:1,episodes:[{number:1,rating:6.25}]}]}),/rating/);
 });
+
+test('TV imports accept half-point show scores and optional wishlist priority without overwriting existing personal values', () => {
+  const input = file([row('Half point', {rating:4.5,status:'Want to Watch',priority:1})]);
+  const preview=importer.preview([],input); const imported=importer.apply([],input,preview.snapshot,preview.entries.map(e=>e.show.id));
+  assert.equal(imported.shows[0].rating,4.5);assert.equal(imported.shows[0].priority,1);
+  const existing=imported.shows.map(s=>({...s,priority:4,rating:2.5}));
+  assert.equal(importer.preview(existing,input).entries[0].action,'skip');assert.equal(existing[0].priority,4);
+  assert.throws(()=>importer.preview([],file([row('Invalid',{rating:4.25})])),/half-points/);
+  assert.throws(()=>importer.preview([],file([row('Invalid',{priority:1.5})])),/priority/);
+});

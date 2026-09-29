@@ -16,10 +16,10 @@ const show = (extra = {}) => tv.normalize({ id: 'tv-one', title: 'Example', tmdb
 const series = () => ({ id: 123, name: 'Example', status: 'Returning Series', in_production: true, type: 'Scripted', first_air_date: '2020-01-02', last_air_date: '2024-03-04', number_of_seasons: 4, number_of_episodes: 38, vote_average: 8.25, genres: [{ name: 'Drama' }], networks: [{ name: 'Network' }], production_companies: [{ name: 'Studio' }], seasons: [{ id: 71, season_number: 1, name: 'Season 1', episode_count: 3 }] });
 const season = () => ({ id: 71, season_number: 1, name: 'Season 1', episodes: [{ id: 91, episode_number: 1, name: 'Pilot', air_date: '2020-01-02' }, { id: 92, episode_number: 2, name: 'Second' }] });
 
-test('TV scales preserve zero, blanks, whole numbers and exact labels', () => {
+test('TV scales preserve zero, blanks, half-point show/episode scores and exact labels', () => {
   assert.equal(show({ rating: 0 }).rating, 0);
   for (const r of [undefined, null, '']) assert.equal(show({ rating: r }).rating, null);
-  for (const r of [-1, 6, 1.5, '3', NaN]) assert.throws(() => show({ rating: r }), /rating/);
+  for (const r of [-1, 6, 1.25, '3', NaN]) assert.throws(() => show({ rating: r }), /rating/);
   for (const r of [0, 11, 5.5]) assert.throws(() => show({ seasons: [{ number: 1, rating: r }] }), /rating/);
   assert.equal(tv.showLabels[5], 'Legendary'); assert.equal(tv.showLabels[0], 'Terrible');
   assert.equal(tv.episodeLabels[1], 'Did not Finish'); assert.equal(tv.episodeLabels[10], 'Best of the Best');
@@ -104,7 +104,7 @@ test('TV sync fingerprints ignore device preferences and check timestamps', () =
   assert.equal(model.syncHash(state), hash);
   assert.equal(model.syncHash(model.prepareSync(model.syncPayload(state)).state), hash);
   state.workspace.tvShows[0].rating = 0; assert.notEqual(model.syncHash(state), hash);
-  const payload = model.syncPayload(state); assert.equal(payload.syncVersion, 7); assert.equal(payload.schemaVersion, 11);
+  const payload = model.syncPayload(state); assert.equal(payload.syncVersion, 8); assert.equal(payload.schemaVersion, 12);
   assert.throws(() => model.prepareSync({ ...payload, syncVersion: 5, schemaVersion: 9 }), /invalid/);
 });
 
@@ -184,4 +184,33 @@ test('Sherlock supplied episode ratings seed once, preserve existing scores, and
   assert.equal(existing.seasons[1].episodes[0].rating, 3);
   assert.equal(tv.normalize({ ...s, deleted: true }).seasons, undefined);
   assert.equal(show({ title: 'Sherlock Holmes' }).seasons.length, 0);
+});
+
+test('TV status sorting follows the viewing order and wishlist ties use independent priority', () => {
+  const expected = ['Watching', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
+  assert.deepEqual(Array.from(tv.statuses), expected);
+  const items = expected.slice().reverse().map((status, i) => show({ id: 'status-' + i, status, title: 'Show ' + i }));
+  assert.deepEqual(items.slice().sort((a,b)=>tv.compare(a,b,'status','asc')).map(s=>s.status), expected);
+  assert.deepEqual(items.slice().sort((a,b)=>tv.compare(a,b,'status','desc')).map(s=>s.status), expected.slice().reverse());
+  const wishes = [null,5,1,3].map((priority,i)=>show({id:'wish-'+i,status:'Want to Watch',priority,rating:5-i,title:'Wish '+i}));
+  assert.deepEqual(wishes.slice().sort((a,b)=>tv.compare(a,b,'rating','asc')).map(s=>s.priority), [1,3,5,null]);
+  assert.deepEqual(wishes.slice().sort((a,b)=>tv.compare(a,b,'status','asc')).map(s=>s.priority), [1,3,5,null]);
+  assert.deepEqual(wishes.slice().sort((a,b)=>tv.compare(a,b,'rating','desc')).map(s=>s.priority), [5,3,1,null]);
+});
+
+test('TV half-point show ratings and priority survive status changes, refresh, backups and current/legacy sync', () => {
+  for (const rating of [0,.5,1.5,2.5,3.5,4.5,5]) assert.equal(show({rating}).rating,rating);
+  for (const priority of [0,6,1.5,'2']) assert.throws(()=>show({priority}),/priority/);
+  const original = show({status:'Want to Watch',priority:1,rating:4.5});
+  const watching = tv.normalize({...original,status:'Watching'}); assert.equal(watching.priority,1); assert.equal(watching.rating,4.5);
+  const refreshed = tv.refresh(original,tv.fromTmdb(series())); assert.equal(refreshed.priority,1); assert.equal(refreshed.rating,4.5);
+  const local = model.normalize({workspace:{tvShows:[original]},ui:{tv:{episodeWidths:{episode:300,rating:75,notes:700}}}});
+  const backup = model.prepare(model.exportEnvelope(local)).state;
+  assert.equal(backup.workspace.tvShows[0].priority,1);assert.equal(backup.workspace.tvShows[0].rating,4.5);assert.equal(backup.ui.tv.episodeWidths.notes,700);
+  const payload=model.syncPayload(local);assert.equal(model.prepareSync(payload).state.workspace.tvShows[0].priority,1);
+  const legacy=JSON.parse(JSON.stringify(payload));legacy.syncVersion=7;legacy.schemaVersion=11;delete legacy.data.tvShows[0].priority;legacy.data.tvShows[0].rating=4;
+  assert.equal(model.prepareSync(legacy).state.workspace.tvShows[0].priority,null);
+  assert.throws(()=>model.prepareSync({...payload,syncVersion:9,schemaVersion:13}),/not supported/);
+  const oldLocal=JSON.parse(JSON.stringify(local));oldLocal.schemaVersion=8;delete oldLocal.workspace.tvShows[0].priority;
+  assert.ok(model.prepare(oldLocal).migrations.includes('8→9'));
 });

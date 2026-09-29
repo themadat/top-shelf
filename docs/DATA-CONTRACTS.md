@@ -2,7 +2,7 @@
 
 ## Local preferences and data contracts
 
-Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 8. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v7/schema 11 and accepts earlier v1–v6 cloud envelopes. Keep namespace compatibility. Books uses a new envelope version so earlier clients reject Books-bearing data; earlier TV-bearing v6 envelopes remain readable.
+Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 9. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v8/schema 12 and accepts earlier v1–v7 cloud envelopes. Keep namespace compatibility. TV priority and half-point show scores use a new envelope so older clients reject unsupported data; earlier TV-bearing v6 and Books-bearing v7 envelopes remain readable.
 
 Device-local ui fields (full backups, excluded from content sync): books (view/query/sort/direction/widths/status/ownership/kind/format/pivotQuery/minimum/pivotSort/pivotDirection); tv (view/sort/direction/widths/pivotWidths/episodeWidths/filter/query); movieSorts by all/wishlist/watched; movieColumnWidths with separate maps per tab; pivotColumnWidths; pivotLocalSettings; pivotSubsectionSorts. Old flat movie widths migrate to independent copies. Old workspace.pivotSettings is a fallback until locally overridden; scoring baseline/weight remain shared. Reset preferences clears local overrides.
 
