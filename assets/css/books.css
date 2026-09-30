@@ -2,6 +2,9 @@
 .books-toolbar, .books-lookup-row, .books-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .7rem; margin-bottom: .85rem; }
 .books-toolbar { align-items: center; justify-content: space-between; }
 .books-toolbar-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.books-batch { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; font-size: .82rem; color: var(--muted); }
+.books-batch:has(#booksBatchStatus:empty) { margin: 0; }
+.books-batch:has(#booksBatchStatus:not(:empty)) { margin-bottom: .6rem; }
 .books-views { flex-wrap: wrap; }
 .books-filters label, .books-lookup-row label, .book-fields > label { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; min-width: 0; }
 .books-filters label { flex: 1 1 130px; }
@@ -12,6 +15,7 @@
 .books-search > kbd { flex: 0 0 auto; min-width: 22px; padding: 2px 5px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); color: var(--muted); font-size: .68rem; text-align: center; }
 .books-search[data-shortcut]::after { content: none; }
 .books-filters input, .books-filters select, .books-lookup-row input, .books-lookup-row select, .book-fields input, .book-fields select, .book-fields textarea { width: 100%; min-width: 0; }
+.books-filters #booksClear { height: var(--control-height); min-height: var(--control-height); align-self: flex-end; }
 .books-lookup-row label:nth-child(2) { flex: 1 1 220px; }
 .books-table-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: .5rem; }
 .books-import-table { width: 100%; min-width: 860px; border-collapse: collapse; font-size: .85rem; }
@@ -21,7 +25,7 @@
 #booksImportError { color: var(--danger); }
 #booksImportFile { max-width: 100%; }
 #booksTable { table-layout: fixed; border-collapse: collapse; font-size: .88rem; }
-#booksTable th, #booksTable td { padding: .55rem .65rem; border-bottom: 1px solid var(--line); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#booksTable th, #booksTable td { padding: .38rem .55rem; border-bottom: 1px solid var(--line); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #booksTable thead th { position: relative; background: var(--surface-2); }
 #booksTable tbody th { font-weight: 500; white-space: normal; }
 #booksTable thead th > button:first-child { border: 0; background: none; color: inherit; font: inherit; font-weight: 600; padding: .25rem 0; }
@@ -31,12 +35,12 @@
 .book-notes-marker:hover { background: var(--accent-soft); }
 .book-notes-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .book-notes-marker .sf-symbol { width: 1rem; height: 1rem; }
-.book-title { max-width: 100%; padding: .2rem 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; overflow-wrap: anywhere; }
+.book-title { max-width: 100%; padding: .08rem 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; overflow-wrap: anywhere; }
 .book-title:hover { color: var(--accent-strong); text-decoration: underline; }
-.book-mark { display: block; border: 0; background: none; color: var(--accent-strong); font-size: .75rem; padding: .35rem 0; }
+.book-mark { display: inline; margin-left: .45rem; padding: .08rem 0; border: 0; background: none; color: var(--accent-strong); font-size: .75rem; }
 .book-resize { position: absolute; right: 0; top: 0; bottom: 0; width: 10px; padding: 0; background: transparent; border: 0; cursor: col-resize; touch-action: none; }
 .book-resize:hover, .book-resize:focus-visible { background: var(--accent-soft); }
-.book-dialog { width: min(820px, calc(100vw - 2rem)); height: calc(100dvh - 2rem); max-height: calc(100dvh - 2rem); }
+.book-dialog { width: min(1100px, calc(100vw - 2rem)); height: calc(100dvh - 2rem); max-height: calc(100dvh - 2rem); }
 .book-dialog .dialog-shell { height: 100%; }
 .book-dialog .dialog-body { min-height: 0; overflow-y: auto; }
 .book-dialog .dialog-footer { flex-wrap: wrap; }

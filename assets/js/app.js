@@ -233,6 +233,7 @@
   function renderNotesEditor() {
     const documentItem = state().workspace.documents[0];
     $("#notesTextarea").innerHTML = u.sanitizeRichHtml(documentItem?.html || "");
+    App.notesOutline.decorate($("#notesTextarea"));
   }
 
   function saveNotes(value) {
@@ -259,6 +260,7 @@
     if (notesSelection && editor.contains(notesSelection.commonAncestorContainer)) { selection.removeAllRanges(); selection.addRange(notesSelection); }
   }
   function queueNotesFromEditor() {
+    App.notesOutline.decorate($("#notesTextarea"));
     pendingNotes = $("#notesTextarea").innerHTML;
     $("[data-floating-local-label]").textContent = "Saving locally…";
     queueNotesSave();
@@ -945,6 +947,13 @@
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
     $("#notesTextarea").addEventListener("input", queueNotesFromEditor);
+    $("#notesTextarea").addEventListener("mousedown", function (event) { if (event.target.closest("[data-notes-toggle]")) event.preventDefault(); });
+    $("#notesTextarea").addEventListener("click", function (event) {
+      const toggle = event.target.closest("[data-notes-toggle]");
+      if (toggle) { event.preventDefault(); App.notesOutline.toggle(this, toggle); return; }
+      const link = event.target.closest("a[href]");
+      if (link && this.contains(link)) { event.preventDefault(); const url = u.safeUrl(link.getAttribute("href")); if (url) window.open(url, "_blank", "noopener,noreferrer"); }
+    });
     document.addEventListener("selectionchange", rememberNotesSelection);
     $("#notesDialog .notes-toolbar").addEventListener("mousedown", function (event) { if (event.target.closest("button")) event.preventDefault(); });
     $("#notesDialog .notes-toolbar").addEventListener("click", function (event) {
@@ -963,7 +972,7 @@
       const selection = window.getSelection();
       if (selection?.isCollapsed) document.execCommand("insertHTML", false, '<a href="' + u.escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' + u.escapeHtml(url) + '</a>');
       else document.execCommand("createLink", false, url);
-      $("#notesTextarea").querySelectorAll("a[href]").forEach(function (link) { link.target = "_blank"; link.rel = "noopener noreferrer"; });
+      $("#notesTextarea").querySelectorAll("a[href]").forEach(function (link) { link.target = "_blank"; link.rel = "noopener noreferrer"; link.title = link.href; });
       $("#notesLinkControls").hidden = true; $("#notesLinkUrl").value = '';
       rememberNotesSelection(); queueNotesFromEditor();
     });

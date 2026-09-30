@@ -3,7 +3,7 @@
   const App = window.LocalApp, books = App.books, esc = App.utils.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
   const columns = [['rating','#',70],['average','Ave',75],['yearRead','Year',90],['title','Name',240],['authors','Author',190],['kind','Type',120],['genres','Genre',180],['ownership','Own',100],['formats','Format',150],['review','Review',260]];
-  let group = null;
+  let group = null, batch = null;
   function state() { return App.storage.getState(); }
   function pref() { return state().ui.books; }
   function preference(patch) { App.storage.mutate(function (s) { Object.assign(s.ui.books, patch); }, { touch: false, reason: 'books-preference' }); }
@@ -13,7 +13,43 @@
     if (key === 'formats') return b.formats.join(', ') + (b.audible ? ' · Audible' : '');
     if (key === 'genres') return b.genres.join(', ');
     if (key === 'average') return b.catalog.average;
+    if (key === 'ownership') return b.ownership === 'Owned' ? 'YES' : b.ownership === 'Not owned' ? 'NO' : null;
     return b[key];
+  }
+  async function refreshAll() {
+    if (batch) return;
+    const linked = state().workspace.books.filter(function (b) { return !b.deleted && b.catalog.workId; });
+    const message = $('#booksBatchStatus');
+    if (!linked.length) { message.textContent = 'No linked books to refresh. Link a book to Open Library in its editor first.'; return; }
+    if (navigator.onLine === false) { message.textContent = 'You’re offline. Saved books can still be edited.'; return; }
+    const controller = new AbortController(); batch = controller;
+    $('#booksStop').hidden = false; $('#booksRefresh').disabled = true;
+    let updated = 0, skipped = 0, errorMessage = '';
+    try {
+      const before = App.utils.stableJson(state());
+      if (!await App.storage.saveRecoveryAsync('Before refreshing all books')) throw new Error('Could not save recovery. No books were changed.');
+      if (App.utils.stableJson(state()) !== before) throw new Error('Books changed while preparing recovery. Refresh again.');
+      for (let index = 0; index < linked.length && !controller.signal.aborted; index++) {
+        const old = linked[index];
+        message.textContent = 'Refreshing linked books · ' + (index + 1) + '/' + linked.length + ': ' + old.title;
+        if (App.booksEditor.isEditing(old.id)) { skipped++; continue; }
+        const snapshot = App.utils.stableJson(old);
+        const result = await App.openLibrary.details(old.catalog, controller.signal, true);
+        if (controller.signal.aborted) break;
+        const current = state().workspace.books.find(function (b) { return b.id === old.id && !b.deleted; });
+        if (!current || snapshot !== App.utils.stableJson(current) || App.booksEditor.isEditing(old.id)) { skipped++; continue; }
+        const next = App.utils.clone(state());
+        const position = next.workspace.books.findIndex(function (b) { return b.id === old.id; });
+        next.workspace.books[position] = books.refresh(current, result.catalog);
+        next.workspace.books = books.normalizeList(next.workspace.books);
+        App.storage.replace(next, { saveRecovery: false, reason: 'books-refresh' });
+        updated++;
+      }
+    } catch (error) { if (error.name !== 'AbortError') errorMessage = error.message; }
+    finally {
+      batch = null; $('#booksStop').hidden = true; $('#booksRefresh').disabled = false;
+      message.textContent = (controller.signal.aborted ? 'Stopped. ' : '') + updated + ' of ' + linked.length + ' linked books refreshed; ' + skipped + ' skipped. ' + errorMessage;
+    }
   }
   function render() {
     const p = pref(), all = state().workspace.books.filter(function (b) { return !b.deleted; });
@@ -52,8 +88,10 @@
     const tab = $('[data-shelf="books"]'); if (tab) { tab.querySelector('.shelf-tab-count').textContent = all.length; tab.setAttribute('aria-label', 'Books, ' + all.length + ' books'); }
   }
   function init() {
-    [['booksFilterStatus',books.statuses],['booksFilterOwnership',books.ownerships],['booksFilterKind',books.kinds],['booksFilterFormat',books.formats.concat('Audible')]].forEach(function (entry) { $('#' + entry[0]).innerHTML = '<option value="all">All</option>' + entry[1].map(function (s) { return '<option>' + esc(s) + '</option>'; }).join(''); });
+    [['booksFilterStatus',books.statuses],['booksFilterOwnership',books.ownerships],['booksFilterKind',books.kinds],['booksFilterFormat',books.formats.concat('Audible')]].forEach(function (entry) { $('#' + entry[0]).innerHTML = '<option value="all">All</option>' + entry[1].map(function (s) { return '<option value="' + esc(s) + '">' + (entry[0] === 'booksFilterOwnership' ? s === 'Owned' ? 'YES' : s === 'Not owned' ? 'NO' : 'Unknown' : esc(s)) + '</option>'; }).join(''); });
     $('#booksAdd').addEventListener('click', function () { App.booksEditor.open(null, this); });
+    $('#booksRefresh').addEventListener('click', refreshAll);
+    $('#booksStop').addEventListener('click', function () { batch?.abort(); });
     $('#booksWorkspace').addEventListener('click', function (event) {
       const view = event.target.closest('[data-books-view]'); if (view) { group = null; preference({ view: view.dataset.booksView, status: 'all', sort: view.dataset.booksView === 'wishlist' ? 'rating' : 'title', direction: 'asc' }); }
       const sort = event.target.closest('[data-books-sort]'); if (sort) preference({ sort: sort.dataset.booksSort, direction: pref().sort === sort.dataset.booksSort && pref().direction === 'asc' ? 'desc' : 'asc' });
@@ -70,9 +108,19 @@
     $('#booksTable').addEventListener('pointerdown', function (event) {
       const b = event.target.closest('[data-book-resize]'); if (!b) return; event.preventDefault();
       const key = b.dataset.bookResize, start = event.clientX, size = pref().widths[key] || columns.find(function (c) { return c[0] === key; })[2];
-      const end = function (e) { document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', cancel); width(key, size + e.clientX - start); };
-      const cancel = function () { document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', cancel); };
-      document.addEventListener('pointerup', end); document.addEventListener('pointercancel', cancel, { once: true });
+      const table = $('#booksTable'), col = table.querySelector('col:nth-child(' + (columns.findIndex(function (c) { return c[0] === key; }) + 1) + ')');
+      const total = parseInt(table.style.width, 10), clamp = function (n) { return Math.max(70, Math.min(800, Math.round(n))); };
+      let current = size;
+      const show = function (n) { current = clamp(n); col.style.width = current + 'px'; table.style.width = total + current - size + 'px'; };
+      const move = function (e) { if (e.pointerId === event.pointerId) show(size + e.clientX - start); };
+      const clear = function () { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', finish); document.removeEventListener('pointercancel', cancel); };
+      const finish = function (e) {
+        if (e.pointerId !== event.pointerId) return;
+        clear();
+        show(size + e.clientX - start); if (current !== size) width(key, current);
+      };
+      const cancel = function (e) { if (e.pointerId !== event.pointerId) return; clear(); show(size); };
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', finish); document.addEventListener('pointercancel', cancel);
     });
     window.addEventListener('app:statechange', function (event) { if (event.detail.reason === 'edit-document') return; if (['import','sync-download','sync-merge','recovery','erase-all','restore-demo','reset-preferences'].includes(event.detail.reason)) group = null; render(); });
     render();

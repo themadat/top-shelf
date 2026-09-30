@@ -105,7 +105,7 @@
     finally { if (token === generation) $('#bookLookupCancel').hidden = true; }
   }
   function init() {
-    [['bookStatus',books.statuses],['bookOwnership',books.ownerships],['bookKind',books.kinds]].forEach(function (entry) { $('#' + entry[0]).innerHTML = entry[1].map(function (value) { return '<option>' + esc(value) + '</option>'; }).join(''); });
+    [['bookStatus',books.statuses],['bookOwnership',books.ownerships],['bookKind',books.kinds]].forEach(function (entry) { $('#' + entry[0]).innerHTML = entry[1].map(function (value) { return '<option value="' + esc(value) + '">' + (entry[0] === 'bookOwnership' ? value === 'Owned' ? 'YES' : value === 'Not owned' ? 'NO' : 'Unknown' : esc(value)) + '</option>'; }).join(''); });
     $('#bookForm').addEventListener('submit', save);
     ['bookClose','bookCancel'].forEach(function (id) { $('#' + id).addEventListener('click', close); });
     $('#bookDelete').addEventListener('click', remove); $('#bookLookupSearch').addEventListener('click', lookup);
@@ -122,5 +122,5 @@
     $('#bookDialog').addEventListener('close', function () { stop(); draft = null; });
     window.addEventListener('app:statechange', function (event) { if (['import','sync-download','sync-merge','recovery','erase-all','restore-demo'].includes(event.detail.reason)) { epoch++; if (draft) { stop(); status('Saved data was replaced. Copy unsaved notes before reopening this book.'); } } });
   }
-  App.booksEditor = { init: init, open: open };
+  App.booksEditor = { init: init, open: open, isEditing: function (id) { return !!draft && existing && draft.id === id && $('#bookDialog').open; } };
 })();

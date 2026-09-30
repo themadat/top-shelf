@@ -4,6 +4,8 @@ Books is independent of Movies/TV. All Books includes every nondeleted entry; Re
 
 The list columns are #, Ave, Year, Name, Author, Type, Genre, Own, Format and Review. # shows wishlist priority for Want to Read and My rating for other statuses; Ave is the Open Library average when available. A notes icon beside Year indicates longer book notes and opens that book. Earlier saved priority sorting maps to # sorting.
 
+Own displays YES, NO or — for unknown; filters and the editor use YES/NO labels while keeping the established saved ownership values. The Clear filters control matches the input height. Column widths update during pointer dragging and persist on release. Refresh Book Data updates linked Open Library metadata and community ratings, saving a recovery copy first. It skips books being edited or changed during retrieval and can be stopped; manual books remain untouched. The book editor is wider on desktop.
+
 ## Personal fields
 
 A title is required. Authors support multiple names, one per line, with optional Open Library author identities. Year read is one optional completion year (1000–9999), separate from the catalog's first publication year. My rating is optional 0–5 in half-points; zero counts and blank is unrated. Ownership is Owned / Not owned / Unknown. Print, Ebook and Audiobook may coexist; Listened via Audible implies Audiobook. Catalog ebook availability never sets personal format or ownership.
