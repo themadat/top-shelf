@@ -41,6 +41,11 @@
     { keys: "Arrow keys", label: "Move through tabs, menus, and list choices", group: "Navigation", chord: false }
   ];
 
+  SHORTCUTS.push(
+    { keys: 'Cmd/Ctrl+B / I / K', label: 'Notes: bold / italic / add link', group: 'Notes', chord: false },
+    { keys: 'Cmd/Ctrl+Shift+B', label: 'Notes: body text', group: 'Notes', chord: false },
+    { keys: 'Cmd/Ctrl+Shift+1 / 2 / 3', label: 'Notes: heading 1 / 2 / 3', group: 'Notes', chord: false }
+  );
   SHORTCUTS.push.apply(SHORTCUTS, config.shelves.map(function (shelf) { return { keys: shelf.shortcut, label: "Open " + shelf.label, group: "Rating lists", chord: false }; }));
 
   function state() {
@@ -252,7 +257,16 @@
   let notesSelection = null;
   function rememberNotesSelection() {
     const selection = window.getSelection(), editor = $("#notesTextarea");
-    if (selection?.rangeCount && editor.contains(selection.anchorNode) && editor.contains(selection.focusNode)) notesSelection = selection.getRangeAt(0).cloneRange();
+    if (selection?.rangeCount && editor.contains(selection.anchorNode) && editor.contains(selection.focusNode)) {
+      notesSelection = selection.getRangeAt(0).cloneRange();
+      const node = selection.anchorNode.nodeType === Node.ELEMENT_NODE ? selection.anchorNode : selection.anchorNode.parentElement;
+      const block = node.closest('h1,h2,h3,p,div');
+      $$('[data-notes-command]').forEach(function (button) {
+        const command = button.dataset.notesCommand;
+        const active = ['bold', 'italic'].includes(command) ? document.queryCommandState(command) : command === (block === editor ? 'p' : block?.tagName.toLowerCase());
+        button.setAttribute('aria-pressed', String(Boolean(active)));
+      });
+    }
   }
   function restoreNotesSelection() {
     const editor = $("#notesTextarea"), selection = window.getSelection();
@@ -276,10 +290,18 @@
     storage.saveNow();
   }
 
+  function formatNotes(command) {
+    restoreNotesSelection();
+    document.execCommand("styleWithCSS", false, false);
+    document.execCommand(command === "bold" || command === "italic" ? command : "formatBlock", false, command === "bold" || command === "italic" ? undefined : command);
+    rememberNotesSelection(); queueNotesFromEditor();
+  }
+
   function openNotes(trigger) {
     notesSelection = null;
     renderNotesEditor();
     components.openDialog("#notesDialog", { trigger: trigger, focus: "#notesTextarea" });
+    App.notesOutline.position($("#notesTextarea"));
   }
 
   function filteredRoadmap(overrides) {
@@ -947,10 +969,19 @@
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
     $("#notesTextarea").addEventListener("input", queueNotesFromEditor);
-    $("#notesTextarea").addEventListener("mousedown", function (event) { if (event.target.closest("[data-notes-toggle]")) event.preventDefault(); });
+    new ResizeObserver(function () { App.notesOutline.position($("#notesTextarea")); }).observe($("#notesTextarea"));
+    $("#notesTextarea").addEventListener("beforeinput", function (event) {
+      if (App.notesOutline.headingInput(this, event)) queueNotesFromEditor();
+    });
+    $("#notesTextarea").addEventListener("keydown", function (event) {
+      if (event.isComposing || event.altKey || !(event.metaKey || event.ctrlKey)) return;
+      const command = event.shiftKey ? { KeyB: 'p', Digit1: 'h1', Digit2: 'h2', Digit3: 'h3' }[event.code] : { KeyB: 'bold', KeyI: 'italic', KeyK: 'link' }[event.code];
+      if (!command) return;
+      event.preventDefault();
+      rememberNotesSelection();
+      if (command === 'link') $("#notesLinkButton").click(); else formatNotes(command);
+    });
     $("#notesTextarea").addEventListener("click", function (event) {
-      const toggle = event.target.closest("[data-notes-toggle]");
-      if (toggle) { event.preventDefault(); App.notesOutline.toggle(this, toggle); return; }
       const link = event.target.closest("a[href]");
       if (link && this.contains(link)) { event.preventDefault(); const url = u.safeUrl(link.getAttribute("href")); if (url) window.open(url, "_blank", "noopener,noreferrer"); }
     });
@@ -958,11 +989,7 @@
     $("#notesDialog .notes-toolbar").addEventListener("mousedown", function (event) { if (event.target.closest("button")) event.preventDefault(); });
     $("#notesDialog .notes-toolbar").addEventListener("click", function (event) {
       const button = event.target.closest("[data-notes-command]"); if (!button) return;
-      restoreNotesSelection();
-      const command = button.dataset.notesCommand;
-      document.execCommand("styleWithCSS", false, false);
-      document.execCommand(command === "bold" || command === "italic" ? command : "formatBlock", false, command === "bold" || command === "italic" ? undefined : command);
-      rememberNotesSelection(); queueNotesFromEditor();
+      formatNotes(button.dataset.notesCommand);
     });
     $("#notesLinkButton").addEventListener("click", function () { rememberNotesSelection(); $("#notesLinkError").textContent = ''; $("#notesLinkControls").hidden = false; $("#notesLinkUrl").focus(); });
     $("#notesLinkApply").addEventListener("click", function () {
@@ -976,7 +1003,11 @@
       $("#notesLinkControls").hidden = true; $("#notesLinkUrl").value = '';
       rememberNotesSelection(); queueNotesFromEditor();
     });
-    $("#notesLinkUrl").addEventListener("keydown", function (event) { if (event.key === "Enter") { event.preventDefault(); $("#notesLinkApply").click(); } });
+    $("#notesLinkCancel").addEventListener("click", function () { $("#notesLinkControls").hidden = true; $("#notesLinkUrl").value = ''; restoreNotesSelection(); });
+    $("#notesLinkUrl").addEventListener("keydown", function (event) {
+      if (event.key === "Enter") { event.preventDefault(); $("#notesLinkApply").click(); }
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); $("#notesLinkCancel").click(); }
+    });
     $("#notesTextarea").addEventListener("paste", function (event) {
       event.preventDefault();
       document.execCommand("insertText", false, event.clipboardData.getData("text/plain"));
