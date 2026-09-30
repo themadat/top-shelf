@@ -38,8 +38,8 @@
     const isbn = text(s.isbn, 13);
     if (isbn && !/^(?:\d{9}[\dX]|\d{13})$/.test(isbn)) throw new Error('Invalid ISBN.');
     return { workId: providerId(s.workId, 'W'), editionId: providerId(s.editionId, 'M'), isbn: isbn,
-      title: text(s.title, 500), authors: authors(s.authors), genres: names(s.genres), kind: kinds.includes(s.kind) ? s.kind : 'Unknown',
-      publicationYear: optionalNumber(s.publicationYear, 1, 9999, 1), coverId: optionalNumber(s.coverId, 1, Number.MAX_SAFE_INTEGER, 1),
+      title: text(s.title, 500), authors: authors(s.authors), genres: names(s.genres), subjects: names(s.subjects).slice(0, 40), kind: kinds.includes(s.kind) ? s.kind : 'Unknown',
+      publicationYear: optionalNumber(s.publicationYear, 1, 9999, 1), publishDate: text(s.publishDate, 100), publisher: text(s.publisher, 200), pages: optionalNumber(s.pages, 1, 100000, 1), pagesSource: ['edition','work-median'].includes(s.pagesSource) ? s.pagesSource : '', coverId: optionalNumber(s.coverId, 1, Number.MAX_SAFE_INTEGER, 1),
       average: optionalNumber(s.average, 1, 5), ratingsCount: optionalNumber(s.ratingsCount, 0, Number.MAX_SAFE_INTEGER, 1),
       fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', ratingsFetchedAt: s.ratingsFetchedAt ? u.ensureIso(s.ratingsFetchedAt, '') : '' };
   }
@@ -84,10 +84,11 @@
     if (fresh.average === null && old.average !== null) {
       fresh.average = old.average; fresh.ratingsCount = old.ratingsCount; fresh.ratingsFetchedAt = old.ratingsFetchedAt;
     }
+    ['publishDate','publisher','pages','subjects'].forEach(function (key) { if ((fresh[key] === '' || fresh[key] === null || Array.isArray(fresh[key]) && !fresh[key].length) && old[key]) { fresh[key] = old[key]; if (key === 'pages') fresh.pagesSource = old.pagesSource; } });
     next.catalog = fresh;
     return normalize(next);
   }
-  function searchable(b) { return [b.title, b.authors.map(function (a) { return a.name; }).join(' '), b.genres.join(' '), b.review, b.notes].join(' ').toLowerCase(); }
+  function searchable(b) { return [b.title, b.authors.map(function (a) { return a.name; }).join(' '), b.genres.join(' '), b.catalog.publisher, b.catalog.subjects.join(' '), b.review, b.notes].join(' ').toLowerCase(); }
   function groups(b, key) {
     if (key === 'yearRead') return [{ key: String(b.yearRead || ''), label: String(b.yearRead || 'Unknown year') }];
     const values = key === 'authors' ? b.authors.map(function (a) { return { key: a.id || a.name.toLowerCase(), label: a.name }; }) : b.genres.map(function (g) { return { key: g.toLowerCase(), label: g }; });
@@ -109,9 +110,9 @@
   function preferences(input) {
     const s = u.plainObject(input), widths = {};
     Object.entries(u.plainObject(s.widths)).forEach(function (entry) { if (['title','authors','yearRead','rating','average','ownership','formats','kind','genres','review','priority','status'].includes(entry[0]) && Number.isFinite(entry[1]) && entry[1] >= 70 && entry[1] <= 800) widths[entry[0]] = Math.round(entry[1]); });
-    return { view: ['all', 'read', 'wishlist', 'pivots'].includes(s.view) ? s.view : 'all', query: u.cleanLine(s.query, 200),
+    return { view: ['all', 'read', 'wishlist', 'pivots'].includes(s.view) ? s.view : 'all', query: u.cleanLine(s.query, 200), rowHeight: Number.isInteger(s.rowHeight) && s.rowHeight >= 28 && s.rowHeight <= 100 ? s.rowHeight : 36,
       sort: s.sort === 'priority' ? 'rating' : ['title','authors','yearRead','rating','average','ownership','formats','kind','genres','review'].includes(s.sort) ? s.sort : 'title', direction: s.direction === 'desc' ? 'desc' : 'asc', widths: widths,
-      status: statuses.includes(s.status) ? s.status : 'all', ownership: ownerships.includes(s.ownership) ? s.ownership : 'all', kind: kinds.includes(s.kind) ? s.kind : 'all', format: formats.concat('Audible').includes(s.format) ? s.format : 'all',
+      status: statuses.includes(s.status) ? s.status : 'all', ownership: ownerships.includes(s.ownership) ? s.ownership : 'all', kind: kinds.includes(s.kind) ? s.kind : 'all', format: s.format === 'Audible' ? 'Audiobook' : formats.includes(s.format) ? s.format : 'all',
       pivotQuery: u.cleanLine(s.pivotQuery, 200), minimum: Number.isInteger(s.minimum) && s.minimum >= 1 && s.minimum <= 5000 ? s.minimum : 1,
       pivotSort: ['label','count','average'].includes(s.pivotSort) ? s.pivotSort : 'count', pivotDirection: s.pivotDirection === 'asc' ? 'asc' : 'desc' };
   }

@@ -10,7 +10,7 @@
   function value(b, key) {
     if (key === 'rating') return b.status === 'Want to Read' ? b.priority : b.rating;
     if (key === 'authors') return b.authors.map(function (a) { return a.name; }).join(', ');
-    if (key === 'formats') return b.formats.join(', ') + (b.audible ? ' · Audible' : '');
+    if (key === 'formats') return b.formats.map(function (format) { return format === 'Ebook' ? 'eBook' : format; }).join(', ');
     if (key === 'genres') return b.genres.join(', ');
     if (key === 'average') return b.catalog.average;
     if (key === 'ownership') return b.ownership === 'Owned' ? 'YES' : b.ownership === 'Not owned' ? 'NO' : null;
@@ -55,9 +55,9 @@
     const p = pref(), all = state().workspace.books.filter(function (b) { return !b.deleted; });
     const pivot = p.view === 'pivots'; $('#booksListView').hidden = pivot; $('#booksPivotsView').hidden = !pivot;
     document.querySelectorAll('[data-books-view]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.booksView === p.view)); });
-    [['query','booksSearch'],['status','booksFilterStatus'],['ownership','booksFilterOwnership'],['kind','booksFilterKind'],['format','booksFilterFormat'],['pivotQuery','booksPivotSearch'],['minimum','booksPivotMin'],['pivotSort','booksPivotSort']].forEach(function (entry) { const node = $('#' + entry[1]); if (node !== document.activeElement) node.value = p[entry[0]]; });
+    [['query','booksSearch'],['status','booksFilterStatus'],['ownership','booksFilterOwnership'],['kind','booksFilterKind'],['format','booksFilterFormat'],['pivotQuery','booksPivotSearch'],['minimum','booksPivotMin'],['pivotSort','booksPivotSort'],['rowHeight','booksRowHeight']].forEach(function (entry) { const node = $('#' + entry[1]); if (node !== document.activeElement) node.value = p[entry[0]]; });
     $('#booksPivotDirection').textContent = p.pivotDirection === 'asc' ? 'Ascending ↑' : 'Descending ↓';
-    const rows = all.filter(function (b) { return (p.view !== 'read' || b.status === 'Read') && (p.view !== 'wishlist' || b.status === 'Want to Read') && (p.status === 'all' || b.status === p.status) && (p.ownership === 'all' || b.ownership === p.ownership) && (p.kind === 'all' || b.kind === p.kind) && (p.format === 'all' || (p.format === 'Audible' ? b.audible : b.formats.includes(p.format))) && (!p.query || books.searchable(b).includes(p.query.toLowerCase())) && (!group || b.status === 'Read' && books.groups(b, group.type).some(function (g) { return g.key === group.key; })); });
+    const rows = all.filter(function (b) { return (p.view !== 'read' || b.status === 'Read') && (p.view !== 'wishlist' || b.status === 'Want to Read') && (p.status === 'all' || b.status === p.status) && (p.ownership === 'all' || b.ownership === p.ownership) && (p.kind === 'all' || b.kind === p.kind) && (p.format === 'all' || b.formats.includes(p.format)) && (!p.query || books.searchable(b).includes(p.query.toLowerCase())) && (!group || b.status === 'Read' && books.groups(b, group.type).some(function (g) { return g.key === group.key; })); });
     rows.sort(function (a, b) {
       const x = value(a, p.sort), y = value(b, p.sort);
       if (x === null || y === null) return x === y ? a.title.localeCompare(b.title) : x === null ? 1 : -1;
@@ -71,6 +71,7 @@
     const ordered = columns;
     $('#booksTable colgroup').innerHTML = ordered.map(function (c) { return '<col style="width:' + (p.widths[c[0]] || c[2]) + 'px">'; }).join('');
     $('#booksTable').style.width = ordered.reduce(function (n, c) { return n + (p.widths[c[0]] || c[2]); }, 0) + 'px';
+    $('#booksTable').style.setProperty('--books-row-height', p.rowHeight + 'px');
     $('#booksTable thead').innerHTML = '<tr>' + ordered.map(function (c) { const detail = c[0] === 'rating' ? 'My rating or wishlist priority' : c[0] === 'average' ? 'Open Library average rating' : c[1]; return '<th scope="col" aria-sort="' + (p.sort === c[0] ? p.direction === 'asc' ? 'ascending' : 'descending' : 'none') + '"><button type="button" data-books-sort="' + c[0] + '" aria-label="Sort by ' + detail + '" title="' + detail + '">' + c[1] + (p.sort === c[0] ? p.direction === 'asc' ? ' ↑' : ' ↓' : '') + '</button><button type="button" class="book-resize" data-book-resize="' + c[0] + '" aria-label="Resize ' + c[1] + ' column" title="Drag or use arrow keys to resize"></button></th>'; }).join('') + '</tr>';
     $('#booksTable tbody').innerHTML = rows.map(function (b) { return '<tr>' + ordered.map(function (c) {
       const v = value(b, c[0]);
@@ -79,8 +80,8 @@
         return '<td title="' + label + '">' + (v === null ? '—' : '<span class="' + (wishlist ? 'movie-priority' : 'movie-score') + '" style="background:' + App.movies.color(v, wishlist) + '">' + v + '</span>') + '</td>';
       }
       if (c[0] === 'yearRead') return '<td><span class="book-year-cell"><span>' + (v === null ? '—' : esc(v)) + '</span>' + (b.notes.trim() ? '<button type="button" class="book-notes-marker" data-book-open="' + esc(b.id) + '" title="Longer notes saved" aria-label="Open longer notes for ' + esc(b.title) + '">' + App.icons.markup('notes') + '</button>' : '') + '</span></td>';
-      if (c[0] === 'title') return '<th scope="row"><button type="button" class="book-title" data-book-open="' + esc(b.id) + '">' + esc(b.title) + '</button>' + (b.catalog.workId ? '<a class="book-catalog-link" href="https://openlibrary.org/works/' + b.catalog.workId + '" target="_blank" rel="noopener noreferrer" title="Open https://openlibrary.org/works/' + b.catalog.workId + '" aria-label="Open ' + esc(b.title) + ' on Open Library">Open Library</a>' : '') + (b.status !== 'Read' ? '<button type="button" class="book-mark" data-book-read="' + esc(b.id) + '">Mark read</button>' : '') + '</th>';
-      if (c[0] === 'average') return '<td title="' + esc(b.catalog.average === null ? 'Not available' : b.catalog.ratingsCount + ' ratings · fetched ' + b.catalog.ratingsFetchedAt.slice(0, 10)) + '">' + (v === null ? '—' : '<a href="https://openlibrary.org/works/' + b.catalog.workId + '" target="_blank" rel="noopener noreferrer">' + v.toFixed(2) + '</a>') + '</td>';
+      if (c[0] === 'title') return '<th scope="row"><button type="button" class="book-title" data-book-open="' + esc(b.id) + '">' + esc(b.title) + '</button>' + (b.status !== 'Read' ? '<button type="button" class="book-mark" data-book-read="' + esc(b.id) + '">Mark Read</button>' : '') + '</th>';
+      if (c[0] === 'average') return '<td title="' + esc(b.catalog.average === null ? 'No community rating' : b.catalog.ratingsCount + ' ratings · fetched ' + b.catalog.ratingsFetchedAt.slice(0, 10)) + '">' + (b.catalog.workId ? '<a class="book-average-pill' + (v === null ? ' book-average-empty' : '') + '" href="https://openlibrary.org/works/' + b.catalog.workId + '" target="_blank" rel="noopener noreferrer" title="Open https://openlibrary.org/works/' + b.catalog.workId + '" aria-label="Open ' + esc(b.title) + ' on Open Library' + (v === null ? ', no community rating' : ', average ' + v.toFixed(2)) + '"' + (v === null ? '' : ' style="background:' + App.movies.color(Math.round(v * 100) / 100, false) + '"') + '>' + (v === null ? '—' : v.toFixed(2)) + '</a>' : '—') + '</td>';
       return '<td title="' + esc(v ?? '') + '">' + esc(v === null || v === '' ? '—' : v) + '</td>';
     }).join('') + '</tr>'; }).join('');
     const pivotCounts = App.booksPivotsUI.render(all, p);
@@ -88,8 +89,9 @@
     const tab = $('[data-shelf="books"]'); if (tab) { tab.querySelector('.shelf-tab-count').textContent = all.length; tab.setAttribute('aria-label', 'Books, ' + all.length + ' books'); }
   }
   function init() {
-    [['booksFilterStatus',books.statuses],['booksFilterOwnership',books.ownerships],['booksFilterKind',books.kinds],['booksFilterFormat',books.formats.concat('Audible')]].forEach(function (entry) { $('#' + entry[0]).innerHTML = '<option value="all">All</option>' + entry[1].map(function (s) { return '<option value="' + esc(s) + '">' + (entry[0] === 'booksFilterOwnership' ? s === 'Owned' ? 'YES' : s === 'Not owned' ? 'NO' : 'Unknown' : esc(s)) + '</option>'; }).join(''); });
+    [['booksFilterStatus',books.statuses],['booksFilterOwnership',books.ownerships],['booksFilterKind',books.kinds],['booksFilterFormat',books.formats]].forEach(function (entry) { $('#' + entry[0]).innerHTML = '<option value="all">All</option>' + entry[1].map(function (s) { return '<option value="' + esc(s) + '">' + (entry[0] === 'booksFilterOwnership' ? s === 'Owned' ? 'YES' : s === 'Not owned' ? 'NO' : 'Unknown' : s === 'Ebook' ? 'eBook' : esc(s)) + '</option>'; }).join(''); });
     $('#booksAdd').addEventListener('click', function () { App.booksEditor.open(null, this); });
+    $('#booksRowHeight').addEventListener('change', function () { if (this.checkValidity() && this.value) preference({ rowHeight: Number(this.value) }); else this.reportValidity(); });
     $('#booksRefresh').addEventListener('click', refreshAll);
     $('#booksStop').addEventListener('click', function () { batch?.abort(); });
     $('#booksWorkspace').addEventListener('click', function (event) {

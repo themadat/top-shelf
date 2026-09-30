@@ -12,7 +12,7 @@ function harness(fetch = async () => { throw new Error('Offline'); }) {
 const App = harness(), books = App.books, model = App.stateModel;
 const book = (extra = {}) => books.normalize({ id: 'book-one', title: 'Sample', ...extra });
 const plain = x => JSON.parse(JSON.stringify(x));
-const raw = { key: '/works/OL27482W', title: 'The Hobbit', author_name: ['J.R.R. Tolkien'], author_key: ['OL26320A'], first_publish_year: 1937, subject: ['Fantasy fiction','Fiction','Middle Earth','Fantasy'], cover_i: 123, editions: { docs: [{ key: '/books/OL123M' }] } };
+const raw = { key: '/works/OL27482W', title: 'The Hobbit', author_name: ['J.R.R. Tolkien'], author_key: ['OL26320A'], first_publish_year: 1937, subject: ['Fantasy fiction','Fiction','Middle Earth','Fantasy'], cover_i: 123, number_of_pages_median: 310, editions: { docs: [{ key: '/books/OL123M', publish_date: ['September 27, 1995'], publisher: ['Houghton Mifflin'], number_of_pages: 320 }] } };
 const response = (data, status = 200) => ({ ok: status === 200, status, headers: { get: () => null }, text: async () => JSON.stringify(data) });
 
 test('book fields keep zero, blanks, ownership, multiple formats and plain writing distinct', () => {
@@ -82,9 +82,23 @@ test('provider lookup selects fields, ISBN edition, curated genres and real rati
   const a=harness(async (url,options)=>{calls.push({url,options});return response(url.includes('ratings.json')?{summary:{average:4.29,count:500}}:{docs:[raw]});});
   const results=await a.openLibrary.search('978-0261103344','isbn'); const d=await a.openLibrary.details(results[0]);
   assert.equal(results[0].isbn,'9780261103344'); assert.equal(results[0].editionId,'OL123M'); assert.equal(d.catalog.average,4.29); assert.equal(d.catalog.ratingsCount,500);
+  assert.equal(results[0].publishDate,'September 27, 1995'); assert.equal(results[0].publisher,'Houghton Mifflin'); assert.equal(results[0].pages,320); assert.equal(results[0].pagesSource,'edition');
+  const median=a.openLibrary.fromSearch({...raw,editions:{docs:[{key:'/books/OL123M'}]}}); assert.equal(median.pages,310); assert.equal(median.pagesSource,'work-median');
+  assert.deepEqual(plain(results[0].subjects),['Fantasy fiction','Fiction','Middle Earth','Fantasy']);
   assert.deepEqual(plain(results[0].genres),['Fantasy']); assert.equal(results[0].kind,'Fiction'); assert.equal(calls[0].options.credentials,'omit'); assert.equal(calls[0].options.headers.Authorization,undefined);
   assert.equal(new URL(calls[0].url).searchParams.get('isbn'),'9780261103344'); assert.equal(calls.length,2);
   await a.openLibrary.search('9780261103344','isbn'); assert.equal(calls.length,2);
+});
+
+test('refresh reads the selected edition and preserves existing catalog values when absent', async () => {
+  const calls=[];
+  const a=harness(async url=>{calls.push(url);return response(url.includes('/books/OL123M.json')?{publish_date:'2001',publishers:['Updated Publisher'],number_of_pages:321}:url.includes('ratings.json')?{summary:{average:4.2,count:10}}:{docs:[raw]});});
+  const prior=a.books.catalog({workId:'OL27482W',editionId:'OL123M',subjects:['Earlier Subject'],publishDate:'1995',publisher:'Old Publisher',pages:300});
+  const refreshed=await a.openLibrary.details(prior,undefined,true);
+  assert.equal(refreshed.catalog.publishDate,'2001'); assert.equal(refreshed.catalog.publisher,'Updated Publisher'); assert.equal(refreshed.catalog.pages,321); assert.equal(refreshed.catalog.pagesSource,'edition');
+  assert.equal(calls.length,3);
+  const kept=a.books.refresh(a.books.normalize({id:'one',title:'The Hobbit',catalog:prior}),a.books.catalog({workId:'OL27482W'}));
+  assert.equal(kept.catalog.publisher,'Old Publisher'); assert.deepEqual(plain(kept.catalog.subjects),['Earlier Subject']);
 });
 
 test('provider errors, zero ratings, malformed responses and cancellation keep metadata usable', async () => {
