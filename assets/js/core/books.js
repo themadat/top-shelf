@@ -88,6 +88,18 @@
     next.catalog = fresh;
     return normalize(next);
   }
+  function relink(prior, incoming) {
+    const fresh = catalog(incoming), old = prior.catalog;
+    if (!fresh.workId) throw new Error('Choose an Open Library book to link.');
+    if (old.workId === fresh.workId) return refresh(prior, fresh);
+    const next = u.clone(prior);
+    ['title', 'authors', 'genres', 'kind'].forEach(function (key) {
+      const empty = key === 'kind' ? prior[key] === 'Unknown' : !prior[key].length;
+      if (empty || old.workId && u.stableJson(prior[key]) === u.stableJson(old[key])) next[key] = fresh[key];
+    });
+    next.catalog = fresh;
+    return normalize(next);
+  }
   function searchable(b) { return [b.title, b.authors.map(function (a) { return a.name; }).join(' '), b.genres.join(' '), b.catalog.publisher, b.catalog.subjects.join(' '), b.review, b.notes].join(' ').toLowerCase(); }
   function groups(b, key) {
     if (key === 'yearRead') return [{ key: String(b.yearRead || ''), label: String(b.yearRead || 'Unknown year') }];
@@ -116,5 +128,5 @@
       pivotQuery: u.cleanLine(s.pivotQuery, 200), minimum: Number.isInteger(s.minimum) && s.minimum >= 1 && s.minimum <= 5000 ? s.minimum : 1,
       pivotSort: ['label','count','average'].includes(s.pivotSort) ? s.pivotSort : 'count', pivotDirection: s.pivotDirection === 'asc' ? 'asc' : 'desc' };
   }
-  App.books = { statuses: statuses, ownerships: ownerships, kinds: kinds, formats: formats, normalize: normalize, normalizeList: normalizeList, catalog: catalog, refresh: refresh, searchable: searchable, groups: groups, pivots: pivots, preferences: preferences };
+  App.books = { statuses: statuses, ownerships: ownerships, kinds: kinds, formats: formats, normalize: normalize, normalizeList: normalizeList, catalog: catalog, refresh: refresh, relink: relink, searchable: searchable, groups: groups, pivots: pivots, preferences: preferences };
 })();

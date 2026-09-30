@@ -68,14 +68,14 @@
 .book-toggle-field legend, .book-formats legend { margin-bottom: .3rem; font-size: .85rem; }
 .book-toggle-group { display: flex; align-items: stretch; gap: .2rem; min-height: var(--control-height); overflow-x: auto; padding-bottom: .15rem; }
 .book-toggle-group button { flex: 0 0 auto; min-width: 1.9rem; padding: .36rem .45rem; border: 1px solid var(--line); border-radius: .35rem; background: var(--surface); color: var(--text); font-size: .75rem; white-space: nowrap; }
-.book-toggle-group button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 700; }
+.book-toggle-group button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 800; box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px var(--accent-soft); }
 .book-toggle-group button:focus-visible, .book-formats label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .book-fields small { color: var(--muted); font-weight: normal; }
 .book-fields textarea { resize: vertical; line-height: 1.5; }
 .book-formats { display: flex; flex-wrap: wrap; align-content: start; gap: .2rem; }
 .book-formats legend { width: 100%; }
 .book-formats label { position: relative; display: inline-flex; align-items: center; min-height: var(--control-height); padding: .36rem .5rem; border: 1px solid var(--line); border-radius: .35rem; background: var(--surface); font-size: .75rem; white-space: nowrap; cursor: pointer; }
-.book-formats label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 700; }
+.book-formats label:has(input:checked) { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 800; box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px var(--accent-soft); }
 .book-formats input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .book-source { border-bottom: 1px solid var(--line); padding-bottom: .7rem; }
 .book-source .books-toolbar { justify-content: start; }
@@ -90,6 +90,8 @@
 .books-lookup-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; max-height: 260px; overflow: auto; }
 .book-match { display: flex; flex-direction: column; gap: .35rem; padding: .7rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--surface-2); color: var(--text); text-align: left; overflow-wrap: anywhere; }
 .book-match span { color: var(--muted); font-size: .8rem; }
+.book-match:hover { border-color: var(--accent); background: var(--accent-soft); }
+.book-match[aria-current="true"] { border: 2px solid var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-soft); }
 .books-pivot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: .85rem; align-items: start; }
 .books-pivot-card { min-width: 0; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface); padding: .8rem; }
 .books-pivot-card h2 { font-size: 1rem; margin: 0 0 .7rem; }

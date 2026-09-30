@@ -47,6 +47,18 @@ test('refresh updates untouched metadata while keeping corrections, personal fie
   assert.throws(() => books.refresh(prior, {...c,workId:'OL2W'}), /different/);
 });
 
+test('switching an Open Library match keeps personal fields and corrections without carrying old source data', () => {
+  const old = books.catalog({workId:'OL1W',title:'Old Title',authors:['Old Author'],genres:['Fantasy'],kind:'Fiction',publisher:'Old Publisher',pages:200,average:4.5,ratingsCount:12});
+  const prior = book({title:'Old Title',authors:old.authors,genres:['My Genre'],kind:'Fiction',rating:3,status:'Read',review:'Keep this review',catalog:old});
+  const replacement = books.catalog({workId:'OL2W',title:'New Title',authors:['New Author'],genres:['History'],kind:'Nonfiction',publisher:'New Publisher',pages:350});
+  const switched = books.relink(prior,replacement);
+  assert.equal(switched.title,'New Title'); assert.equal(switched.authors[0].name,'New Author'); assert.deepEqual(plain(switched.genres),['My Genre']); assert.equal(switched.kind,'Nonfiction');
+  assert.equal(switched.rating,3); assert.equal(switched.status,'Read'); assert.equal(switched.review,'Keep this review');
+  assert.equal(switched.catalog.workId,'OL2W'); assert.equal(switched.catalog.publisher,'New Publisher'); assert.equal(switched.catalog.pages,350); assert.equal(switched.catalog.average,null);
+  assert.equal(prior.catalog.workId,'OL1W');
+  assert.throws(() => books.normalizeList([switched,book({id:'other',catalog:replacement})]),/already in your library/);
+});
+
 test('pivots count completed books once per group, preserve author identity and average only personal scores', () => {
   const rows = [book({status:'Read', rating:0, authors:[{id:'OL1A',name:'Alex'},{id:'OL2A',name:'Alex'}], genres:['Fantasy','fantasy'], yearRead:2020}), book({id:'two',status:'Read',rating:4,authors:[{id:'OL1A',name:'Alex'}],genres:['Fantasy','History'],yearRead:2020}), book({id:'three',status:'Read'}), book({id:'wishlist',rating:5}), {id:'deleted',deleted:true}];
   const author = books.pivots(rows,'authors'); assert.equal(author.find(g=>g.key==='OL1A').count,2); assert.equal(author.find(g=>g.key==='OL1A').average,2); assert.equal(author.find(g=>g.key==='OL2A').count,1);

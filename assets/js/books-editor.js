@@ -21,7 +21,8 @@
   function metadata() {
     const c = draft.catalog;
     $('#bookRefresh').hidden = $('#bookUnlink').hidden = !c.workId;
-    $('#bookNameLookup').hidden = !!c.workId;
+    $('#bookNameLookup').setAttribute('aria-label', c.workId ? 'Switch Open Library Match' : 'Find This Book On Open Library');
+    $('#bookNameLookup').title = c.workId ? 'Switch Open Library Match' : 'Find This Book On Open Library';
     const facts = [['Publish Date', c.publishDate], ['Publisher', c.publisher], [c.pagesSource === 'work-median' ? 'Pages (Median)' : 'Pages', c.pages], ['First Published', c.publicationYear], ['ISBN', c.isbn]].filter(function (item) { return item[1] !== '' && item[1] !== null; });
     $('#bookMetadata').innerHTML = c.workId ? (c.coverId ? '<img class="book-cover" src="https://covers.openlibrary.org/b/id/' + c.coverId + '-M.jpg?default=false" alt="Cover of ' + esc(draft.title) + '" loading="lazy">' : '') + '<p><a href="https://openlibrary.org/works/' + c.workId + '" target="_blank" rel="noopener noreferrer">Open Library</a>' + (c.editionId ? ' · <a href="https://openlibrary.org/books/' + c.editionId + '" target="_blank" rel="noopener noreferrer">Selected Edition</a>' : '') + '</p><p>Community Rating: <strong>' + (c.average === null ? 'Not Available' : c.average.toFixed(2) + ' / 5') + '</strong>' + (c.ratingsCount === null ? '' : ' · ' + c.ratingsCount + ' Ratings') + '</p><dl class="book-catalog-facts">' + facts.map(function (item) { return '<div><dt>' + item[0] + '</dt><dd>' + esc(item[1]) + '</dd></div>'; }).join('') + '</dl>' + (c.subjects.length ? '<details class="book-subjects"><summary>Subjects (' + c.subjects.length + ')</summary><p>' + esc(c.subjects.join(', ')) + '</p></details>' : '') + '<p class="setting-note">' + esc([c.ratingsFetchedAt ? 'Rating Fetched ' + c.ratingsFetchedAt.slice(0, 10) : '', c.fetchedAt ? 'Metadata Fetched ' + c.fetchedAt.slice(0, 10) : ''].filter(Boolean).join(' · ')) + '</p>' : '<p class="setting-note">Manual Entry · Community Rating: Not Available. Link an Open Library match to add source information.</p>';
     const image = $('#bookMetadata img'); if (image) image.addEventListener('error', function () { image.hidden = true; });
@@ -84,7 +85,7 @@
     try {
       results = await App.openLibrary.search($('#bookLookupQuery').value, $('#bookLookupMode').value, signal);
       if (token !== generation) return;
-      $('#bookLookupResults').innerHTML = results.map(function (c, i) { return '<button class="book-match" type="button" data-book-match="' + i + '"><strong>' + esc(c.title) + '</strong><span>' + esc(c.authors.map(function (a) { return a.name; }).join(', ') || 'Unknown author') + (c.publicationYear ? ' · ' + c.publicationYear : '') + '</span></button>'; }).join('');
+      $('#bookLookupResults').innerHTML = results.map(function (c, i) { const current = c.workId === draft.catalog.workId; return '<button class="book-match" type="button" data-book-match="' + i + '"' + (current ? ' aria-current="true"' : '') + '><strong>' + esc(c.title) + (current ? ' · Current Match' : '') + '</strong><span>' + esc(c.authors.map(function (a) { return a.name; }).join(', ') || 'Unknown author') + (c.publicationYear ? ' · ' + c.publicationYear : '') + '</span></button>'; }).join('');
       status(results.length ? 'Choose a matching book.' : 'No matches. Try another search or enter the book manually.');
     } catch (error) { if (token === generation) status(error.message); }
     finally { if (token === generation) $('#bookLookupCancel').hidden = true; }
@@ -96,13 +97,14 @@
       guard(); const result = await App.openLibrary.details(candidate, signal, refresh);
       if (token !== generation || !$('#bookDialog').open) return;
       read(); guard(); if (snapshot !== u.stableJson(draft)) throw new Error('Your draft changed during lookup. Search or refresh again to apply metadata.');
-      const next = books.refresh(draft, result.catalog);
+      const switching = !refresh && !!draft.catalog.workId && draft.catalog.workId !== result.catalog.workId;
+      const next = switching ? books.relink(draft, result.catalog) : books.refresh(draft, result.catalog);
       books.normalizeList(state().workspace.books.filter(function (b) { return b.id !== draft.id; }).concat(next));
       const changes = ['title','authors','genres','kind'].filter(function (key) { return u.stableJson(draft[key]) !== u.stableJson(next[key]); });
       if (refresh && changes.length && !await App.components.confirm({ title: 'Update book information?', message: changes.map(function (key) { const value = key === 'authors' ? next.authors.map(function (a) { return a.name; }).join(', ') : Array.isArray(next[key]) ? next[key].join(', ') : next[key]; return key + ': ' + (value || 'Unknown'); }).join('\n'), confirmLabel: 'Use updates', cancelLabel: 'Keep draft' })) return;
       if (token !== generation || !$('#bookDialog').open) return;
       read(); guard(); if (snapshot !== u.stableJson(draft)) throw new Error('Your draft changed. Retry this lookup.');
-      draft = next; render(); status((refresh ? 'Information refreshed in your draft. ' : 'Catalog match linked in your draft. ') + result.warning + ' Save Book to keep changes.');
+      draft = next; render(); status((refresh ? 'Information refreshed in your draft. ' : switching ? 'Catalog match switched in your draft. ' : 'Catalog match linked in your draft. ') + result.warning + ' Save Book to keep changes.');
     } catch (error) { if (token === generation) status(error.message); }
     finally { if (token === generation) $('#bookLookupCancel').hidden = true; }
   }
