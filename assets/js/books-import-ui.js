@@ -9,17 +9,18 @@
   function rowFor(id) { return input.books[preview.entries.findIndex(function (entry) { return entry.book.id === id; })]; }
   function usedWorks(except) { return new Set(state().workspace.books.concat(input.books.filter(function (book, index) { return preview.entries[index].book.id !== except; })).map(function (book) { return book.catalog?.workId; }).filter(Boolean)); }
   function counts() {
-    const count = selected().length;
     const chosen = new Set(selected());
-    $('#booksImportApply').disabled = busy || !count;
+    const added = preview.entries.filter(function (e) { return chosen.has(e.book.id) && e.action === 'add'; }).length;
+    const linked = preview.entries.filter(function (e) { return chosen.has(e.book.id) && e.action === 'link'; }).length;
     const unlinked = preview.entries.filter(function (e) { return chosen.has(e.book.id) && !e.skip && !e.book.catalog.workId; }).length;
+    $('#booksImportApply').disabled = busy || !added && !linked;
     $('#booksImportFind').disabled = busy || !unlinked;
     $('#booksImportStop').hidden = !lookupController;
-    $('#booksImportSummary').textContent = count + ' books selected to add · ' + unlinked + ' selected without an Open Library ID · ' + preview.entries.filter(function (e) { return e.skip; }).length + ' existing/deleted books skipped. Existing entries stay unchanged.';
+    $('#booksImportSummary').textContent = added + ' selected to add · ' + linked + ' selected to link · ' + unlinked + ' selected without an Open Library ID · ' + preview.entries.filter(function (e) { return e.skip; }).length + ' skipped. Existing personal details stay unchanged.';
   }
   function render(checked) {
     $('#booksImportRows').innerHTML = preview.entries.map(function (entry) {
-      const book = entry.book, candidates = results.get(book.id) || [];
+      const book = entry.book, shown = entry.saved || book, candidates = results.get(book.id) || [];
       let link = 'Not linked';
       if (book.catalog.workId) {
         const url = 'https://openlibrary.org/works/' + book.catalog.workId;
@@ -27,7 +28,7 @@
       } else if (!entry.skip && results.has(book.id)) {
         link = '<select class="books-import-match" data-book-id="' + esc(book.id) + '" aria-label="Open Library match for ' + esc(book.title) + '"><option value="">Choose a match or leave unlinked</option>' + candidates.map(function (candidate, index) { return '<option value="' + index + '">' + esc(candidate.title + ' — ' + candidate.authors.map(function (a) { return a.name; }).join(', ') + ' (' + candidate.workId + ')') + '</option>'; }).join('') + '</select>' + (candidates.length ? '' : '<span>No results</span>');
       }
-      return '<tr><td><input type="checkbox" value="' + esc(book.id) + '" aria-label="Import ' + esc(book.title) + '"' + (entry.skip ? ' disabled' : checked ? checked.has(book.id) ? ' checked' : '' : ' checked') + '></td><td>' + esc(book.title) + '</td><td>' + esc(book.authors.map(function (a) { return a.name; }).join(', ') || 'Unknown') + '</td><td>' + esc(book.status) + '</td><td>' + (book.rating === null ? 'Unrated' : book.rating) + '</td><td>' + esc(book.kind) + '</td><td>' + esc(book.review) + '</td><td>' + link + '</td><td>' + entry.reason + '</td></tr>';
+      return '<tr><td><input type="checkbox" value="' + esc(book.id) + '" aria-label="Select ' + esc(shown.title) + ' for import"' + (entry.skip ? ' disabled' : checked ? checked.has(book.id) ? ' checked' : '' : ' checked') + '></td><td>' + esc(shown.title) + '</td><td>' + esc(shown.authors.map(function (a) { return a.name; }).join(', ') || 'Unknown') + '</td><td>' + esc(shown.status) + '</td><td>' + (shown.rating === null ? 'Unrated' : shown.rating) + '</td><td>' + esc(shown.kind) + '</td><td>' + esc(shown.review) + '</td><td>' + link + '</td><td>' + entry.reason + '</td></tr>';
     }).join('');
     counts();
   }
@@ -102,7 +103,7 @@
       const next = App.utils.clone(state()); next.workspace.books = result.books;
       App.storage.replace(next, { saveRecovery: false, reason: 'import' });
       App.components.closeDialog('#booksImportDialog');
-      App.components.toast('Added ' + result.count + ' books. Existing entries were kept.', { title: 'Books import complete', kind: 'success' });
+      App.components.toast('Added ' + result.added + ' ' + (result.added === 1 ? 'book' : 'books') + ' and linked ' + result.linked + ' existing ' + (result.linked === 1 ? 'book' : 'books') + '.', { title: 'Books import complete', kind: 'success' });
     } catch (error) { $('#booksImportError').textContent = error.message; }
     finally { busy = false; if (preview) counts(); }
   }

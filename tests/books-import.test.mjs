@@ -13,12 +13,40 @@ test('Books import previews additions, skips existing and deleted records, and k
   const existing = [books.normalize(row('saved', 'Already Here', { rating: 4, status: 'Read' })), { id: 'deleted', deleted: true }];
   const input = file(row('incoming', 'Already Here', { rating: 5 }), row('deleted', 'Removed'), row('new', 'New Book'));
   const preview = booksImport.preview(existing, input);
-  assert.deepEqual(Array.from(preview.entries, entry => entry.reason), ['Already in library · kept unchanged', 'Previously deleted · skipped', 'Add']);
+  assert.deepEqual(Array.from(preview.entries, entry => entry.reason), ['Existing book · find an ID', 'Previously deleted · skipped', 'Add']);
   const applied = booksImport.apply(existing, input, preview.snapshot, ['new']);
-  assert.equal(applied.count, 1);
+  assert.equal(applied.added, 1);
+  assert.equal(applied.linked, 0);
   assert.equal(applied.books.length, 3);
   assert.equal(applied.books[0].rating, 4);
-  assert.equal(booksImport.preview(applied.books, input).entries.filter(entry => !entry.skip).length, 0);
+  assert.equal(booksImport.preview(applied.books, input).entries.filter(entry => entry.action === 'add').length, 0);
+});
+
+test('Re-import links an existing book without replacing personal details', () => {
+  const original = books.normalize(row('saved', 'Mere Christianity', { authors: ['C.S. Lewis'], status: 'Read', rating: 4.5, review: 'My review', ownership: 'Owned', notes: 'My notes' }));
+  const catalog = books.catalog({ workId: 'OL71056W', title: 'Mere Christianity', authors: ['C. S. Lewis'] });
+  const input = file(row('saved', 'Mere Christianity', { authors: ['C.S. Lewis'], status: 'Want to Read', rating: 1, review: 'Old import', catalog }));
+  const preview = booksImport.preview([original], input);
+  assert.equal(preview.entries[0].action, 'link');
+  assert.equal(preview.entries[0].saved.review, 'My review');
+  const result = booksImport.apply([original], input, preview.snapshot, ['saved']);
+  assert.equal(result.added, 0);
+  assert.equal(result.linked, 1);
+  assert.equal(result.books[0].catalog.workId, 'OL71056W');
+  assert.equal(result.books[0].status, 'Read');
+  assert.equal(result.books[0].rating, 4.5);
+  assert.equal(result.books[0].review, 'My review');
+  assert.equal(result.books[0].notes, 'My notes');
+  assert.equal(result.books[0].ownership, 'Owned');
+  assert.equal(booksImport.preview(result.books, input).entries[0].action, 'skip');
+});
+
+test('Re-import never assigns a claimed work ID or a reused book ID', () => {
+  const claimed = books.normalize(row('claimed', 'Another Book', { catalog: { workId: 'OL71056W' } }));
+  const saved = books.normalize(row('saved', 'Mere Christianity'));
+  const catalog = { workId: 'OL71056W', title: 'Mere Christianity' };
+  assert.equal(booksImport.preview([saved, claimed], file(row('saved', 'Mere Christianity', { catalog }))).entries[0].action, 'skip');
+  assert.equal(booksImport.preview([saved], file(row('saved', 'Different Book', { catalog: { workId: 'OL999W' } }))).entries[0].action, 'skip');
 });
 
 test('Books import rejects stale previews, duplicate identities and invalid content', () => {

@@ -49,18 +49,43 @@
       if (book.catalog.isbn) isbns.set(book.catalog.isbn, book);
     });
     const entries = imported.map(function (book) {
-      const match = ids.get(book.id) || (book.catalog.workId && works.get(book.catalog.workId)) || (book.catalog.isbn && isbns.get(book.catalog.isbn)) || identities.get(identity(book));
-      return { book: book, skip: !!match, reason: match ? match.deleted ? 'Previously deleted · skipped' : 'Already in library · kept unchanged' : 'Add' };
+      const byId = ids.get(book.id), byIdentity = identities.get(identity(book));
+      const match = byId || byIdentity || (book.catalog.workId && works.get(book.catalog.workId)) || (book.catalog.isbn && isbns.get(book.catalog.isbn));
+      const sameBook = match && !match.deleted && (byIdentity === match || byId === match && key(book.title) === key(match.title));
+      const claimedWork = book.catalog.workId && works.get(book.catalog.workId);
+      let action = 'add', reason = 'Add';
+      if (match?.deleted) { action = 'skip'; reason = 'Previously deleted · skipped'; }
+      else if (match && (!sameBook || claimedWork && claimedWork !== match)) { action = 'skip'; reason = 'Catalog or ID belongs to another book · skipped'; }
+      else if (match?.catalog?.workId) { action = 'skip'; reason = 'Already linked · kept unchanged'; }
+      else if (match) { action = book.catalog.workId ? 'link' : 'lookup'; reason = book.catalog.workId ? 'Link existing book' : 'Existing book · find an ID'; }
+      return { book: book, saved: sameBook ? match : null, matchId: match?.id || '', action: action, skip: action === 'skip', reason: reason };
     });
-    App.books.normalizeList(existing.concat(entries.filter(function (entry) { return !entry.skip; }).map(function (entry) { return entry.book; })));
+    const proposed = existing.map(function (book) {
+      const entry = entries.find(function (item) { return item.action === 'link' && item.matchId === book.id; });
+      return entry ? withCatalog(book, entry.book.catalog) : book;
+    }).concat(entries.filter(function (entry) { return entry.action === 'add'; }).map(function (entry) { return entry.book; }));
+    App.books.normalizeList(proposed);
     return { entries: entries, snapshot: u.stableJson(existing) };
+  }
+  function withCatalog(book, incoming) {
+    const merged = Object.assign({}, book.catalog);
+    Object.entries(incoming).forEach(function (pair) {
+      const value = pair[1];
+      if (value !== '' && value !== null && value !== 'Unknown' && (!Array.isArray(value) || value.length)) merged[pair[0]] = value;
+    });
+    return App.books.normalize(Object.assign({}, book, { catalog: merged }));
   }
   function apply(existing, input, snapshot, selectedIds) {
     if (u.stableJson(existing) !== snapshot) throw new Error('Books changed since this preview. Preview the file again before importing.');
     const result = preview(existing, input), selected = new Set(selectedIds);
-    const added = result.entries.filter(function (entry) { return !entry.skip && selected.has(entry.book.id); }).map(function (entry) { return entry.book; });
-    if (!added.length) throw new Error('Select at least one book to add.');
-    return { books: App.books.normalizeList(existing.concat(added)), count: added.length };
+    const added = result.entries.filter(function (entry) { return entry.action === 'add' && selected.has(entry.book.id); }).map(function (entry) { return entry.book; });
+    const links = result.entries.filter(function (entry) { return entry.action === 'link' && selected.has(entry.book.id); });
+    if (!added.length && !links.length) throw new Error('Select at least one book to add or link.');
+    const updated = existing.map(function (book) {
+      const entry = links.find(function (item) { return item.matchId === book.id; });
+      return entry ? withCatalog(book, entry.book.catalog) : book;
+    });
+    return { books: App.books.normalizeList(updated.concat(added)), added: added.length, linked: links.length };
   }
   App.booksImport = { preview: preview, apply: apply, matchCatalog: matchCatalog };
 })();
