@@ -230,21 +230,17 @@
     return u.richTextToPlainText(documentItem && documentItem.html || "", config.controls.maxDocumentHtmlLength);
   }
 
-  function documentHtml(value) {
-    return u.escapeHtml(u.cleanText(value, config.controls.maxDocumentHtmlLength)).replace(/\n/g, "<br>");
-  }
-
   function renderNotesEditor() {
     const documentItem = state().workspace.documents[0];
-    setInputValue($("#notesTextarea"), documentText(documentItem));
+    $("#notesTextarea").innerHTML = u.sanitizeRichHtml(documentItem?.html || "");
   }
 
   function saveNotes(value) {
-    const normalized = u.cleanText(value, config.controls.maxDocumentHtmlLength);
+    const normalized = u.sanitizeRichHtml(value);
     storage.mutate(function (next) {
       const documentItem = next.workspace.documents[0];
       if (!documentItem) return;
-      documentItem.html = documentHtml(normalized);
+      documentItem.html = normalized;
       documentItem.updatedAt = u.isoNow();
     }, { reason: "edit-document" });
     $("[data-floating-local-label]").textContent = "Saving locally…";
@@ -252,6 +248,21 @@
   }
 
   let pendingNotes = null;
+  let notesSelection = null;
+  function rememberNotesSelection() {
+    const selection = window.getSelection(), editor = $("#notesTextarea");
+    if (selection?.rangeCount && editor.contains(selection.anchorNode) && editor.contains(selection.focusNode)) notesSelection = selection.getRangeAt(0).cloneRange();
+  }
+  function restoreNotesSelection() {
+    const editor = $("#notesTextarea"), selection = window.getSelection();
+    editor.focus();
+    if (notesSelection && editor.contains(notesSelection.commonAncestorContainer)) { selection.removeAllRanges(); selection.addRange(notesSelection); }
+  }
+  function queueNotesFromEditor() {
+    pendingNotes = $("#notesTextarea").innerHTML;
+    $("[data-floating-local-label]").textContent = "Saving locally…";
+    queueNotesSave();
+  }
   const queueNotesSave = u.debounce(function () {
     if (pendingNotes === null) return;
     const value = pendingNotes; pendingNotes = null;
@@ -264,6 +275,7 @@
   }
 
   function openNotes(trigger) {
+    notesSelection = null;
     renderNotesEditor();
     components.openDialog("#notesDialog", { trigger: trigger, focus: "#notesTextarea" });
   }
@@ -932,13 +944,37 @@
     $("#versionButton").addEventListener("click", function (event) { openSupport("releases", event.currentTarget); });
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
-    $("#notesTextarea").addEventListener("input", function (event) {
-      pendingNotes = event.target.value;
-      $("[data-floating-local-label]").textContent = "Saving locally…";
-      queueNotesSave();
+    $("#notesTextarea").addEventListener("input", queueNotesFromEditor);
+    document.addEventListener("selectionchange", rememberNotesSelection);
+    $("#notesDialog .notes-toolbar").addEventListener("mousedown", function (event) { if (event.target.closest("button")) event.preventDefault(); });
+    $("#notesDialog .notes-toolbar").addEventListener("click", function (event) {
+      const button = event.target.closest("[data-notes-command]"); if (!button) return;
+      restoreNotesSelection();
+      const command = button.dataset.notesCommand;
+      document.execCommand("styleWithCSS", false, false);
+      document.execCommand(command === "bold" || command === "italic" ? command : "formatBlock", false, command === "bold" || command === "italic" ? undefined : command);
+      rememberNotesSelection(); queueNotesFromEditor();
     });
+    $("#notesLinkButton").addEventListener("click", function () { rememberNotesSelection(); $("#notesLinkError").textContent = ''; $("#notesLinkControls").hidden = false; $("#notesLinkUrl").focus(); });
+    $("#notesLinkApply").addEventListener("click", function () {
+      const url = u.safeUrl($("#notesLinkUrl").value);
+      if (!url) { $("#notesLinkError").textContent = 'Use an http or https URL.'; return; }
+      restoreNotesSelection();
+      const selection = window.getSelection();
+      if (selection?.isCollapsed) document.execCommand("insertHTML", false, '<a href="' + u.escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' + u.escapeHtml(url) + '</a>');
+      else document.execCommand("createLink", false, url);
+      $("#notesTextarea").querySelectorAll("a[href]").forEach(function (link) { link.target = "_blank"; link.rel = "noopener noreferrer"; });
+      $("#notesLinkControls").hidden = true; $("#notesLinkUrl").value = '';
+      rememberNotesSelection(); queueNotesFromEditor();
+    });
+    $("#notesLinkUrl").addEventListener("keydown", function (event) { if (event.key === "Enter") { event.preventDefault(); $("#notesLinkApply").click(); } });
+    $("#notesTextarea").addEventListener("paste", function (event) {
+      event.preventDefault();
+      document.execCommand("insertText", false, event.clipboardData.getData("text/plain"));
+    });
+    $("#notesTextarea").addEventListener("drop", function (event) { event.preventDefault(); });
     $("#notesTextarea").addEventListener("blur", flushNotes);
-    $("#notesDialog").addEventListener("close", flushNotes);
+    $("#notesDialog").addEventListener("close", function () { flushNotes(); notesSelection = null; $("#notesLinkControls").hidden = true; });
     window.addEventListener("pagehide", flushNotes);
     window.addEventListener("beforeunload", flushNotes);
     document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flushNotes(); });
@@ -1059,6 +1095,7 @@
     App.moviesUI.init();
     App.booksEditor.init();
     App.booksUI.init();
+    App.booksImportUI.init();
     App.tvEditor.init();
     await App.tvUI.init();
     App.tvImportUI.init();

@@ -2,12 +2,13 @@
   'use strict';
   const App = window.LocalApp, books = App.books, esc = App.utils.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['title','Book',240],['authors','Authors',190],['yearRead','Year read',110],['rating','My rating',110],['average','Open Library / 5',145],['priority','Priority',100],['status','Status',130],['ownership','Ownership',120],['formats','Formats',160],['kind','Type',140],['genres','Genres',180],['review','Short review',260]];
+  const columns = [['rating','#',70],['average','Ave',75],['yearRead','Year',90],['title','Name',240],['authors','Author',190],['kind','Type',120],['genres','Genre',180],['ownership','Own',100],['formats','Format',150],['review','Review',260]];
   let group = null;
   function state() { return App.storage.getState(); }
   function pref() { return state().ui.books; }
   function preference(patch) { App.storage.mutate(function (s) { Object.assign(s.ui.books, patch); }, { touch: false, reason: 'books-preference' }); }
   function value(b, key) {
+    if (key === 'rating') return b.status === 'Want to Read' ? b.priority : b.rating;
     if (key === 'authors') return b.authors.map(function (a) { return a.name; }).join(', ');
     if (key === 'formats') return b.formats.join(', ') + (b.audible ? ' · Audible' : '');
     if (key === 'genres') return b.genres.join(', ');
@@ -31,14 +32,19 @@
     $('#booksCount').textContent = rows.length + ' of ' + all.length + ' books' + (p.view === 'wishlist' ? ' · Priority 1 is highest; blank means unprioritized.' : '');
     $('#booksSearchCount').textContent = rows.length + ' / ' + all.length;
     $('#booksEmpty').hidden = rows.length > 0; $('#booksEmpty').textContent = all.length ? 'No books match this view. Try clearing filters.' : 'Add your first book, or search Open Library to find it.';
-    const ordered = p.view === 'wishlist' ? [columns[5]].concat(columns.filter(function (c) { return c[0] !== 'priority'; })) : columns;
+    const ordered = columns;
     $('#booksTable colgroup').innerHTML = ordered.map(function (c) { return '<col style="width:' + (p.widths[c[0]] || c[2]) + 'px">'; }).join('');
     $('#booksTable').style.width = ordered.reduce(function (n, c) { return n + (p.widths[c[0]] || c[2]); }, 0) + 'px';
-    $('#booksTable thead').innerHTML = '<tr>' + ordered.map(function (c) { return '<th scope="col" aria-sort="' + (p.sort === c[0] ? p.direction === 'asc' ? 'ascending' : 'descending' : 'none') + '"><button type="button" data-books-sort="' + c[0] + '">' + c[1] + (p.sort === c[0] ? p.direction === 'asc' ? ' ↑' : ' ↓' : '') + '</button><button type="button" class="book-resize" data-book-resize="' + c[0] + '" aria-label="Resize ' + c[1] + ' column" title="Drag or use arrow keys to resize"></button></th>'; }).join('') + '</tr>';
+    $('#booksTable thead').innerHTML = '<tr>' + ordered.map(function (c) { const detail = c[0] === 'rating' ? 'My rating or wishlist priority' : c[0] === 'average' ? 'Open Library average rating' : c[1]; return '<th scope="col" aria-sort="' + (p.sort === c[0] ? p.direction === 'asc' ? 'ascending' : 'descending' : 'none') + '"><button type="button" data-books-sort="' + c[0] + '" aria-label="Sort by ' + detail + '" title="' + detail + '">' + c[1] + (p.sort === c[0] ? p.direction === 'asc' ? ' ↑' : ' ↓' : '') + '</button><button type="button" class="book-resize" data-book-resize="' + c[0] + '" aria-label="Resize ' + c[1] + ' column" title="Drag or use arrow keys to resize"></button></th>'; }).join('') + '</tr>';
     $('#booksTable tbody').innerHTML = rows.map(function (b) { return '<tr>' + ordered.map(function (c) {
       const v = value(b, c[0]);
-      if (c[0] === 'title') return '<th scope="row"><button type="button" class="book-title" data-book-open="' + b.id + '">' + esc(b.title) + '</button>' + (b.notes ? '<small class="book-hint">Notes saved</small>' : '') + (b.status !== 'Read' ? '<button type="button" class="book-mark" data-book-read="' + b.id + '">Mark read</button>' : '') + '</th>';
-      if (c[0] === 'average') return '<td title="' + esc(b.catalog.average === null ? 'Not available' : b.catalog.ratingsCount + ' ratings · fetched ' + b.catalog.ratingsFetchedAt.slice(0, 10)) + '">' + (v === null ? 'Not available' : '<a href="https://openlibrary.org/works/' + b.catalog.workId + '" target="_blank" rel="noopener noreferrer">' + v.toFixed(2) + '</a>') + '</td>';
+      if (c[0] === 'rating') {
+        const wishlist = b.status === 'Want to Read', label = wishlist ? 'Wishlist priority (1 highest)' : 'My rating out of 5';
+        return '<td title="' + label + '">' + (v === null ? '—' : '<span class="' + (wishlist ? 'movie-priority' : 'movie-score') + '" style="background:' + App.movies.color(v, wishlist) + '">' + v + '</span>') + '</td>';
+      }
+      if (c[0] === 'yearRead') return '<td><span class="book-year-cell"><span>' + (v === null ? '—' : esc(v)) + '</span>' + (b.notes.trim() ? '<button type="button" class="book-notes-marker" data-book-open="' + esc(b.id) + '" title="Longer notes saved" aria-label="Open longer notes for ' + esc(b.title) + '">' + App.icons.markup('notes') + '</button>' : '') + '</span></td>';
+      if (c[0] === 'title') return '<th scope="row"><button type="button" class="book-title" data-book-open="' + esc(b.id) + '">' + esc(b.title) + '</button>' + (b.status !== 'Read' ? '<button type="button" class="book-mark" data-book-read="' + esc(b.id) + '">Mark read</button>' : '') + '</th>';
+      if (c[0] === 'average') return '<td title="' + esc(b.catalog.average === null ? 'Not available' : b.catalog.ratingsCount + ' ratings · fetched ' + b.catalog.ratingsFetchedAt.slice(0, 10)) + '">' + (v === null ? '—' : '<a href="https://openlibrary.org/works/' + b.catalog.workId + '" target="_blank" rel="noopener noreferrer">' + v.toFixed(2) + '</a>') + '</td>';
       return '<td title="' + esc(v ?? '') + '">' + esc(v === null || v === '' ? '—' : v) + '</td>';
     }).join('') + '</tr>'; }).join('');
     const pivotCounts = App.booksPivotsUI.render(all, p);
@@ -49,7 +55,7 @@
     [['booksFilterStatus',books.statuses],['booksFilterOwnership',books.ownerships],['booksFilterKind',books.kinds],['booksFilterFormat',books.formats.concat('Audible')]].forEach(function (entry) { $('#' + entry[0]).innerHTML = '<option value="all">All</option>' + entry[1].map(function (s) { return '<option>' + esc(s) + '</option>'; }).join(''); });
     $('#booksAdd').addEventListener('click', function () { App.booksEditor.open(null, this); });
     $('#booksWorkspace').addEventListener('click', function (event) {
-      const view = event.target.closest('[data-books-view]'); if (view) { group = null; preference({ view: view.dataset.booksView, status: 'all', sort: view.dataset.booksView === 'wishlist' ? 'priority' : 'title', direction: 'asc' }); }
+      const view = event.target.closest('[data-books-view]'); if (view) { group = null; preference({ view: view.dataset.booksView, status: 'all', sort: view.dataset.booksView === 'wishlist' ? 'rating' : 'title', direction: 'asc' }); }
       const sort = event.target.closest('[data-books-sort]'); if (sort) preference({ sort: sort.dataset.booksSort, direction: pref().sort === sort.dataset.booksSort && pref().direction === 'asc' ? 'desc' : 'asc' });
       const open = event.target.closest('[data-book-open]'); if (open) App.booksEditor.open(open.dataset.bookOpen, open);
       const read = event.target.closest('[data-book-read]'); if (read) App.booksEditor.open(read.dataset.bookRead, read, true);

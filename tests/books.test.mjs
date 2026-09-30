@@ -23,6 +23,11 @@ test('book fields keep zero, blanks, ownership, multiple formats and plain writi
   for (const patch of [{ rating: 5.5 }, { rating: '4' }, { rating: 1.25 }, { priority: 0 }, { yearRead: 2020.5 }, { title: '' }, { notes: 'x'.repeat(20001) }, { authors: {} }, { catalog: { workId: 'javascript:alert(1)' } }]) assert.throws(() => book(patch));
 });
 
+test('old Books priority sorting follows the combined # column', () => {
+  assert.equal(books.preferences({ sort: 'priority', view: 'wishlist' }).sort, 'rating');
+  assert.equal(books.preferences({ sort: 'status' }).sort, 'title');
+});
+
 test('book identity validation rejects ambiguous linked duplicates and preserves tombstones', () => {
   const b = book({ catalog: { workId: 'OL1W', isbn: '123456789X' } });
   assert.throws(() => books.normalizeList([b, { ...b, id: 'another' }]), /already/);
@@ -57,10 +62,10 @@ test('books migrate legacy local and TV cloud data and survive full backup/conte
   assert.equal(previous.state.workspace.tvShows.length,1); assert.equal(previous.state.workspace.books.length,0);
   const state = model.normalize({workspace:{books:[book({notes:'First\nSecond',rating:0,yearRead:2024})]},ui:{books:{view:'wishlist',query:'Sample',widths:{title:350}}}});
   assert.deepEqual(plain(model.prepare(model.exportEnvelope(state)).state.workspace.books),plain(state.workspace.books));
-  const payload = model.syncPayload(state); assert.equal(payload.syncVersion,8); assert.equal(payload.schemaVersion,12); assert.equal(JSON.stringify(payload).includes('widths'),false);
+  const payload = model.syncPayload(state); assert.equal(payload.syncVersion,9); assert.equal(payload.schemaVersion,13); assert.equal(JSON.stringify(payload).includes('widths'),false);
   assert.equal(model.syncHash(model.prepareSync(payload).state),model.syncHash(state));
   assert.throws(()=>model.prepareSync({...payload,syncVersion:6,schemaVersion:10}),/invalid/);
-  assert.throws(()=>model.prepareSync({...payload,syncVersion:9,schemaVersion:13}),/not supported/);
+  assert.throws(()=>model.prepareSync({...payload,syncVersion:10,schemaVersion:14}),/not supported/);
   const remote = model.normalize({workspace:{books:[book({id:'remote'})]}});
   assert.equal(model.applySync(state,remote).ui.books.widths.title,350); assert.equal(model.resetPreferences(state).ui.books.query,'');
 });

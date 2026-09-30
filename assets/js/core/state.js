@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 8;
-  // Older builds reject TV priorities and half-point show scores instead of dropping data.
-  const SYNC_SCHEMA_VERSION = 12;
+  const SYNC_VERSION = 9;
+  // Older builds reject formatted Notes rather than silently dropping the markup.
+  const SYNC_SCHEMA_VERSION = 13;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -377,13 +377,16 @@
     const updatedAt = ordered.reduce(function (latest, item) {
       return Date.parse(item.updatedAt) > Date.parse(latest) ? item.updatedAt : latest;
     }, ordered[0].updatedAt);
+    if (ordered.length === 1) {
+      const item = ordered[0];
+      const emptyStarter = u.richTextToPlainText(item.html, config.controls.maxDocumentHtmlLength) === "This is a simple local note. Start typing to replace it.";
+      return [{ id: "app-notes", title: "Notes", html: emptyStarter ? "" : u.sanitizeRichHtml(item.html), order: 0, createdAt: createdAt, updatedAt: updatedAt }];
+    }
     const sections = ordered.map(function (item) {
       const text = u.richTextToPlainText(item.html, config.controls.maxDocumentHtmlLength);
-      if (ordered.length === 1) return text;
       return [item.title, text].filter(Boolean).join("\n\n");
     });
     let text = u.cleanText(sections.filter(Boolean).join("\n\n—\n\n"), config.controls.maxDocumentHtmlLength);
-    if (ordered.length === 1 && text === "This is a simple local note. Start typing to replace it.") text = "";
     return [{
       id: "app-notes",
       title: "Notes",
@@ -641,7 +644,7 @@
     const normalized = normalize(state);
     const data = {};
     const notes = u.richTextToPlainText(normalized.workspace.documents[0].html, config.controls.maxDocumentHtmlLength);
-    if (notes) data.notes = notes;
+    if (notes) { data.notes = notes; data.notesHtml = normalized.workspace.documents[0].html; }
     if (Object.keys(normalized.workspace.pivotSettings).length) data.pivotSettings = normalized.workspace.pivotSettings;
     if (normalized.workspace.movies.length) data.movies = normalized.workspace.movies;
     if (normalized.workspace.tvShows.length) data.tvShows = normalized.workspace.tvShows.map(App.tv.content).sort(function (a, b) { return a.id.localeCompare(b.id); });
@@ -673,11 +676,13 @@
     const priorSubgenres = input.syncFormat === SYNC_FORMAT && input.syncVersion === 5 && input.schemaVersion === 9;
     const priorTv = input.syncFormat === SYNC_FORMAT && input.syncVersion === 6 && input.schemaVersion === 10;
     const priorBooks = input.syncFormat === SYNC_FORMAT && input.syncVersion === 7 && input.schemaVersion === 11;
-    if (!priorBooks && !priorTv && !legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const priorRatings = input.syncFormat === SYNC_FORMAT && input.syncVersion === 8 && input.schemaVersion === 12;
+    if (!priorRatings && !priorBooks && !priorTv && !legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(priorBooks || priorTv || input.syncVersion === SYNC_VERSION ? ["tvShows"] : []).concat(priorBooks || input.syncVersion === SYNC_VERSION ? ["books"] : [])).includes(key); })
+      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(input.syncVersion === SYNC_VERSION ? ["notesHtml"] : []).concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(priorRatings || priorBooks || priorTv || input.syncVersion === SYNC_VERSION ? ["tvShows"] : []).concat(priorRatings || priorBooks || input.syncVersion === SYNC_VERSION ? ["books"] : [])).includes(key); })
       || ("notes" in data && (typeof data.notes !== "string" || data.notes.length > config.controls.maxDocumentHtmlLength))
+      || ("notesHtml" in data && (typeof data.notesHtml !== "string" || data.notesHtml.length > config.controls.maxDocumentHtmlLength))
       || ("records" in data && (!Array.isArray(data.records) || data.records.length > config.controls.maxRecords))) {
       throw new Error("The cloud file contains invalid or unsupported content.");
     }
@@ -688,7 +693,7 @@
       || u.stableJson(normalizePivotSettings(data.pivotSettings)) !== u.stableJson(data.pivotSettings))) throw new Error("The cloud file contains invalid pivot settings.");
     const state = normalize({
       workspace: {
-        documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(data.notes || "").replace(/\n/g, "<br>") }],
+        documents: [{ id: "app-notes", title: "Notes", html: data.notesHtml !== undefined ? data.notesHtml : u.escapeHtml(data.notes || "").replace(/\n/g, "<br>") }],
         movies: App.movies.normalizeList((data.movies || []).map(function (movie) { return legacyContent || priorMovies || priorPivots || priorReview ? Object.assign({ subgenreReviewed: true }, movie) : movie; })),
         tvShows: App.tv.normalizeList(data.tvShows),
         books: App.books.normalizeList(data.books),
@@ -696,7 +701,7 @@
         records: data.records || []
       }
     });
-    return { state: state, legacy: priorBooks || priorTv || legacyContent || priorMovies || priorPivots || priorReview || priorSubgenres, migrations: [], validation: validate(state) };
+    return { state: state, legacy: priorRatings || priorBooks || priorTv || legacyContent || priorMovies || priorPivots || priorReview || priorSubgenres, migrations: [], validation: validate(state) };
   }
 
   function applySync(localState, remoteState) {
@@ -715,9 +720,12 @@
   function mergeSyncData(localState, remoteState) {
     const local = syncPayload(localState).data;
     const remote = syncPayload(remoteState).data;
-    if (local.notes && remote.notes && local.notes !== remote.notes) throw new Error("Notes differ. Choose which copy to keep.");
+    if (local.notesHtml && remote.notesHtml && local.notesHtml !== remote.notesHtml) throw new Error("Notes differ. Choose which copy to keep.");
     const data = {};
-    if (local.notes || remote.notes) data.notes = local.notes || remote.notes;
+    if (local.notesHtml || remote.notesHtml) {
+      const source = local.notesHtml ? local : remote;
+      data.notes = source.notes; data.notesHtml = source.notesHtml;
+    }
     const pivotSettings = Object.assign({}, local.pivotSettings || {});
     Object.entries(remote.pivotSettings || {}).forEach(function (entry) {
       if (pivotSettings[entry[0]] && u.stableJson(pivotSettings[entry[0]]) !== u.stableJson(entry[1])) throw new Error("Pivot settings differ. Choose which copy to keep.");

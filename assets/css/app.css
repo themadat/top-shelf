@@ -387,8 +387,15 @@ dialog::backdrop { background: rgba(10, 16, 14, .56); backdrop-filter: blur(3px)
 .notes-dialog > .dialog-shell { height: 100%; }
 .notes-dialog-title { display: flex; align-items: center; gap: .45rem; }
 .notes-dialog-title-icon { display: inline-grid; place-items: center; color: var(--accent-strong); font-size: 1.05rem; }
-.notes-dialog-body { display: flex; min-height: 0; }
-.notes-textarea { flex: 1 1 auto; width: 100%; min-height: 0; resize: none; font-size: 1rem; line-height: 1.65; }
+.notes-dialog-body { display: flex; flex-direction: column; min-height: 0; }
+.notes-toolbar { flex: 0 0 auto; }
+.notes-link-controls:not([hidden]) { display: flex; flex: 1 1 220px; flex-wrap: wrap; gap: .3rem; }
+.notes-link-controls input { flex: 1 1 auto; min-width: 0; }
+.notes-link-controls [role="alert"] { align-self: center; color: var(--danger); font-size: .75rem; }
+.notes-textarea { flex: 1 1 auto; width: 100%; min-height: 0; font-size: 1rem; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.notes-textarea:empty::before { content: attr(data-placeholder); color: var(--muted); pointer-events: none; }
+.notes-textarea:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+.notes-textarea a { color: var(--accent-strong); text-decoration: underline; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
 .choice-actions { display: grid; gap: .5rem; margin-top: 1rem; }
 .choice-actions .button { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; justify-items: stretch; gap: .75rem; height: auto; min-height: 60px; text-align: left; }

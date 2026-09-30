@@ -9,9 +9,9 @@ Use focused browser checks for ordinary changes. Release cuts additionally cover
 | Shell | Desktop and 390/320px mobile; light/dark; no console errors or page overflow; visible focus, shortcuts, dialogs and Settings. |
 | Movies | Wishlist/Watched edit and reload, zero/half/historical ratings, optional dates/reviews, sorting/filter counts, column widths, pivot search/minimum/sorting. |
 | TV | List/Filters/Pivots; show/season/half-point episode scores; episode notes; compact/detail toggle; resizing, auto-height notes, editor 90% dimensions; persistence after reload. |
-| Books | Manual/catalog entry, every personal field, wishlist priority, multi-author/genre/year pivots, zero/unrated ratings, missing provider metadata, refresh overrides, late responses, duplicate match rejection, failed writes, stale drafts, delete recovery, backup/cloud round trips and desktop/390/320px offline edit/reload. |
-| Notes | Autosave, blur/close flush, reload, draft cancellation after state replacement. |
-| Data | Full backup round trip, legacy migration, additive TV imports, stale-preview rejection, recovery before replacement, credentials excluded. |
+| Books | Manual/catalog entry, every personal field, wishlist priority, # rating/priority display, list column order and Year notes marker, multi-author/genre/year pivots, zero/unrated ratings, missing provider metadata, refresh overrides, late responses, duplicate match rejection, failed writes, stale drafts, delete recovery, additive import preview/repeat import, backup/cloud round trips and desktop/390/320px offline edit/reload. |
+| Notes | Heading, bold, italic and safe link formatting, autosave, blur/close flush, reload, draft cancellation after state replacement. |
+| Data | Full backup round trip, legacy migration, additive TV/Books imports, stale-preview rejection, recovery before replacement, credentials excluded. |
 | Storage pressure | Full localStorage: cloud restore saves IndexedDB recovery, removes only superseded recovery, survives reload; oversized replacement keeps live/stored state. Recovery restore and Erase All cover both stores. |
 | Network/offline | Service worker controls page; offline reload/edit/save/reload; no stale TMDB response application; abort/401/429 feedback; assets cached under current build. |
 | Sync | Mocked restore/merge/upload, conflict choices, local preferences retained, concurrent edits protected, failed persistence never reports success. |

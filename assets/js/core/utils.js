@@ -97,7 +97,7 @@
     );
   }
 
-  const ALLOWED_RICH_TAGS = new Set(["P", "BR", "STRONG", "B", "EM", "I", "U", "S", "H2", "H3", "UL", "OL", "LI", "BLOCKQUOTE", "A", "CODE"]);
+  const ALLOWED_RICH_TAGS = new Set(["P", "DIV", "BR", "STRONG", "B", "EM", "I", "U", "S", "H2", "H3", "UL", "OL", "LI", "BLOCKQUOTE", "A", "CODE"]);
 
   function sanitizeRichHtml(value) {
     const source = cleanText(value, config.controls.maxDocumentHtmlLength);
@@ -140,7 +140,7 @@
     const template = document.createElement("template");
     const withBreaks = sanitizeRichHtml(value)
       .replace(/<br\s*\/?\s*>/gi, "\n")
-      .replace(/<\/(p|li|h2|h3|blockquote)>/gi, "\n");
+      .replace(/<\/(p|div|li|h2|h3|blockquote)>/gi, "\n");
     template.innerHTML = withBreaks;
     return cleanText(template.content.textContent || "", max || config.controls.maxDocumentHtmlLength)
       .replace(/\n{3,}/g, "\n\n")

@@ -2,7 +2,7 @@
 
 ## Local preferences and data contracts
 
-Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 9. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v8/schema 12 and accepts earlier v1–v7 cloud envelopes. Keep namespace compatibility. TV priority and half-point show scores use a new envelope so older clients reject unsupported data; earlier TV-bearing v6 and Books-bearing v7 envelopes remain readable.
+Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 9. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v9/schema 13 and accepts earlier v1–v8 cloud envelopes. Keep namespace compatibility. The current envelope carries sanitized Notes HTML alongside searchable plain text; older clients reject it instead of dropping formatting. Earlier TV-bearing v6, Books-bearing v7 and half-point TV v8 envelopes remain readable.
 
 Device-local ui fields (full backups, excluded from content sync): books (view/query/sort/direction/widths/status/ownership/kind/format/pivotQuery/minimum/pivotSort/pivotDirection); tv (view/sort/direction/widths/pivotWidths/episodeWidths/filter/query); movieSorts by all/wishlist/watched; movieColumnWidths with separate maps per tab; pivotColumnWidths; pivotLocalSettings; pivotSubsectionSorts. Old flat movie widths migrate to independent copies. Old workspace.pivotSettings is a fallback until locally overridden; scoring baseline/weight remain shared. Reset preferences clears local overrides.
 
@@ -12,7 +12,7 @@ Sync repairs baselineHash only when baselineTarget and nonempty baselineSha matc
 
 Cloud download/merge and manual recovery prefer an IndexedDB recovery snapshot, committed before removing the superseded localStorage recovery key. This frees localStorage space without removing the active library, credentials, or unrelated keys. If IndexedDB is unavailable, the existing localStorage recovery path remains a fallback. Startup loads database recovery for Developer Tools and recovery from an unreadable active state; Erase All clears both stores. Replacements publish state and success only after the active library is persisted. Failed writes retain the prior live and stored library; async recovery rejects intervening edits. A cloud library larger than localStorage capacity still fails safely.
 
-Notes buffers typing 300ms before normalization; flush on blur/close/hidden/page exit, cancel pending drafts on state replacement. Movie/pivot/subgenre views ignore edit-document redraws. Notes fills desktop height minus 2rem and is full-screen on mobile.
+Overall Notes stores sanitized HTML with headings, bold, italics and validated HTTP(S) links. Plain-text search remains available. Notes buffers typing 300ms before normalization; flush on blur/close/hidden/page exit, cancel pending drafts on state replacement. Movie/pivot/subgenre views ignore edit-document redraws. Notes fills desktop height minus 2rem and is full-screen on mobile.
 
 
 TV model, editor, imports and one-time data behavior: [TV.md](TV.md).

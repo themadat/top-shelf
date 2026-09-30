@@ -13,6 +13,28 @@ const App = context.window.LocalApp;
 App.utils = { ...App.utils, sanitizeRichHtml: String, richTextToPlainText: String };
 vm.runInContext(read('assets/js/core/state.js'), context);
 
+test('single Overall Notes keeps rich markup through state normalization', () => {
+  const state = App.stateModel.createDefaultState();
+  const html = '<h2>Heading</h2><p><strong>Bold</strong> <em>italic</em> <a href="https://example.com/">link</a></p>';
+  state.workspace.documents = [{ id: 'app-notes', title: 'Notes', html }];
+  assert.equal(App.stateModel.normalize(state).workspace.documents[0].html, html);
+});
+
+test('formatted Overall Notes survives cloud sync and v8 plain Notes remains readable', () => {
+  const model = App.stateModel;
+  const state = model.createDefaultState();
+  const html = '<h2>Heading</h2><p><strong>Bold</strong> <em>italic</em> <a href="https://example.com/">link</a></p>';
+  state.workspace.documents = [{ id: 'app-notes', title: 'Notes', html }];
+  const payload = model.syncPayload(state);
+  assert.equal(payload.syncVersion, 9);
+  assert.equal(payload.schemaVersion, 13);
+  assert.equal(payload.data.notesHtml, html);
+  assert.equal(model.prepareSync(payload).state.workspace.documents[0].html, html);
+  const prior = { syncFormat: payload.syncFormat, syncVersion: 8, schemaVersion: 12, data: { notes: 'First\nSecond' } };
+  assert.equal(model.prepareSync(prior).state.workspace.documents[0].html, 'First<br>Second');
+  assert.throws(() => model.prepareSync({ ...prior, data: { notes: 'First', notesHtml: html } }), /invalid or unsupported/);
+});
+
 test('foundation identity, release, deployment, and storage surfaces agree', () => {
   const { config } = App;
   assert.equal(config.identity.name, 'Top Shelf');

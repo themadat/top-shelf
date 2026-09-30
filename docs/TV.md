@@ -33,4 +33,4 @@ Existing title matches can gain a missing TMDB ID. Detailed imports fill missing
 - Sherlock seeds 13 supplied episode scores into missing values once. `sherlockRatingsAdded` protects later edits/clears; season 0 holds The Abominable Bride. Season averages are calculated, not personal season scores.
 - The September 29 TV-note reset is independent of September 28: startup recovery first, local completion marker before replacement, TV show notes only. New notes, recovery restores and later imports are not cleared again. Failed persistence keeps the library and removes the marker for retry. Keep this marker stable unless another reset is explicitly requested.
 
-Local schema 9 and cloud v8/schema 12 protect TV priority and half-point show scores from older clients. Earlier local schemas and cloud v1–v7 remain readable. Update all app copies before syncing; older clients reject the new envelope.
+Local schema 9 and cloud v8/schema 12 introduced TV priority and half-point show scores. Current cloud v9/schema 13 adds formatted Overall Notes; cloud v1–v8 remain readable. Update all app copies before syncing; older clients reject the new envelope.

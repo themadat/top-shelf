@@ -26,7 +26,7 @@ This product uses the TMDB API but is not endorsed or certified by TMDB. Streami
 
 ## Storage and sync
 
-Browser storage holds movies, TV shows, books, Notes and local preferences. Export regular full JSON backups in Settings. Recovery copies precede destructive replacements. Local schema is 9; cloud format is top-shelf-app-data v8/schema 12. Prior formats remain readable. Update all devices before syncing; older clients reject the new TV priority/half-point format.
+Browser storage holds movies, TV shows, books, Notes and local preferences. Export regular full JSON backups in Settings. Recovery copies precede destructive replacements. Local schema is 9; cloud format is top-shelf-app-data v9/schema 13. Prior formats remain readable. Update all devices before syncing; older clients reject formatted Notes rather than dropping them.
 
 GitHub Sync targets `themadat/app-data/main/data/top-shelf.json`. To provision it:
 

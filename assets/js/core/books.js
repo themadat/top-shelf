@@ -110,7 +110,7 @@
     const s = u.plainObject(input), widths = {};
     Object.entries(u.plainObject(s.widths)).forEach(function (entry) { if (['title','authors','yearRead','rating','average','ownership','formats','kind','genres','review','priority','status'].includes(entry[0]) && Number.isFinite(entry[1]) && entry[1] >= 70 && entry[1] <= 800) widths[entry[0]] = Math.round(entry[1]); });
     return { view: ['all', 'read', 'wishlist', 'pivots'].includes(s.view) ? s.view : 'all', query: u.cleanLine(s.query, 200),
-      sort: ['title','authors','yearRead','rating','average','ownership','formats','kind','genres','review','priority','status'].includes(s.sort) ? s.sort : 'title', direction: s.direction === 'desc' ? 'desc' : 'asc', widths: widths,
+      sort: s.sort === 'priority' ? 'rating' : ['title','authors','yearRead','rating','average','ownership','formats','kind','genres','review'].includes(s.sort) ? s.sort : 'title', direction: s.direction === 'desc' ? 'desc' : 'asc', widths: widths,
       status: statuses.includes(s.status) ? s.status : 'all', ownership: ownerships.includes(s.ownership) ? s.ownership : 'all', kind: kinds.includes(s.kind) ? s.kind : 'all', format: formats.concat('Audible').includes(s.format) ? s.format : 'all',
       pivotQuery: u.cleanLine(s.pivotQuery, 200), minimum: Number.isInteger(s.minimum) && s.minimum >= 1 && s.minimum <= 5000 ? s.minimum : 1,
       pivotSort: ['label','count','average'].includes(s.pivotSort) ? s.pivotSort : 'count', pivotDirection: s.pivotDirection === 'asc' ? 'asc' : 'desc' };
