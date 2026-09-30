@@ -22,6 +22,10 @@
 .books-import-table th, .books-import-table td { padding: .5rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 .books-import-table th { background: var(--surface-2); }
 .books-import-table td:nth-child(7) { min-width: 180px; max-width: 300px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.books-import-table td:nth-child(8) { min-width: 230px; }
+.books-import-match { width: 100%; max-width: 320px; }
+.books-import-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; }
+.book-catalog-link { display: inline-block; margin-left: .5rem; font-size: .75rem; white-space: nowrap; }
 #booksImportError { color: var(--danger); }
 #booksImportFile { max-width: 100%; }
 #booksTable { table-layout: fixed; border-collapse: collapse; font-size: .88rem; }

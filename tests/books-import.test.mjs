@@ -29,3 +29,17 @@ test('Books import rejects stale previews, duplicate identities and invalid cont
   assert.throws(() => booksImport.preview([], file(row('one', 'First', { rating: 5.2 }))), /Invalid book year, rating or priority/);
   assert.throws(() => booksImport.preview([], file(row('one', 'First', { review: 'x'.repeat(1001) }))), /exceeds/);
 });
+
+test('Books import links only one exact title and author match', () => {
+  const book = books.normalize(row('source', 'The Example: A Story', { authors: ['Jane Smith'] }));
+  const candidate = books.catalog({ workId: 'OL123W', title: 'The Example: A Story', authors: [{ name: 'Jane Smith', id: 'OL456A' }] });
+  const other = books.catalog({ workId: 'OL124W', title: 'The Example: A Story', authors: ['John Smith'] });
+  assert.equal(booksImport.matchCatalog(book, [other, candidate], new Set())?.workId, 'OL123W');
+  assert.equal(booksImport.matchCatalog(book, [candidate, candidate], new Set()), null);
+  assert.equal(booksImport.matchCatalog(book, [candidate], new Set(['OL123W'])), null);
+  assert.equal(booksImport.matchCatalog(books.normalize(row('initials', 'Mere Christianity', { authors: ['C.S. Lewis'] })), [books.catalog({ workId: 'OL71056W', title: 'Mere Christianity', authors: ['C. S. Lewis'] })], new Set())?.workId, 'OL71056W');
+  assert.equal(booksImport.matchCatalog(books.normalize(row('unknown', 'The Example: A Story', { authors: [] })), [candidate], new Set()), null);
+  const linked = file(row('source', 'The Example: A Story', { authors: ['Jane Smith'], catalog: candidate }));
+  const preview = booksImport.preview([], linked);
+  assert.equal(booksImport.apply([], linked, preview.snapshot, ['source']).books[0].catalog.workId, 'OL123W');
+});

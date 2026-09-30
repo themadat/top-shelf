@@ -3,6 +3,20 @@
   const App = window.LocalApp, u = App.utils;
   function key(value) { return value.normalize('NFKC').toLocaleLowerCase('en-US').replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim(); }
   function identity(book) { return key(book.title) + '\n' + book.authors.map(function (a) { return key(a.name); }).sort().join('|'); }
+  function matchCatalog(book, candidates, usedWorkIds) {
+    const title = key(book.title).replace(/[^\p{L}\p{N} ]/gu, '').replace(/\s+/g, ' ').trim();
+    const names = book.authors.map(function (a) { return key(a.name).replace(/[^\p{L}\p{N}]/gu, ''); });
+    const matches = candidates.filter(function (candidate) {
+      if (!candidate.workId || usedWorkIds.has(candidate.workId)) return false;
+      const candidateTitle = key(candidate.title).replace(/[^\p{L}\p{N} ]/gu, '').replace(/\s+/g, ' ').trim();
+      if (candidateTitle !== title || !names.length) return false;
+      return candidate.authors.some(function (author) {
+        const other = key(author.name).replace(/[^\p{L}\p{N}]/gu, '');
+        return names.some(function (name) { return name === other; });
+      });
+    });
+    return matches.length === 1 ? matches[0] : null;
+  }
   function rows(input) {
     if (!input || input.format !== 'top-shelf-books-import' || input.version !== 1 || !Array.isArray(input.books) || !input.books.length || input.books.length > App.config.controls.maxBooks) throw new Error('Choose a Books import JSON file with format top-shelf-books-import, version 1, and a nonempty books array.');
     if (new TextEncoder().encode(JSON.stringify(input)).length > App.config.controls.maxImportBytes) throw new Error('The Books import exceeds the 5 MiB limit.');
@@ -48,5 +62,5 @@
     if (!added.length) throw new Error('Select at least one book to add.');
     return { books: App.books.normalizeList(existing.concat(added)), count: added.length };
   }
-  App.booksImport = { preview: preview, apply: apply };
+  App.booksImport = { preview: preview, apply: apply, matchCatalog: matchCatalog };
 })();

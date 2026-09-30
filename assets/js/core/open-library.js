@@ -65,7 +65,7 @@
     const param = isIsbn ? 'isbn' : mode === 'author' ? 'author' : 'title';
     const data = await request('/search.json?' + param + '=' + encodeURIComponent(isIsbn ? isbn : query) + '&limit=12&fields=' + encodeURIComponent(fields), signal);
     if (!Array.isArray(data?.docs)) throw new Error('Open Library returned invalid search results.');
-    return data.docs.map(function (raw) { return fromSearch(raw, isIsbn ? isbn : ''); });
+    return data.docs.filter(function (raw) { return /^\/?(?:works\/)?OL\d+W$/.test(raw?.key) && typeof raw.title === 'string' && raw.title.trim(); }).map(function (raw) { return fromSearch(raw, isIsbn ? isbn : ''); });
   }
   async function details(candidate, signal, fresh) {
     let result = App.books.catalog(candidate);

@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.4","date":"2026-09-30T12:00:00.000Z","title":"Books controls and collapsible Notes","summary":"Refresh linked Books, improve table and editor controls, and add H1, link opening, and collapsible sections to Overall Notes.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.3","date":"2026-09-30T12:00:00.000Z","title":"Books table column order","summary":"Show rating or wishlist priority in one column, move book notes indicators beside year, and reorder the Books table.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.2","date":"2026-09-29T12:00:00.000Z","title":"Books import and formatted Overall Notes","summary":"Import Books with preview and recovery, and format Overall Notes with headings, bold, italics and safe links.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.1","date":"2026-09-29T12:00:00.000Z","title":"Top Shelf 2.0 — TV library","summary":"TV joins Movies with layered ratings and notes, filters and pivot cards, compact resizable editors, detailed imports, offline editing and safer cloud recovery. Streamlined contributor instructions and handoff.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
