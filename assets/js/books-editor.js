@@ -30,6 +30,7 @@
   function render() {
     [['title','bookName'],['yearRead','bookYear'],['rating','bookRating'],['priority','bookPriority'],['status','bookStatus'],['ownership','bookOwnership'],['kind','bookKind'],['review','bookReview'],['notes','bookNotes']].forEach(function (entry) { $('#' + entry[1]).value = draft[entry[0]] ?? ''; });
     $('#bookAuthors').value = draft.authors.map(function (a) { return a.name; }).join('; '); $('#bookGenres').value = draft.genres.join(', ');
+    $('#bookPublishDate').value = draft.catalog.publishDate || '';
     [['Print','bookPrint'],['Ebook','bookEbook'],['Audiobook','bookAudio']].forEach(function (entry) { $('#' + entry[1]).checked = draft.formats.includes(entry[0]); });
     document.querySelectorAll('[data-book-toggle]').forEach(function (group) { group.querySelectorAll('button').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.bookValue === $('#' + group.dataset.bookToggle).value)); }); });
     metadata();
@@ -114,7 +115,7 @@
     $('#bookForm').addEventListener('submit', save);
     ['bookClose','bookCancel'].forEach(function (id) { $('#' + id).addEventListener('click', close); });
     $('#bookDelete').addEventListener('click', remove); $('#bookLookupSearch').addEventListener('click', lookup);
-    $('#bookNameLookup').addEventListener('click', function () { const title = $('#bookName').value.trim(); if (!title) { status('Enter a Book Name to search Open Library.'); $('#bookName').focus(); return; } $('#bookLookup').open = true; $('#bookLookupMode').value = 'title'; $('#bookLookupQuery').value = title; lookup(); });
+    $('#bookNameLookup').addEventListener('click', function () { const title = $('#bookName').value.split(':', 1)[0].trim(); if (!title) { status('Enter a Book Name to search Open Library.'); $('#bookName').focus(); return; } $('#bookLookup').open = true; $('#bookLookupMode').value = 'title'; $('#bookLookupQuery').value = title; lookup(); });
     $('#bookLookupCancel').addEventListener('click', function () { stop(); status('Lookup stopped. Your draft is kept.'); });
     $('#bookLookupQuery').addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); lookup(); } });
     ['bookLookupQuery','bookLookupMode'].forEach(function (id) { $('#' + id).addEventListener('input', function () { stop(); $('#bookLookupResults').replaceChildren(); results = []; }); });

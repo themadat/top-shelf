@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.8","date":"2026-09-30T12:00:00.000Z","title":"Books link switching and selection","summary":"Make selected book controls clearer and switch Open Library matches directly.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.7","date":"2026-09-30T12:00:00.000Z","title":"Books table and editor controls","summary":"Add adjustable rows, sticky headers, rating pills, compact book fields and richer Open Library details.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.6","date":"2026-09-30T12:00:00.000Z","title":"Books re-import catalog links","summary":"Re-import Books to link Open Library IDs to existing unlinked entries while preserving personal details.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.5","date":"2026-09-30T12:00:00.000Z","title":"Books import catalog links","summary":"Find Open Library work IDs during Books import and show links for linked books in the list.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

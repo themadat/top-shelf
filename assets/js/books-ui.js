@@ -6,6 +6,16 @@
   let group = null, batch = null;
   function state() { return App.storage.getState(); }
   function pref() { return state().ui.books; }
+  let tableSizeFrame = 0;
+  function sizeTable() {
+    window.cancelAnimationFrame(tableSizeFrame);
+    tableSizeFrame = window.requestAnimationFrame(function () {
+      const scroller = $('#booksTable').parentElement;
+      if ($('#booksWorkspace').hidden || $('#booksListView').hidden) return;
+      const top = scroller.getBoundingClientRect().top + window.scrollY;
+      scroller.style.height = $('#booksEmpty').hidden ? Math.max(180, Math.floor(window.innerHeight - top - 12)) + 'px' : '';
+    });
+  }
   function preference(patch) { App.storage.mutate(function (s) { Object.assign(s.ui.books, patch); }, { touch: false, reason: 'books-preference' }); }
   function value(b, key) {
     if (key === 'rating') return b.status === 'Want to Read' ? b.priority : b.rating;
@@ -80,13 +90,14 @@
         return '<td title="' + label + '">' + (v === null ? '—' : '<span class="' + (wishlist ? 'movie-priority' : 'movie-score') + '" style="background:' + App.movies.color(v, wishlist) + '">' + v + '</span>') + '</td>';
       }
       if (c[0] === 'yearRead') return '<td><span class="book-year-cell"><span>' + (v === null ? '—' : esc(v)) + '</span>' + (b.notes.trim() ? '<button type="button" class="book-notes-marker" data-book-open="' + esc(b.id) + '" title="Longer notes saved" aria-label="Open longer notes for ' + esc(b.title) + '">' + App.icons.markup('notes') + '</button>' : '') + '</span></td>';
-      if (c[0] === 'title') return '<th scope="row"><button type="button" class="book-title" data-book-open="' + esc(b.id) + '">' + esc(b.title) + '</button>' + (b.status !== 'Read' ? '<button type="button" class="book-mark" data-book-read="' + esc(b.id) + '">Mark Read</button>' : '') + '</th>';
+      if (c[0] === 'title') return '<th scope="row"><button type="button" class="book-title" data-book-open="' + esc(b.id) + '">' + esc(b.title) + '</button>' + (b.status !== 'Read' ? '<button type="button" class="book-mark" data-book-read="' + esc(b.id) + '" aria-label="Mark ' + esc(b.title) + ' Read" title="Mark Read">' + App.icons.markup('bookMarkRead') + '</button>' : '') + '</th>';
       if (c[0] === 'average') return '<td title="' + esc(b.catalog.average === null ? 'No community rating' : b.catalog.ratingsCount + ' ratings · fetched ' + b.catalog.ratingsFetchedAt.slice(0, 10)) + '">' + (b.catalog.workId ? '<a class="book-average-pill' + (v === null ? ' book-average-empty' : '') + '" href="https://openlibrary.org/works/' + b.catalog.workId + '" target="_blank" rel="noopener noreferrer" title="Open https://openlibrary.org/works/' + b.catalog.workId + '" aria-label="Open ' + esc(b.title) + ' on Open Library' + (v === null ? ', no community rating' : ', average ' + v.toFixed(2)) + '"' + (v === null ? '' : ' style="background:' + App.movies.color(Math.round(v * 100) / 100, false) + '"') + '>' + (v === null ? '—' : v.toFixed(2)) + '</a>' : '—') + '</td>';
       return '<td title="' + esc(v ?? '') + '">' + esc(v === null || v === '' ? '—' : v) + '</td>';
     }).join('') + '</tr>'; }).join('');
     const pivotCounts = App.booksPivotsUI.render(all, p);
     $('#booksPivotSearchCount').textContent = pivotCounts.shown + ' / ' + pivotCounts.total;
     const tab = $('[data-shelf="books"]'); if (tab) { tab.querySelector('.shelf-tab-count').textContent = all.length; tab.setAttribute('aria-label', 'Books, ' + all.length + ' books'); }
+    sizeTable();
   }
   function init() {
     [['booksFilterStatus',books.statuses],['booksFilterOwnership',books.ownerships],['booksFilterKind',books.kinds],['booksFilterFormat',books.formats]].forEach(function (entry) { $('#' + entry[0]).innerHTML = '<option value="all">All</option>' + entry[1].map(function (s) { return '<option value="' + esc(s) + '">' + (entry[0] === 'booksFilterOwnership' ? s === 'Owned' ? 'YES' : s === 'Not owned' ? 'NO' : 'Unknown' : s === 'Ebook' ? 'eBook' : esc(s)) + '</option>'; }).join(''); });
@@ -125,6 +136,8 @@
       document.addEventListener('pointermove', move); document.addEventListener('pointerup', finish); document.addEventListener('pointercancel', cancel);
     });
     window.addEventListener('app:statechange', function (event) { if (event.detail.reason === 'edit-document') return; if (['import','sync-download','sync-merge','recovery','erase-all','restore-demo','reset-preferences'].includes(event.detail.reason)) group = null; render(); });
+    window.addEventListener('resize', sizeTable);
+    window.visualViewport?.addEventListener('resize', sizeTable);
     render();
   }
   App.booksUI = { init: init, render: render };
