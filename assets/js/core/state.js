@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 10;
-  // Older builds reject podcast-bearing content rather than silently dropping it.
-  const SYNC_SCHEMA_VERSION = 14;
+  const SYNC_VERSION = 11;
+  // Older builds reject podcast ratings rather than silently dropping personal scores.
+  const SYNC_SCHEMA_VERSION = 15;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -309,7 +309,8 @@
     source.workspace = Object.assign({}, source.workspace, { podcasts: [] });
     return source;
   }
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9, 9: migrate9to10 };
+  function migrate10to11(input) { const source = u.clone(input); source.schemaVersion = 11; return source; }
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9, 9: migrate9to10, 10: migrate10to11 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -689,10 +690,12 @@
     const priorBooks = input.syncFormat === SYNC_FORMAT && input.syncVersion === 7 && input.schemaVersion === 11;
     const priorRatings = input.syncFormat === SYNC_FORMAT && input.syncVersion === 8 && input.schemaVersion === 12;
     const priorNotes = input.syncFormat === SYNC_FORMAT && input.syncVersion === 9 && input.schemaVersion === 13;
-    if (!priorNotes && !priorRatings && !priorBooks && !priorTv && !legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const priorPodcasts = input.syncFormat === SYNC_FORMAT && input.syncVersion === 10 && input.schemaVersion === 14;
+    if (!priorPodcasts && !priorNotes && !priorRatings && !priorBooks && !priorTv && !legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorNotes || input.syncVersion === SYNC_VERSION ? ["notesHtml"] : []).concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(priorNotes || priorRatings || priorBooks || priorTv || input.syncVersion === SYNC_VERSION ? ["tvShows"] : []).concat(priorNotes || priorRatings || priorBooks || input.syncVersion === SYNC_VERSION ? ["books"] : []).concat(input.syncVersion === SYNC_VERSION ? ["podcasts"] : [])).includes(key); })
+      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorPodcasts || priorNotes || input.syncVersion === SYNC_VERSION ? ["notesHtml"] : []).concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(priorPodcasts || priorNotes || priorRatings || priorBooks || priorTv || input.syncVersion === SYNC_VERSION ? ["tvShows"] : []).concat(priorPodcasts || priorNotes || priorRatings || priorBooks || input.syncVersion === SYNC_VERSION ? ["books"] : []).concat(priorPodcasts || input.syncVersion === SYNC_VERSION ? ["podcasts"] : [])).includes(key); })
+      || (priorPodcasts && Array.isArray(data.podcasts) && data.podcasts.some(function (p) { return p?.rating != null; }))
       || ("notes" in data && (typeof data.notes !== "string" || data.notes.length > config.controls.maxDocumentHtmlLength))
       || ("notesHtml" in data && (typeof data.notesHtml !== "string" || data.notesHtml.length > config.controls.maxDocumentHtmlLength))
       || ("records" in data && (!Array.isArray(data.records) || data.records.length > config.controls.maxRecords))) {

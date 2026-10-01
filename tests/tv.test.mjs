@@ -104,7 +104,7 @@ test('TV sync fingerprints ignore device preferences and check timestamps', () =
   assert.equal(model.syncHash(state), hash);
   assert.equal(model.syncHash(model.prepareSync(model.syncPayload(state)).state), hash);
   state.workspace.tvShows[0].rating = 0; assert.notEqual(model.syncHash(state), hash);
-  const payload = model.syncPayload(state); assert.equal(payload.syncVersion, 10); assert.equal(payload.schemaVersion, 14);
+  const payload = model.syncPayload(state); assert.equal(payload.syncVersion, 11); assert.equal(payload.schemaVersion, 15);
   assert.throws(() => model.prepareSync({ ...payload, syncVersion: 5, schemaVersion: 9 }), /invalid/);
 });
 
@@ -210,7 +210,7 @@ test('TV half-point show ratings and priority survive status changes, refresh, b
   const payload=model.syncPayload(local);assert.equal(model.prepareSync(payload).state.workspace.tvShows[0].priority,1);
   const legacy=JSON.parse(JSON.stringify(payload));legacy.syncVersion=7;legacy.schemaVersion=11;delete legacy.data.tvShows[0].priority;legacy.data.tvShows[0].rating=4;
   assert.equal(model.prepareSync(legacy).state.workspace.tvShows[0].priority,null);
-  assert.throws(()=>model.prepareSync({...payload,syncVersion:11,schemaVersion:15}),/not supported/);
+  assert.throws(()=>model.prepareSync({...payload,syncVersion:12,schemaVersion:16}),/not supported/);
   const oldLocal=JSON.parse(JSON.stringify(local));oldLocal.schemaVersion=8;delete oldLocal.workspace.tvShows[0].priority;
   assert.ok(model.prepare(oldLocal).migrations.includes('8→9'));
 });

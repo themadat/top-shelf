@@ -30,7 +30,7 @@ Tables show book count, rated-book count and average personal rating. Zero is in
 
 ## Persistence and safety
 
-`workspace.books` carries stable local IDs and explicit deletion markers. Local schema 8 adds an empty Books library to schema 7; older supported migrations remain intact. Cloud v7/schema 11 introduced Books; current v10/schema 14 retains them, and v1–v9 remain readable. Earlier apps reject the current envelope. Full backups, content hashes, conflict detection, merges, restore previews and recovery include Books. Conflicting same-book content or duplicate catalog identity requires a user choice; timestamps never pick a winner.
+`workspace.books` carries stable local IDs and explicit deletion markers. Local schema 8 adds an empty Books library to schema 7; older supported migrations remain intact. Cloud v7/schema 11 introduced Books; current v11/schema 15 retains them, and v1–v10 remain readable. Earlier apps reject the current envelope. Full backups, content hashes, conflict detection, merges, restore previews and recovery include Books. Conflicting same-book content or duplicate catalog identity requires a user choice; timestamps never pick a winner.
 
 Book saves validate a cloned library and use durable storage replacement before publishing success. Failed writes keep the old live and stored library and the open editor draft. Deletion first commits a recovery snapshot, then checks for intervening edits before saving a tombstone. Data replacement invalidates open drafts; manual same-book changes block stale saves. Device preferences and transient lookup caches are excluded from content sync. Existing storage capacity limits still apply.
 

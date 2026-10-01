@@ -62,7 +62,7 @@ test('podcasts migrate, round trip, isolate local preferences and reject old cli
  const old=model.createDefaultState();old.schemaVersion=9;delete old.workspace.podcasts;const migrated=model.prepare(old);assert.ok(migrated.migrations.includes('9→10'));assert.equal(migrated.state.workspace.podcasts.length,0);
  const local=model.normalize({workspace:{podcasts:[row({catalog})]},ui:{podcasts:{query:'Local',status:'Stopped'}}});
  assert.deepEqual(plain(model.prepare(model.exportEnvelope(local)).state.workspace.podcasts),plain(local.workspace.podcasts));
- const payload=model.syncPayload(local);assert.equal(payload.syncVersion,10);assert.equal(payload.schemaVersion,14);assert.equal(JSON.stringify(payload).includes('Local'),false);
+ const payload=model.syncPayload(local);assert.equal(payload.syncVersion,11);assert.equal(payload.schemaVersion,15);assert.equal(JSON.stringify(payload).includes('Local'),false);
  const remote=model.prepareSync(payload).state;assert.deepEqual(plain(remote.workspace.podcasts),plain(local.workspace.podcasts));assert.equal(model.applySync(local,remote).ui.podcasts.query,'Local');
  assert.throws(()=>model.prepareSync({...payload,syncVersion:9,schemaVersion:13}),/invalid/);assert.equal(model.prepareSync({syncFormat:'top-shelf-app-data',syncVersion:9,schemaVersion:13,data:{notesHtml:'<p>Old</p>',notes:'Old'}}).state.workspace.documents[0].html,'<p>Old</p>');
  const different=model.normalize({workspace:{podcasts:[row({status:'Stopped'})]}});assert.throws(()=>model.merge(local,different),/differs/);
@@ -81,3 +81,21 @@ test('provider error and malformed response do not produce false links',async()=
 });
 
 test('import cannot reuse another entry ID to attach an unrelated catalog',()=>{const saved=row(),source=file([row({title:'Different show',catalog})]);assert.equal(im.preview([saved],source).entries[0].action,'skip');});
+
+test('personal podcast ratings survive imports and backup/content round trips; invalid scores are rejected',()=>{
+ const rated=row({rating:5,catalog});assert.equal(row().rating,null);
+ for(const rating of [0,6,1.5,'5',NaN])assert.throws(()=>row({rating}),/ratings/);
+ const local=model.normalize({workspace:{podcasts:[rated]},ui:{podcasts:{view:'pivots',publisher:'Example Publisher',pivotQuery:'News',minimum:2,pivotSort:'average'}}});
+ assert.equal(model.prepare(model.exportEnvelope(local)).state.workspace.podcasts[0].rating,5);
+ assert.equal(model.prepareSync(model.syncPayload(local)).state.workspace.podcasts[0].rating,5);
+ assert.equal(local.ui.podcasts.view,'pivots');assert.equal(local.ui.podcasts.pivotSort,'average');
+ assert.equal(JSON.stringify(model.syncPayload(local)).includes('pivotQuery'),false);
+ const original=im.parse(table);original.podcasts[0].catalog=catalog;const old=row({...original.podcasts[0],rating:4,catalog:{}}),preview=im.preview([old],original);
+ assert.equal(im.apply([old],original,preview.snapshot,[old.id]).podcasts[0].rating,4);
+});
+
+test('previous podcast envelopes remain readable and rating envelopes require an updated client',()=>{
+ const legacy=model.prepareSync({syncFormat:'top-shelf-app-data',syncVersion:10,schemaVersion:14,data:{podcasts:[row()],notesHtml:'<p>Keep</p>'}});assert.equal(legacy.state.workspace.podcasts[0].rating,null);
+ assert.throws(()=>model.prepareSync({syncFormat:'top-shelf-app-data',syncVersion:10,schemaVersion:14,data:{podcasts:[row({rating:4})]}}),/invalid/);
+ const old=model.createDefaultState();old.schemaVersion=10;old.workspace.podcasts=[row({rating:3})];const migrated=model.prepare(old);assert.ok(migrated.migrations.includes('10→11'));assert.equal(migrated.state.workspace.podcasts[0].rating,3);
+});

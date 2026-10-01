@@ -24,6 +24,7 @@
       activity:choice(s.activity,activities,'Unknown'), activityReason:text(s.activityReason,500), size:choice(s.size,sizes,'Unknown'), frequency:choice(s.frequency,frequencies,'Unknown'),
       averageSeconds:number(s.averageSeconds,864000), sampleCount:number(s.sampleCount,20), lastEpisode:text(s.lastEpisode,40), fundingUrl:url(s.fundingUrl), fetchedAt:text(s.fetchedAt,40), feedFetchedAt:text(s.feedFetchedAt,40) };
   }
+  function rating(v) { if (v == null || v === '') return null; if (!Number.isInteger(v) || v < 1 || v > 5) throw new Error('Podcast ratings must be whole numbers from 1–5.'); return v; }
   function normalize(input) {
     const s=u.plainObject(input), id=text(s.id,100)||u.uid('podcast');
     if (!/^[a-z0-9_-]+$/i.test(id)) throw new Error('Invalid podcast identity.');
@@ -33,7 +34,7 @@
     if(currency && !/^[A-Z]{3}$/.test(currency)) throw new Error('Use a three-letter currency code.');
     const amount=number(m.amount,1000000); if(amount!==null && !currency) throw new Error('Enter the price currency.');
     const checkedAt=text(m.checkedAt,10); if(checkedAt && !/^\d{4}-\d{2}-\d{2}$/.test(checkedAt)) throw new Error('Enter a valid checked date.');
-    return {id,title,kind:choice(s.kind,['Podcast','Membership'],'Podcast'),status:choice(s.status,statuses,'Listening'),activity:choice(s.activity,activities.concat(''),'Unknown'),size:choice(s.size,sizes,'Unknown'),frequency:choice(s.frequency,frequencies,'Unknown'),categories:categories(s.categories),website:url(s.website),
+    return {id,title,rating:rating(s.rating),kind:choice(s.kind,['Podcast','Membership'],'Podcast'),status:choice(s.status,statuses,'Listening'),activity:choice(s.activity,activities.concat(''),'Unknown'),size:choice(s.size,sizes,'Unknown'),frequency:choice(s.frequency,frequencies,'Unknown'),categories:categories(s.categories),website:url(s.website),
       membership:{available:choice(m.available,['Unknown','Yes','No'],'Unknown'),amount,currency,basis:choice(m.basis,['Annual','Monthly','Variable','Unknown'],'Unknown'),tier:text(m.tier,200),url:url(m.url),checkedAt},
       legacy:{active:typeof l.active==='boolean'?l.active:null,last:text(l.last,100),time:number(l.time,1000000),recurrence:text(l.recurrence,100),url:url(l.url),sourceName:text(l.sourceName,500)},
       sourceKey:text(s.sourceKey,100),catalog:catalog(s.catalog)};
@@ -59,6 +60,6 @@
     return {activity,activityReason:complete?'Publisher marked the feed complete':activity==='Unknown'?'Insufficient episode history':'Estimated from episode dates; seasonal shows may differ',size:average===null?'Unknown':sizeFor(average),averageSeconds:average,sampleCount:durations.length,frequency,lastEpisode:dates.length?new Date(dates[0]).toISOString():''};
   }
   function searchable(p){return [p.title,p.catalog.title,p.catalog.author,...effective(p,'categories').flatMap(c=>[c.name,...c.subcategories]),p.membership.tier].join(' ').toLowerCase();}
-  function preferences(s){s=u.plainObject(s);return {query:u.cleanLine(s.query,200),status:statuses.includes(s.status)?s.status:'all',activity:activities.includes(s.activity)?s.activity:'all',size:sizes.includes(s.size)?s.size:'all',frequency:frequencies.includes(s.frequency)?s.frequency:'all',category:u.cleanLine(s.category,200)||'all',membership:['Yes','No','Unknown'].includes(s.membership)?s.membership:'all',sort:['title','status','activity','size','frequency','cost'].includes(s.sort)?s.sort:'title',direction:s.direction==='desc'?'desc':'asc'};}
+  function preferences(s){s=u.plainObject(s);return {view:s.view==='pivots'?'pivots':'list',publisher:u.cleanLine(s.publisher,500)||'all',pivotQuery:u.cleanLine(s.pivotQuery,200),minimum:Number.isInteger(s.minimum)&&s.minimum>=1&&s.minimum<=2000?s.minimum:1,pivotSort:['name','count','average','score'].includes(s.pivotSort)?s.pivotSort:'count',pivotDirection:s.pivotDirection==='asc'?'asc':'desc',query:u.cleanLine(s.query,200),status:statuses.includes(s.status)?s.status:'all',activity:activities.includes(s.activity)?s.activity:'all',size:sizes.includes(s.size)?s.size:'all',frequency:frequencies.includes(s.frequency)?s.frequency:'all',category:u.cleanLine(s.category,200)||'all',membership:['Yes','No','Unknown'].includes(s.membership)?s.membership:'all',sort:['title','rating','status','activity','size','frequency','cost','author','lastEpisode'].includes(s.sort)?s.sort:'title',direction:s.direction==='desc'?'desc':'asc'};}
   App.podcasts={statuses,activities,sizes,frequencies,text,url,categories,catalog,normalize,normalizeList,effective,annual,sizeFor,estimate,searchable,preferences};
 })();
