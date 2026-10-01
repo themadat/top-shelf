@@ -5,12 +5,14 @@ import vm from 'node:vm';
 
 test('recovery rotation handles browsers that cannot replace a large stored value in place', () => {
   const values = new Map();
+  let rejectedTitle = '';
   const quota = Object.assign(new Error('Temporary replacement quota'), { name: 'QuotaExceededError' });
   const localStorage = {
     getItem: key => values.get(key) ?? null,
     removeItem: key => values.delete(key),
     setItem(key, value) {
-      if (key.includes('recovery') && values.has(key) && values.get(key) !== value) throw quota;
+      if (rejectedTitle && key === 'topShelf.state.v5' && JSON.parse(value).workspace.title === rejectedTitle) throw quota;
+      if ((key.includes('recovery') || key === 'topShelf.state.v5') && values.has(key) && values.get(key) !== value) throw quota;
       values.set(key, String(value));
     }
   };
@@ -23,6 +25,19 @@ test('recovery rotation handles browsers that cannot replace a large stored valu
   assert.equal(storage.saveRecovery('First'), true);
   assert.equal(storage.saveRecovery('Replacement'), true);
   assert.equal(storage.recoveryInfo().reason, 'Replacement');
+  storage.load();
+  const next = window.LocalApp.utils.clone(storage.getState());
+  next.workspace.title = 'GitHub wins';
+  storage.replace(next, { saveRecovery: false, overwriteLocal: true });
+  assert.equal(JSON.parse(values.get('topShelf.state.v5')).workspace.title, 'GitHub wins');
+  assert.equal(storage.getState().workspace.title, 'GitHub wins');
+  const persisted = values.get('topShelf.state.v5');
+  rejectedTitle = 'Too large';
+  const oversized = window.LocalApp.utils.clone(storage.getState());
+  oversized.workspace.title = rejectedTitle;
+  assert.throws(() => storage.replace(oversized, { saveRecovery: false, overwriteLocal: true }), /even after freeing/);
+  assert.equal(values.get('topShelf.state.v5'), persisted);
+  assert.equal(storage.getState().workspace.title, 'GitHub wins');
 });
 
 

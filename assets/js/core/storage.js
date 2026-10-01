@@ -210,9 +210,35 @@
     const next = prepared.state;
     if (settings.touch) model.touch(next);
     const json = JSON.stringify(next);
-    // setItem is atomic: keep both the prior stored value and live state until
-    // the replacement is durably saved. Never report an in-memory-only restore.
-    if (!writeLocal(config.storage.stateKey, json)) throw new Error("The replacement could not fit in browser storage. Current data was kept; the recovery copy is still available. Export a backup before freeing storage.");
+    // Publish live state only after persistence. Explicit pulls may rotate the
+    // active key on quota failure; other replacements keep the atomic write.
+    let saved = false;
+    if (settings.overwriteLocal) {
+      const prior = readLocal(config.storage.stateKey);
+      try {
+        localStorage.setItem(config.storage.stateKey, json);
+        saved = true;
+      } catch (error) {
+        if (error && error.name === "QuotaExceededError") {
+          // An explicit cloud pull may free the old library's slot before retrying.
+          // Only rotate this key; leave credentials and unrelated storage intact.
+          try {
+            localStorage.removeItem(config.storage.stateKey);
+            localStorage.setItem(config.storage.stateKey, json);
+            saved = true;
+          } catch (retryError) {
+            if (prior !== null) {
+              try { localStorage.setItem(config.storage.stateKey, prior); } catch (restoreError) { /* live state remains available */ }
+            }
+          }
+        }
+      }
+      if (!saved) throw new Error("The GitHub copy could not fit in browser storage even after freeing the local library’s slot. Free browser storage and try pulling again.");
+      persistentStorageAvailable = true;
+    } else {
+      saved = writeLocal(config.storage.stateKey, json);
+      if (!saved) throw new Error("The replacement could not fit in browser storage. Current data was kept; the recovery copy is still available. Export a backup before freeing storage.");
+    }
     scheduleSave.cancel();
     currentState = next;
     lastSavedJson = json;

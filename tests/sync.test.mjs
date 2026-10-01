@@ -221,12 +221,12 @@ test('restore cancellation preserves data; confirmation saves recovery and local
   assert.ok(h.events.some(event => event.detail?.info?.state === 'downloading'));
 });
 
-test('restore refuses replacement when a recovery copy cannot be saved', async () => {
+test('explicit restore overwrites when a recovery copy cannot be saved', async () => {
   const h = harness(); h.confirmation = true; h.recoveryWorks = false;
   await h.sync.restoreFromCloud();
-  assert.equal(h.replacements.length, 0);
-  assert.equal(h.sync.getInfo().state, 'failed');
-  assert.match(h.sync.getInfo().message, /recovery copy/);
+  assert.equal(h.replacements.length, 1);
+  assert.equal(h.sync.getInfo().state, 'upToDate');
+
 });
 
 test('forgetting a connection prevents stale errors and a pending restore from applying', async () => {

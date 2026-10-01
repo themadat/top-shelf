@@ -30,7 +30,7 @@
   })));
   const ACTIONS = Object.freeze({
     syncNow: Object.freeze({ symbol: "arrow.trianglehead.clockwise.icloud", title: "Sync Now", help: "Compare copies and sync changes with GitHub." }),
-    restore: Object.freeze({ symbol: "arrow.trianglehead.counterclockwise.icloud", title: "Restore from Cloud", help: "Replace this device with the GitHub copy after confirmation and a recovery backup." }),
+    restore: Object.freeze({ symbol: "arrow.trianglehead.counterclockwise.icloud", title: "Restore from Cloud", help: "Replace this device with the GitHub copy after confirmation; recovery is best-effort." }),
     settings: Object.freeze({ symbol: "support", title: "Sync Settings", help: "Open storage and GitHub Sync settings." })
   });
 
@@ -449,12 +449,12 @@
     try {
       const before = u.stableJson(storage.getState());
       const next = model.applySync(storage.getState(), runtime.remoteState);
-      if (!await storage.saveRecoveryAsync("Before downloading GitHub data")) throw new Error("The local recovery copy could not be saved. Export a backup before restoring from cloud.");
+      const recovered = await storage.saveRecoveryAsync("Before downloading GitHub data");
       if (!currentRequest(context)) return false;
       if (u.stableJson(storage.getState()) !== before) throw new Error("Local data changed while saving recovery. Check cloud sync again before restoring.");
-      storage.replace(next, { saveRecovery: false, reason: "sync-download", touch: false });
+      storage.replace(next, { saveRecovery: false, reason: "sync-download", touch: false, overwriteLocal: true });
       rememberBaseline(runtime.remoteSha, runtime.remoteHash);
-      App.components.toast("This device now uses the GitHub copy. The previous local copy is recoverable in Developer Tools.", { title: "Sync complete", kind: "success", duration: 5000 });
+      App.components.toast(recovered ? "This device now uses the GitHub copy. The previous local copy is recoverable in Developer Tools." : "This device now uses the GitHub copy. A recovery copy could not be saved.", { title: "Sync complete", kind: "success", duration: 5000 });
       return true;
     } catch (error) {
       recordError(error, "Download failed.");
@@ -511,7 +511,7 @@
         : [
             ...(model.canMerge(storage.getState(), runtime.remoteState) ? [{ value: "merge", symbol: "link.icloud", label: "Merge both copies", description: "Combine matching or separate items, keeping content present in either copy.", kind: "primary" }] : []),
             { value: "upload", symbol: STATE_PRESENTATIONS.uploading.symbol, label: "Upload this device", description: "Replace the GitHub copy with this device.", kind: "secondary" },
-            { value: "download", symbol: STATE_PRESENTATIONS.downloading.symbol, label: "Download GitHub", description: "Replace saved content after making a recovery copy; keep this device’s settings.", kind: "secondary" }
+            { value: "download", symbol: STATE_PRESENTATIONS.downloading.symbol, label: "Download GitHub", description: "Overwrite local content with GitHub; keep this device’s settings. Recovery is best-effort.", kind: "secondary" }
           ];
       const sequence = runtime.requestSequence;
       runtime.deciding = true;
@@ -548,7 +548,7 @@
     try {
       accepted = await App.components.confirm({
         title: "Restore from Cloud?",
-        message: "Replace this device’s saved content with the GitHub copy? Device settings stay as they are. Your current local copy will be saved for recovery in Developer Tools.",
+        message: "Replace this device’s saved content with the GitHub copy? Device settings stay as they are. This overwrites local content even if a recovery copy cannot be saved.",
         confirmLabel: ACTIONS.restore.title, cancelLabel: "Keep this device", danger: true, trigger: trigger
       });
     } finally { runtime.deciding = false; emit(); }
