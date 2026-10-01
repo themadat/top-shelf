@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.10","date":"2026-10-01T12:00:00.000Z","title":"GitHub pull overwrite","summary":"Explicit GitHub pulls overwrite local content when recovery is unavailable and retry storage quota failures after freeing the old library slot.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.9","date":"2026-09-30T12:00:00.000Z","title":"Books viewport and editor layout","summary":"Fill the Books table space, refine editor rows and title lookup, and add an icon for Mark Read.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.8","date":"2026-09-30T12:00:00.000Z","title":"Books link switching and selection","summary":"Make selected book controls clearer and switch Open Library matches directly.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.7","date":"2026-09-30T12:00:00.000Z","title":"Books table and editor controls","summary":"Add adjustable rows, sticky headers, rating pills, compact book fields and richer Open Library details.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

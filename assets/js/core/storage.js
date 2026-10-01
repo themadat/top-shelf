@@ -5,6 +5,8 @@
   const config = App.config;
   const u = App.utils;
   const model = App.stateModel;
+  const codec = App.storageCodec;
+  let compactStorage = false;
   let currentState;
   let databaseRecovery = null;
   let persistentStorageAvailable = true;
@@ -40,6 +42,37 @@
       });
       return false;
     }
+  }
+
+  function writeState(json, overwriteLocal) {
+    const key = config.storage.stateKey, prior = readLocal(key);
+    let value = compactStorage ? codec.encode(json) : json;
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      if (!error || error.name !== "QuotaExceededError") return writeLocal(key, value);
+      const compact = compactStorage ? value : codec.encode(json);
+      if (compact.length < value.length) value = compact;
+      try {
+        // Prefer an atomic compact write before rotating an explicit pull.
+        localStorage.setItem(key, value);
+      } catch (compactError) {
+        if (!overwriteLocal || !compactError || compactError.name !== "QuotaExceededError") return writeLocal(key, value);
+        try {
+          localStorage.removeItem(key);
+          localStorage.setItem(key, value);
+        } catch (retryError) {
+          if (prior !== null) {
+            try { localStorage.setItem(key, prior); } catch (restoreError) { /* retain live data and recovery */ }
+          }
+          persistentStorageAvailable = false;
+          return false;
+        }
+      }
+    }
+    compactStorage = value !== json;
+    persistentStorageAvailable = true;
+    return true;
   }
 
   function removeLocal(key) {
@@ -111,7 +144,8 @@
       const raw = readLocal(candidate.key);
       if (!raw) continue;
       try {
-        const prepared = model.prepare(JSON.parse(raw));
+        const prepared = model.prepare(codec.parse(raw));
+        compactStorage = JSON.parse(raw).storageEncoding === codec.format;
         currentState = prepared.state;
         loadReport = {
           source: candidate.label,
@@ -153,7 +187,7 @@
     currentState = normalized;
     const json = JSON.stringify(normalized);
     if (json === lastSavedJson) return true;
-    const saved = writeLocal(config.storage.stateKey, json);
+    const saved = writeState(json);
     if (saved) {
       lastSavedJson = json;
       emit("app:statesaved", { bytes: new Blob([json]).size, updatedAt: normalized.meta.updatedAt });
@@ -210,35 +244,7 @@
     const next = prepared.state;
     if (settings.touch) model.touch(next);
     const json = JSON.stringify(next);
-    // Publish live state only after persistence. Explicit pulls may rotate the
-    // active key on quota failure; other replacements keep the atomic write.
-    let saved = false;
-    if (settings.overwriteLocal) {
-      const prior = readLocal(config.storage.stateKey);
-      try {
-        localStorage.setItem(config.storage.stateKey, json);
-        saved = true;
-      } catch (error) {
-        if (error && error.name === "QuotaExceededError") {
-          // An explicit cloud pull may free the old library's slot before retrying.
-          // Only rotate this key; leave credentials and unrelated storage intact.
-          try {
-            localStorage.removeItem(config.storage.stateKey);
-            localStorage.setItem(config.storage.stateKey, json);
-            saved = true;
-          } catch (retryError) {
-            if (prior !== null) {
-              try { localStorage.setItem(config.storage.stateKey, prior); } catch (restoreError) { /* live state remains available */ }
-            }
-          }
-        }
-      }
-      if (!saved) throw new Error("The GitHub copy could not fit in browser storage even after freeing the local library’s slot. Free browser storage and try pulling again.");
-      persistentStorageAvailable = true;
-    } else {
-      saved = writeLocal(config.storage.stateKey, json);
-      if (!saved) throw new Error("The replacement could not fit in browser storage. Current data was kept; the recovery copy is still available. Export a backup before freeing storage.");
-    }
+    if (!writeState(json, settings.overwriteLocal)) throw new Error("The replacement could not fit in browser storage, even in compact form. Current live data was kept. Export a backup or free browser storage before trying again.");
     scheduleSave.cancel();
     currentState = next;
     lastSavedJson = json;
@@ -266,6 +272,7 @@
     [config.storage.stateKey, config.storage.tmdbSecretKey, config.storage.recoveryKey, config.storage.secretKey, config.storage.sessionSecretKey].concat(config.storage.legacyKeys).forEach(removeLocal);
     try { sessionStorage.removeItem(config.storage.sessionSecretKey); sessionStorage.removeItem(config.storage.tmdbSecretKey); } catch (error) { /* unavailable */ }
     lastSavedJson = "";
+    compactStorage = false;
     currentState = model.createDefaultState({ demo: false });
     saveNow();
     emit("app:statechange", { reason: "erase-all", state: currentState });

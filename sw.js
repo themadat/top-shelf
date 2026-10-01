@@ -1,7 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "top-shelf-shell-2.0.0.10";
-const ASSET_VERSION = "2.0.0.10";
+const CACHE_NAME = "top-shelf-shell-2.0.0.11";
+const ASSET_VERSION = "2.0.0.11";
 const versioned = function (path) { return path + "?v=" + ASSET_VERSION; };
 const SHELL = [
   "./",
@@ -50,6 +50,7 @@ const SHELL = [
   versioned("./assets/js/podcasts-import-ui.js"),
   versioned("./assets/css/podcasts.css"),
   versioned("./assets/js/core/state.js"),
+  versioned("./assets/js/core/storage-codec.js"),
   versioned("./assets/js/core/storage.js"),
   versioned("./assets/js/core/components.js"),
   versioned("./assets/js/core/portability.js"),

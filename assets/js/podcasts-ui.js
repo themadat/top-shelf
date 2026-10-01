@@ -2,7 +2,7 @@
  'use strict';const App=window.LocalApp,p=App.podcasts,u=App.utils,esc=u.escapeHtml,$=s=>document.querySelector(s);
  const state=()=>App.storage.getState();
  function snapshot(){return {rows:u.stableJson(state().workspace.podcasts),workspace:u.stableJson(state().workspace),stored:localStorage.getItem(App.config.storage.stateKey)};}
- function guard(before){const stored=localStorage.getItem(App.config.storage.stateKey);let sameContent=false;try{sameContent=u.stableJson(JSON.parse(stored)?.workspace)===before.workspace;}catch(_){}if(u.stableJson(state().workspace)!==before.workspace||(stored!==before.stored&&!sameContent))throw new Error('Saved data changed. Reopen the editor or preview again before saving.');}
+ function guard(before){const stored=localStorage.getItem(App.config.storage.stateKey);let sameContent=false;try{sameContent=u.stableJson(App.storageCodec.parse(stored)?.workspace)===before.workspace;}catch(_){}if(u.stableJson(state().workspace)!==before.workspace||(stored!==before.stored&&!sameContent))throw new Error('Saved data changed. Reopen the editor or preview again before saving.');}
  async function commit(rows,before,recovery,valid){
   guard(before);const next=u.clone(state());next.workspace.podcasts=p.normalizeList(rows);
   const current=u.stableJson(state());if(!App.storage.saveNow())throw new Error('Could not save current data.');const stored=localStorage.getItem(App.config.storage.stateKey);
