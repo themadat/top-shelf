@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
 const context = vm.createContext({ window: {}, URL, TextEncoder, TextDecoder, Uint8Array, structuredClone });
-for (const path of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/books.js']) {
+for (const path of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/books.js', 'core/podcasts.js']) {
   vm.runInContext(read('assets/js/' + path), context);
 }
 const App = context.window.LocalApp;
@@ -26,8 +26,8 @@ test('formatted Overall Notes survives cloud sync and v8 plain Notes remains rea
   const html = '<h2>Heading</h2><p><strong>Bold</strong> <em>italic</em> <a href="https://example.com/">link</a></p>';
   state.workspace.documents = [{ id: 'app-notes', title: 'Notes', html }];
   const payload = model.syncPayload(state);
-  assert.equal(payload.syncVersion, 9);
-  assert.equal(payload.schemaVersion, 13);
+  assert.equal(payload.syncVersion, 10);
+  assert.equal(payload.schemaVersion, 14);
   assert.equal(payload.data.notesHtml, html);
   assert.equal(model.prepareSync(payload).state.workspace.documents[0].html, html);
   const prior = { syncFormat: payload.syncFormat, syncVersion: 8, schemaVersion: 12, data: { notes: 'First\nSecond' } };

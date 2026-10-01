@@ -1,6 +1,6 @@
 # Architecture
 
-Top Shelf is a static, dependency-free, local-first application. The Movies workspace implements Wishlist and Watched lists; the other seven domain tabs retain starter views.
+Top Shelf is a static, dependency-free, local-first application. Movies, TV, Books and Podcasts have dedicated libraries; the other domain tabs retain starter views.
 
 - `index.html` provides the header, centered search, Notes, Settings, dialogs, live regions, and asset references.
 - `assets/css/app.css` owns shell styles; `assets/css/movies.css` holds movie/pivot styles and loads second to preserve the cascade.
@@ -17,3 +17,5 @@ Persistence, schemas, migration, credential boundaries and conflict rules are do
 The runtime requires no account for local use. Optional GitHub Sync and explicit TMDB lookups perform authenticated requests. Future product work should add the smallest useful model and UI without introducing speculative infrastructure.
 
 `core/pivots.js` derives watched-only aggregates without modifying movie records; `pivots-ui.js` provides the Movies dashboard and locally persisted display controls. See [PIVOTS.md](PIVOTS.md) for calculation and interaction rules.
+
+Podcasts separates the model (`core/podcasts.js`), table importer (`core/podcasts-import.js`), public discovery/feed readers (`core/podcast-catalog.js`, `core/podcast-feed.js`), and list/editor/import interfaces. See [PODCASTS.md](PODCASTS.md) for provider boundaries and import safeguards.

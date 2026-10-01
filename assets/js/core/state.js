@@ -5,9 +5,9 @@
   const config = App.config;
   const u = App.utils;
   const SYNC_FORMAT = "top-shelf-app-data";
-  const SYNC_VERSION = 9;
-  // Older builds reject formatted Notes rather than silently dropping the markup.
-  const SYNC_SCHEMA_VERSION = 13;
+  const SYNC_VERSION = 10;
+  // Older builds reject podcast-bearing content rather than silently dropping it.
+  const SYNC_SCHEMA_VERSION = 14;
   const CLOUD_TARGET = Object.freeze({
     owner: u.cleanLine(config.cloudSync?.owner, 39),
     repo: u.cleanLine(config.cloudSync?.repo, 100).replace(/\.git$/i, ""),
@@ -82,6 +82,7 @@
         movies: [],
         tvShows: [],
         books: [],
+        podcasts: [],
         pivotSettings: {},
         records: records,
         documents: documents
@@ -118,6 +119,7 @@
         selectedShelf: config.shelves[0].id,
         movieSorts: {},
         books: App.books.preferences(),
+        podcasts: App.podcasts.preferences(),
         tv: { view: "list", sort: "title", direction: "asc", widths: {}, filter: "all", query: "" },
         movieColumnWidths: { all: {}, wishlist: {}, watched: {} },
         pivotColumnWidths: {}, pivotLocalSettings: {}, pivotSubsectionSorts: {},
@@ -302,7 +304,12 @@
     const source = u.clone(input); source.schemaVersion = 9;
     return source;
   }
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9 };
+  function migrate9to10(input) {
+    const source = u.clone(input); source.schemaVersion = 10;
+    source.workspace = Object.assign({}, source.workspace, { podcasts: [] });
+    return source;
+  }
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9, 9: migrate9to10 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -463,6 +470,7 @@
         movies: App.movies.normalizeList(sourceWorkspace.movies),
         tvShows: App.tv.normalizeList(sourceWorkspace.tvShows),
         books: App.books.normalizeList(sourceWorkspace.books),
+        podcasts: App.podcasts.normalizeList(sourceWorkspace.podcasts),
         pivotSettings: normalizePivotSettings(sourceWorkspace.pivotSettings),
         records: records,
         documents: documents
@@ -500,6 +508,7 @@
         search: u.cleanLine(sourceUi.search, 200),
         movieColumnWidths: movieWidths(sourceUi.movieColumnWidths),
         books: App.books.preferences(sourceUi.books),
+        podcasts: App.podcasts.preferences(sourceUi.podcasts),
         tv: {
           view: sourceUi.tv?.view === "pivots" ? "pivots" : "list",
           sort: ["rating", "title", "status", "providerStatus", "lastAirDate", "type", "genres", "numberOfSeasons", "numberOfEpisodes", "voteAverage", "networks", "notes"].includes(sourceUi.tv?.sort) ? sourceUi.tv.sort : "title",
@@ -612,6 +621,7 @@
     next.ui.movieSorts = defaults.ui.movieSorts;
     next.ui.tv = defaults.ui.tv;
     next.ui.books = defaults.ui.books;
+    next.ui.podcasts = defaults.ui.podcasts;
     next.ui.movieColumnWidths = defaults.ui.movieColumnWidths;
     next.ui.pivotColumnWidths = {}; next.ui.pivotLocalSettings = {}; next.ui.pivotSubsectionSorts = {};
     next.ui.documents = defaults.ui.documents;
@@ -649,6 +659,7 @@
     if (normalized.workspace.movies.length) data.movies = normalized.workspace.movies;
     if (normalized.workspace.tvShows.length) data.tvShows = normalized.workspace.tvShows.map(App.tv.content).sort(function (a, b) { return a.id.localeCompare(b.id); });
     if (normalized.workspace.books.length) data.books = normalized.workspace.books.slice().sort(function (a, b) { return a.id.localeCompare(b.id); });
+    if (normalized.workspace.podcasts.length) data.podcasts = normalized.workspace.podcasts.slice().sort(function (a, b) { return a.id.localeCompare(b.id); });
     // Preserve real content from older backups, without exporting empty scaffolding.
     if (normalized.workspace.records.length) data.records = normalized.workspace.records.map(function (record) {
       const item = Object.assign({}, record);
@@ -677,10 +688,11 @@
     const priorTv = input.syncFormat === SYNC_FORMAT && input.syncVersion === 6 && input.schemaVersion === 10;
     const priorBooks = input.syncFormat === SYNC_FORMAT && input.syncVersion === 7 && input.schemaVersion === 11;
     const priorRatings = input.syncFormat === SYNC_FORMAT && input.syncVersion === 8 && input.schemaVersion === 12;
-    if (!priorRatings && !priorBooks && !priorTv && !legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
+    const priorNotes = input.syncFormat === SYNC_FORMAT && input.syncVersion === 9 && input.schemaVersion === 13;
+    if (!priorNotes && !priorRatings && !priorBooks && !priorTv && !legacyContent && !priorMovies && !priorPivots && !priorReview && !priorSubgenres && (input.syncFormat !== SYNC_FORMAT || input.syncVersion !== SYNC_VERSION || input.schemaVersion !== SYNC_SCHEMA_VERSION)) throw new Error("This cloud data format is not supported. Update the app before syncing.");
     const data = input.data;
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(input.syncVersion === SYNC_VERSION ? ["notesHtml"] : []).concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(priorRatings || priorBooks || priorTv || input.syncVersion === SYNC_VERSION ? ["tvShows"] : []).concat(priorRatings || priorBooks || input.syncVersion === SYNC_VERSION ? ["books"] : [])).includes(key); })
+      || Object.keys(data).some(function (key) { return !(legacyContent ? ["notes", "records"] : ["notes", "records", "movies"].concat(priorNotes || input.syncVersion === SYNC_VERSION ? ["notesHtml"] : []).concat(priorMovies || priorPivots ? [] : ["pivotSettings"]).concat(priorNotes || priorRatings || priorBooks || priorTv || input.syncVersion === SYNC_VERSION ? ["tvShows"] : []).concat(priorNotes || priorRatings || priorBooks || input.syncVersion === SYNC_VERSION ? ["books"] : []).concat(input.syncVersion === SYNC_VERSION ? ["podcasts"] : [])).includes(key); })
       || ("notes" in data && (typeof data.notes !== "string" || data.notes.length > config.controls.maxDocumentHtmlLength))
       || ("notesHtml" in data && (typeof data.notesHtml !== "string" || data.notesHtml.length > config.controls.maxDocumentHtmlLength))
       || ("records" in data && (!Array.isArray(data.records) || data.records.length > config.controls.maxRecords))) {
@@ -697,11 +709,12 @@
         movies: App.movies.normalizeList((data.movies || []).map(function (movie) { return legacyContent || priorMovies || priorPivots || priorReview ? Object.assign({ subgenreReviewed: true }, movie) : movie; })),
         tvShows: App.tv.normalizeList(data.tvShows),
         books: App.books.normalizeList(data.books),
+        podcasts: App.podcasts.normalizeList(data.podcasts),
         pivotSettings: normalizePivotSettings(data.pivotSettings),
         records: data.records || []
       }
     });
-    return { state: state, legacy: priorRatings || priorBooks || priorTv || legacyContent || priorMovies || priorPivots || priorReview || priorSubgenres, migrations: [], validation: validate(state) };
+    return { state: state, legacy: priorNotes || priorRatings || priorBooks || priorTv || legacyContent || priorMovies || priorPivots || priorReview || priorSubgenres, migrations: [], validation: validate(state) };
   }
 
   function applySync(localState, remoteState) {
@@ -712,6 +725,7 @@
     next.workspace.movies = remote.workspace.movies;
     next.workspace.tvShows = remote.workspace.tvShows;
     next.workspace.books = remote.workspace.books;
+    next.workspace.podcasts = remote.workspace.podcasts;
     next.workspace.pivotSettings = remote.workspace.pivotSettings;
     next.meta.tombstones = remote.meta.tombstones;
     return normalize(touch(next));
@@ -732,7 +746,7 @@
       pivotSettings[entry[0]] = entry[1];
     });
     if (Object.keys(pivotSettings).length) data.pivotSettings = pivotSettings;
-    [["records", "id", config.controls.maxRecords], ["movies", "id", config.controls.maxMovies], ["tvShows", "id", config.controls.maxTvShows], ["books", "id", config.controls.maxBooks]].forEach(function (entry) {
+    [["records", "id", config.controls.maxRecords], ["movies", "id", config.controls.maxMovies], ["tvShows", "id", config.controls.maxTvShows], ["books", "id", config.controls.maxBooks], ["podcasts", "id", config.controls.maxPodcasts]].forEach(function (entry) {
       const items = new Map();
       (local[entry[0]] || []).concat(remote[entry[0]] || []).forEach(function (item) {
         const current = items.get(item[entry[1]]);
@@ -742,6 +756,7 @@
       if (items.size > entry[2]) throw new Error("The combined content exceeds the saved item limit.");
       if (items.size) data[entry[0]] = Array.from(items.values());
     });
+    if (data.podcasts) data.podcasts = App.podcasts.normalizeList(data.podcasts);
     if (data.books) data.books = App.books.normalizeList(data.books);
     if (data.movies) data.movies = App.movies.normalizeList(data.movies);
     if (data.tvShows) data.tvShows = App.tv.normalizeList(data.tvShows).map(App.tv.content);

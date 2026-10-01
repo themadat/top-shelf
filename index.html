@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV and Books available.">
+  <meta name="description" content="A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV, Books and Podcasts available.">
   <meta name="theme-color" content="#f5f3ed">
   <meta name="theme-color" content="#f5f3ed" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121616" media="(prefers-color-scheme: dark)">
@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="assets/css/movies.css?v=2.0.0.9">
   <link rel="stylesheet" href="assets/css/tv.css?v=2.0.0.9">
   <link rel="stylesheet" href="assets/css/books.css?v=2.0.0.9">
+  <link rel="stylesheet" href="assets/css/podcasts.css?v=2.0.0.9">
   <script defer src="assets/js/config.js?v=2.0.0.9"></script>
   <script defer src="assets/js/release-history.js?v=2.0.0.9"></script>
   <script defer src="assets/js/icons.js?v=2.0.0.9"></script>
@@ -33,6 +34,10 @@
   <script defer src="assets/js/core/tv.js?v=2.0.0.9"></script>
   <script defer src="assets/js/core/tv-import.js?v=2.0.0.9"></script>
   <script defer src="assets/js/core/books.js?v=2.0.0.9"></script>
+  <script defer src="assets/js/core/podcasts.js?v=2.0.0.9"></script>
+  <script defer src="assets/js/core/podcasts-import.js?v=2.0.0.9"></script>
+  <script defer src="assets/js/core/podcast-catalog.js?v=2.0.0.9"></script>
+  <script defer src="assets/js/core/podcast-feed.js?v=2.0.0.9"></script>
   <script defer src="assets/js/core/books-import.js?v=2.0.0.9"></script>
   <script defer src="assets/js/core/open-library.js?v=2.0.0.9"></script>
   <script defer src="assets/js/core/state.js?v=2.0.0.9"></script>
@@ -55,6 +60,9 @@
   <script defer src="assets/js/books-editor.js?v=2.0.0.9"></script>
   <script defer src="assets/js/books-pivots-ui.js?v=2.0.0.9"></script>
   <script defer src="assets/js/books-ui.js?v=2.0.0.9"></script>
+  <script defer src="assets/js/podcasts-ui.js?v=2.0.0.9"></script>
+  <script defer src="assets/js/podcasts-editor.js?v=2.0.0.9"></script>
+  <script defer src="assets/js/podcasts-import-ui.js?v=2.0.0.9"></script>
   <script defer src="assets/js/books-import-ui.js?v=2.0.0.9"></script>
   <script defer src="assets/js/app.js?v=2.0.0.9"></script>
 </head>
@@ -79,8 +87,8 @@
     <nav id="shelfNavigation" class="shelf-nav" aria-label="Rating lists"></nav>
     <div class="global-search-wrap" data-shortcut="/">
       <span class="search-icon" aria-hidden="true" data-symbol="search"></span>
-      <label class="visually-hidden" for="globalSearch">Search movies, TV, Books, Notes, and application support</label>
-      <input id="globalSearch" type="search" autocomplete="off" placeholder="Search movies, TV, Books, Notes, and Help" aria-haspopup="listbox" aria-controls="globalSearchResults" aria-keyshortcuts="/ Control+Alt+Shift+/">
+      <label class="visually-hidden" for="globalSearch">Search movies, TV, Books, Podcasts, Notes, and application support</label>
+      <input id="globalSearch" type="search" autocomplete="off" placeholder="Search movies, TV, Books, Podcasts, Notes, and Help" aria-haspopup="listbox" aria-controls="globalSearchResults" aria-keyshortcuts="/ Control+Alt+Shift+/">
       <kbd aria-hidden="true">/</kbd>
       <div id="globalSearchResults" class="global-search-results" role="listbox" aria-label="Search results" hidden></div>
     </div>
@@ -119,7 +127,7 @@
 
   <aside id="contextHint" class="context-hint" data-hint-key="shell-basics" hidden>
     <span class="context-hint-icon" aria-hidden="true" data-symbol="info"></span>
-    <p>Press <kbd>/</kbd> to search movies, TV, Books, Notes, and Help, or <kbd>N</kbd> to open Notes.</p>
+    <p>Press <kbd>/</kbd> to search movies, TV, Books, Podcasts, Notes, and Help, or <kbd>N</kbd> to open Notes.</p>
     <button type="button" class="icon-button" data-dismiss-hint="shell-basics" aria-label="Dismiss hint"><span aria-hidden="true" data-symbol="close"></span></button>
   </aside>
 
@@ -179,6 +187,12 @@
         <div class="books-filters"><label class="books-search" data-shortcut="."><span class="visually-hidden">Find A Group</span><input id="booksPivotSearch" type="search" maxlength="200" placeholder="Find A Group…" aria-keyshortcuts="."><span id="booksPivotSearchCount" role="status"></span><kbd aria-hidden="true">.</kbd></label><label>Minimum Books<input id="booksPivotMin" type="number" min="1" max="5000" value="1"></label><label>Sort Groups<select id="booksPivotSort"><option value="count">Book Count</option><option value="average">My Average Rating</option><option value="label">Name / Year</option></select></label><button id="booksPivotDirection" class="button small" type="button">Descending</button></div>
         <p id="booksPivotCount" class="setting-note"></p><div id="booksPivotCards" class="books-pivot-grid"></div>
       </section>
+    </section>
+    <section id="podcastsWorkspace" class="podcasts-workspace" aria-labelledby="podcastsTitle" hidden>
+      <div class="podcasts-toolbar"><h1 id="podcastsTitle" tabindex="-1">Podcasts</h1><span id="podcastsCount" role="status"></span><button id="podcastsImport" class="button" type="button">Import Podcasts</button><button id="podcastsAdd" class="button primary" type="button"><span data-symbol="add" aria-hidden="true"></span> Add Podcast</button></div>
+      <div class="podcasts-filters"><label>Search<input id="podcastsSearch" type="search" maxlength="200" placeholder="Name, publisher or category"></label><label>My Status<select id="podcastsStatus"></select></label><label>Show Activity<select id="podcastsActivity"></select></label><label>Length<select id="podcastsSize"></select></label><label>Frequency<select id="podcastsFrequency"></select></label><label>Category<select id="podcastsCategory"></select></label><label>Membership<select id="podcastsMembership"></select></label><label>Sort<select id="podcastsSort"><option value="title">Name</option><option value="status">My Status</option><option value="activity">Activity</option><option value="size">Length</option><option value="frequency">Frequency</option><option value="cost">Annual Cost</option></select></label><button id="podcastsDirection" type="button" class="button">Ascending</button></div>
+      <p id="podcastsEmpty">No matching entries. Add a podcast or import your table.</p>
+      <div class="podcast-scroll" tabindex="0" role="region" aria-label="Podcast library table"><table class="podcast-table"><thead><tr><th scope="col">Name</th><th scope="col">My Status</th><th scope="col">Show Activity</th><th scope="col">Length</th><th scope="col">Frequency</th><th scope="col">Categories</th><th scope="col">Membership</th><th scope="col">Annual Cost</th><th scope="col">Website</th></tr></thead><tbody id="podcastsRows"></tbody></table></div>
     </section>
     <section class="shelf-starter" aria-labelledby="shelfTitle">
       <span id="shelfSymbol" class="shelf-starter-icon" aria-hidden="true"></span>
@@ -256,6 +270,11 @@
       <footer class="dialog-footer"><button class="button" type="button" data-close-dialog="tvImportDialog">Cancel</button><button id="tvImportApply" class="button primary" type="button" disabled>Import Selected Shows</button></footer>
     </div>
   </dialog>
+
+  <dialog id="podcastDialog" class="app-dialog podcast-dialog" aria-labelledby="podcastEditorTitle" data-backdrop-close="false"><form id="podcastForm" class="dialog-shell"><header class="dialog-header"><h2 id="podcastEditorTitle">Podcast</h2><button id="podcastClose" type="button" class="icon-button" aria-label="Close podcast"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="dialog-body"><div class="podcast-grid">
+<label class="podcast-wide">Name<input id="podcast-title" maxlength="500" required></label><label>Entry Type<select id="podcast-kind"><option>Podcast</option><option>Membership</option></select></label><label>My Status<select id="podcast-status"></select></label><label>Show Activity<select id="podcast-activity"></select></label><label>Length<select id="podcast-size"></select></label><label>Release Frequency<select id="podcast-frequency"></select></label><label class="podcast-wide">Website<input id="podcast-website" type="url" maxlength="2000"></label><label class="podcast-wide">Categories — one per line: Category &gt; Subcategory, Subcategory<textarea id="podcast-categories" rows="3" maxlength="10000"></textarea></label></div><p class="setting-note">S &lt;30 · M 30–&lt;60 · L 60–&lt;90 · XL 90+ minutes. Unknown fields use available feed information.</p><fieldset><legend>Membership</legend><div class="podcast-grid"><label>Available<select id="podcast-member-available"><option>Unknown</option><option>Yes</option><option>No</option></select></label><label>Price<input id="podcast-member-amount" type="number" min="0" max="1000000" step="0.01"></label><label>Currency<input id="podcast-member-currency" maxlength="3" pattern="[A-Z]{3}" placeholder="USD"></label><label>Billing<select id="podcast-member-basis"><option>Unknown</option><option>Annual</option><option>Monthly</option><option>Variable</option></select></label><label>Tier<input id="podcast-member-tier" maxlength="200"></label><label>Price Checked<input id="podcast-member-checkedAt" type="date"></label><label class="podcast-wide">Membership URL<input id="podcast-member-url" type="url" maxlength="2000"></label></div><p class="setting-note">Monthly prices display as a yearly estimate (×12). Unknown prices stay unknown.</p></fieldset>
+<details><summary>Catalog and Public Feed</summary><p id="podcastLinked"></p><label>Search Podcast Index<input id="podcastQuery" maxlength="500"></label><div class="podcast-actions"><button id="podcastLookup" type="button" class="button">Search Catalog</button><button id="podcastStop" type="button" class="button" hidden>Stop Lookup</button><button id="podcastUnlink" type="button" class="button">Unlink</button></div><div id="podcastMatches"></div><label>Public RSS Feed<input id="podcastFeedUrl" type="url" maxlength="2000"></label><div class="podcast-actions"><button id="podcastFeedSet" type="button" class="button">Set Public Feed</button><button id="podcastRefresh" type="button" class="button">Refresh Feed Info</button></div><label>Import Public RSS File<input id="podcastFeedFile" type="file" accept=".xml,.rss,application/rss+xml,application/xml,text/xml"></label><p id="podcastFacts"></p></details><details><summary>Original Imported Values</summary><pre id="podcastLegacy"></pre></details><p id="podcastEditorStatus" role="status"></p></div><footer class="dialog-footer"><button id="podcastDelete" type="button" class="button danger">Delete</button><button id="podcastCancel" type="button" class="button">Cancel</button><button id="podcastSave" type="submit" class="button primary">Save Podcast</button></footer></form></dialog>
+  <dialog id="podcastImportDialog" class="app-dialog podcast-dialog" aria-labelledby="podcastImportTitle" data-backdrop-close="false"><div class="dialog-shell"><header class="dialog-header"><h2 id="podcastImportTitle">Import Podcasts</h2><button type="button" class="icon-button" data-close-dialog="podcastImportDialog" aria-label="Close podcast import"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="dialog-body"><p>Import your podcast table or its prepared JSON file. Active becomes Listening/Stopped; prices are annual USD. Blank prices remain unknown. Existing personal details are kept.</p><label>Podcast Table or Prepared File<input id="podcastImportFile" type="file" accept=".json,.tsv,.md,.txt,application/json,text/plain"></label><details><summary>Paste the Original Table</summary><label>11-column podcast table<textarea id="podcastImportText" rows="5" maxlength="1000000"></textarea></label><button id="podcastImportPreview" class="button" type="button">Preview Table</button></details><pre id="podcastImportAudit"></pre><div class="podcast-actions"><button id="podcastImportFind" class="button" type="button" disabled>Find Catalog Matches</button><button id="podcastImportStop" class="button" type="button" hidden>Stop Lookup</button></div><p id="podcastImportProgress" role="status"></p><p id="podcastImportSummary" role="status"></p><p id="podcastImportError" role="alert"></p><div class="podcast-scroll" role="region" tabindex="0" aria-label="Podcast import preview"><table class="podcast-table"><thead><tr><th>Select</th><th>Name</th><th>My Status</th><th>Length / Frequency</th><th>Categories</th><th>Annual Cost</th><th>Catalog Match</th><th>Action</th></tr></thead><tbody id="podcastImportRows"></tbody></table></div></div><footer class="dialog-footer"><button class="button" type="button" data-close-dialog="podcastImportDialog">Cancel</button><button id="podcastImportApply" class="button primary" type="button" disabled>Apply Selected Changes</button></footer></div></dialog>
 
   <dialog id="bookDialog" class="app-dialog book-dialog" aria-labelledby="bookDialogTitle" data-backdrop-close="false">
     <div class="dialog-shell">
@@ -448,7 +467,7 @@
       <header class="dialog-header"><div><span class="eyebrow">Validated backup</span><h2 id="importPreviewTitle">Review Import</h2></div><button type="button" class="icon-button" data-close-dialog="importPreviewDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header>
       <div class="dialog-body">
         <p><strong data-import-file></strong> passed parsing, migration, sanitization, normalization, and validation.</p>
-        <dl class="preview-grid"><div><dt>Workspace</dt><dd data-import-workspace></dd></div><div><dt>Notes</dt><dd data-import-documents></dd></div><div><dt>Movies</dt><dd data-import-movies></dd></div><div><dt>TV shows</dt><dd data-import-tv></dd></div><div><dt>Books</dt><dd data-import-books></dd></div><div><dt>Versions</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div><div data-import-migrations-row><dt>Migrations</dt><dd data-import-migrations></dd></div></dl>
+        <dl class="preview-grid"><div><dt>Workspace</dt><dd data-import-workspace></dd></div><div><dt>Notes</dt><dd data-import-documents></dd></div><div><dt>Movies</dt><dd data-import-movies></dd></div><div><dt>TV shows</dt><dd data-import-tv></dd></div><div><dt>Books</dt><dd data-import-books></dd></div><div><dt>Podcasts</dt><dd data-import-podcasts></dd></div><div><dt>Versions</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div><div data-import-migrations-row><dt>Migrations</dt><dd data-import-migrations></dd></div></dl>
         <p class="inline-status warning" data-import-warning hidden></p>
         <p class="inline-status"><span aria-hidden="true" data-symbol="restore"></span><span>The current data will be saved as a local recovery copy before replacement.</span></p>
       </div>

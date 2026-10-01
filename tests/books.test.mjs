@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import vm from 'node:vm';
 function harness(fetch = async () => { throw new Error('Offline'); }) {
   const c = vm.createContext({ window: {}, URL, TextEncoder, structuredClone, AbortController, DOMException, fetch, setTimeout: (fn, ms) => setTimeout(fn, ms === 12000 ? ms : 0), clearTimeout });
-  for (const f of ['config.js','core/utils.js','core/movies.js','core/tv.js','core/books.js','core/open-library.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + f, import.meta.url), 'utf8'), c);
+  for (const f of ['config.js','core/utils.js','core/movies.js','core/tv.js','core/books.js', 'core/podcasts.js','core/open-library.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + f, import.meta.url), 'utf8'), c);
   const App = c.window.LocalApp; App.utils.sanitizeRichHtml = String; App.utils.richTextToPlainText = String;
   vm.runInContext(readFileSync(new URL('../assets/js/core/state.js', import.meta.url), 'utf8'), c);
   return App;
@@ -74,10 +74,10 @@ test('books migrate legacy local and TV cloud data and survive full backup/conte
   assert.equal(previous.state.workspace.tvShows.length,1); assert.equal(previous.state.workspace.books.length,0);
   const state = model.normalize({workspace:{books:[book({notes:'First\nSecond',rating:0,yearRead:2024})]},ui:{books:{view:'wishlist',query:'Sample',widths:{title:350}}}});
   assert.deepEqual(plain(model.prepare(model.exportEnvelope(state)).state.workspace.books),plain(state.workspace.books));
-  const payload = model.syncPayload(state); assert.equal(payload.syncVersion,9); assert.equal(payload.schemaVersion,13); assert.equal(JSON.stringify(payload).includes('widths'),false);
+  const payload = model.syncPayload(state); assert.equal(payload.syncVersion,10); assert.equal(payload.schemaVersion,14); assert.equal(JSON.stringify(payload).includes('widths'),false);
   assert.equal(model.syncHash(model.prepareSync(payload).state),model.syncHash(state));
   assert.throws(()=>model.prepareSync({...payload,syncVersion:6,schemaVersion:10}),/invalid/);
-  assert.throws(()=>model.prepareSync({...payload,syncVersion:10,schemaVersion:14}),/not supported/);
+  assert.throws(()=>model.prepareSync({...payload,syncVersion:11,schemaVersion:15}),/not supported/);
   const remote = model.normalize({workspace:{books:[book({id:'remote'})]}});
   assert.equal(model.applySync(state,remote).ui.books.widths.title,350); assert.equal(model.resetPreferences(state).ui.books.query,'');
 });

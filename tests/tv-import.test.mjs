@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import vm from 'node:vm';
 const context = vm.createContext({ window: {}, TextEncoder, structuredClone });
-for (const file of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/books.js', 'core/tv-import.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
+for (const file of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/books.js', 'core/podcasts.js', 'core/tv-import.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
 const A = context.window.LocalApp, importer = A.tvImport;
 vm.runInContext(readFileSync(new URL('../assets/js/core/state.js', import.meta.url), 'utf8'), context);
 const file = shows => ({ format: 'top-shelf-tv-import', version: 1, shows });

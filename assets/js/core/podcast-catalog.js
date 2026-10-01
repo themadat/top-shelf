@@ -1,0 +1,19 @@
+(function(){
+  'use strict';
+  const App=window.LocalApp,p=App.podcasts,cache=new Map();let queue=Promise.resolve(),nextTime=0;
+  function abort(signal){if(signal?.aborted)throw new DOMException('Lookup stopped.','AbortError');}
+  async function request(url,signal,xml){
+    const run=queue.catch(()=>{}).then(async()=>{
+      abort(signal);await new Promise(resolve=>setTimeout(resolve,Math.max(0,nextTime-Date.now())));abort(signal);
+      const controller=new AbortController(),cancel=()=>controller.abort(),timer=setTimeout(cancel,15000);signal?.addEventListener('abort',cancel,{once:true});nextTime=Date.now()+1200;
+      try{const response=await fetch(url,{signal:controller.signal,credentials:'omit',referrerPolicy:'no-referrer'});if(response.status===429){nextTime=Date.now()+60000;throw new Error('Catalog is busy. Wait a minute and try again.');}if(!response.ok)throw new Error('Lookup failed ('+response.status+'). Your saved details are kept.');
+        const reader=response.body?.getReader();let raw='';if(reader){const decoder=new TextDecoder();let bytes=0;while(true){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>App.config.controls.maxImportBytes){await reader.cancel();throw new Error('Response exceeds 5 MiB.');}raw+=decoder.decode(part.value,{stream:true});}raw+=decoder.decode();}else raw=await response.text();
+        if(new TextEncoder().encode(raw).length>App.config.controls.maxImportBytes)throw new Error('Response exceeds 5 MiB.');abort(signal);return xml?raw:JSON.parse(raw);
+      }catch(e){abort(signal);if(e.name==='AbortError')throw new Error('Lookup timed out. Your draft is kept.');throw e;}finally{clearTimeout(timer);signal?.removeEventListener('abort',cancel);}
+    });queue=run;return run;
+  }
+  function candidates(data){if(!Array.isArray(data?.results))throw new Error('Catalog returned an invalid response.');const seen=new Set();return data.results.slice(0,100).flatMap(r=>{try{if(r.kind!=='podcast'||!Number.isSafeInteger(r.collectionId)||r.collectionId<1||!r.collectionName||seen.has(r.collectionId))return [];let feedUrl='';try{feedUrl=p.url(r.feedUrl,true);}catch(_){}const c=p.catalog({provider:'podcastindex',appleId:String(r.collectionId),feedUrl,title:r.collectionName,author:r.artistName||'',categories:(r.genres||[]).filter(g=>g!=='Podcasts').slice(0,20).map(name=>({name})),fetchedAt:new Date().toISOString()});seen.add(r.collectionId);return [c];}catch(_){return [];}});}
+  async function search(query,signal){query=p.text(query,500).trim();if(!query)throw new Error('Enter a show name.');abort(signal);if(cache.has(query))return App.utils.clone(cache.get(query));const result=candidates(await request('https://api.podcastindex.org/search?term='+encodeURIComponent(query),signal));if(cache.size>40)cache.clear();cache.set(query,result);return App.utils.clone(result);}
+  async function lookup(id,signal){if(!/^\d+$/.test(id))throw new Error('Invalid catalog ID.');const found=candidates(await request('https://api.podcastindex.org/lookup?entity=podcast&id='+id,signal));const match=found.find(c=>c.appleId===id);if(!match)throw new Error('Linked podcast is no longer in this catalog.');return match;}
+  App.podcastCatalog={search,lookup,request,candidates};
+})();

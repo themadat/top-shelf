@@ -13,6 +13,7 @@
     return {
       workspaceTitle: state.workspace.title,
       movies: state.workspace.movies.filter(function (movie) { return !movie.deleted; }).length,
+      podcasts: state.workspace.podcasts.filter(function (podcast) { return !podcast.deleted; }).length,
       books: state.workspace.books.filter(function (book) { return !book.deleted; }).length,
       tvShows: state.workspace.tvShows.filter(function (show) { return !show.deleted; }).length,
       records: state.workspace.records.length,
@@ -60,6 +61,7 @@
     document.querySelector("[data-import-workspace]").textContent = summary.workspaceTitle;
     document.querySelector("[data-import-movies]").textContent = summary.movies + " (current: " + current.movies + ")";
     document.querySelector("[data-import-documents]").textContent = summary.documents + " (current: " + current.documents + ")";
+    document.querySelector("[data-import-podcasts]").textContent = summary.podcasts + " (current: " + current.podcasts + ")";
     document.querySelector("[data-import-books]").textContent = summary.books + " (current: " + current.books + ")";
     document.querySelector("[data-import-tv]").textContent = summary.tvShows + " (current: " + current.tvShows + ")";
     document.querySelector("[data-import-version]").textContent = "State v" + summary.schemaVersion + " · app v" + (summary.appVersion || "unknown");
@@ -95,7 +97,7 @@
     if (!pendingImport) return;
     const accepted = await App.components.confirm({
       title: "Replace current data?",
-      message: "The validated backup will replace movies, TV shows, books, notes, preferences, and module settings. A recoverable copy of the current data will be saved first.",
+      message: "The validated backup will replace movies, TV shows, books, podcasts, notes, preferences, and module settings. A recoverable copy of the current data will be saved first.",
       confirmLabel: "Replace data",
       cancelLabel: "Keep current data",
       danger: true,
@@ -107,7 +109,7 @@
     catch (error) { App.components.message("Import unavailable", error.message); return; }
     pendingImport = null;
     App.components.closeDialog("#importPreviewDialog", "imported");
-    App.components.toast("Imported " + summary.movies + " movies, " + summary.tvShows + " TV shows, " + summary.books + " books, and " + summary.documents + " notes.", { title: "Backup restored", kind: "success" });
+    App.components.toast("Imported " + summary.movies + " movies, " + summary.tvShows + " TV shows, " + summary.books + " books, " + summary.podcasts + " podcasts, and " + summary.documents + " notes.", { title: "Backup restored", kind: "success" });
   }
 
   function init() {

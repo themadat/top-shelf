@@ -2,9 +2,9 @@
 
 ## Local preferences and data contracts
 
-Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 9. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v9/schema 13 and accepts earlier v1–v8 cloud envelopes. Keep namespace compatibility. The current envelope carries sanitized Notes HTML alongside searchable plain text; older clients reject it instead of dropping formatting. Earlier TV-bearing v6, Books-bearing v7 and half-point TV v8 envelopes remain readable.
+Identity/build settings live in config.js. Storage key topShelf.state.v5 migrates topShelf.state.v4; local schema 10. Full backups use top-shelf-backup. Content sync uses top-shelf-app-data v10/schema 14 and accepts earlier v1–v9 cloud envelopes. Keep namespace compatibility. The current envelope carries Podcasts and sanitized Notes HTML alongside searchable plain text; older clients reject it instead of dropping formatting. Earlier TV-bearing v6, Books-bearing v7 and half-point TV v8 envelopes remain readable.
 
-Device-local ui fields (full backups, excluded from content sync): books (view/query/sort/direction/widths/status/ownership/kind/format/pivotQuery/minimum/pivotSort/pivotDirection); tv (view/sort/direction/widths/pivotWidths/episodeWidths/filter/query); movieSorts by all/wishlist/watched; movieColumnWidths with separate maps per tab; pivotColumnWidths; pivotLocalSettings; pivotSubsectionSorts. Old flat movie widths migrate to independent copies. Old workspace.pivotSettings is a fallback until locally overridden; scoring baseline/weight remain shared. Reset preferences clears local overrides.
+Device-local ui fields (full backups, excluded from content sync): podcasts (query/status/activity/size/frequency/category/membership/sort/direction); books (view/query/sort/direction/widths/status/ownership/kind/format/pivotQuery/minimum/pivotSort/pivotDirection); tv (view/sort/direction/widths/pivotWidths/episodeWidths/filter/query); movieSorts by all/wishlist/watched; movieColumnWidths with separate maps per tab; pivotColumnWidths; pivotLocalSettings; pivotSubsectionSorts. Old flat movie widths migrate to independent copies. Old workspace.pivotSettings is a fallback until locally overridden; scoring baseline/weight remain shared. Reset preferences clears local overrides.
 
 GitHub target is fixed: themadat/app-data/main/data/top-shelf.json. Imports cannot redirect it. Never write that separate repo without explicit authorization. Tokens are browser-only and excluded from config, exports, diagnostics and content sync. Provisioning instructions: docs/RESET.md. Never request tokens in chat. Keep origin git@github.com:themadat/top-shelf.git; machine SSH setup belongs in user configuration.
 
@@ -18,3 +18,5 @@ Overall Notes stores sanitized HTML with H1–H3 headings, bold, italics and val
 TV model, editor, imports and one-time data behavior: [TV.md](TV.md).
 
 Books model, catalog lookup, wishlist and pivots: [BOOKS.md](BOOKS.md).
+
+Podcast model, table importer and catalog/feed linking: [PODCASTS.md](PODCASTS.md).
