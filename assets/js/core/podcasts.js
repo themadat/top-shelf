@@ -60,6 +60,15 @@
     return {activity,activityReason:complete?'Publisher marked the feed complete':activity==='Unknown'?'Insufficient episode history':'Estimated from episode dates; seasonal shows may differ',size:average===null?'Unknown':sizeFor(average),averageSeconds:average,sampleCount:durations.length,frequency,lastEpisode:dates.length?new Date(dates[0]).toISOString():''};
   }
   function frequencyLabel(value){return {'Every two weeks':'2 Weeks','Several times a week':'Multi/Week'}[value]||value;}
+  function categoryGroups(row){
+    const groups=row.categories.map(c=>({name:c.name,subcategories:c.subcategories.map(label=>({label,feed:false}))}));
+    const parentNames=new Set(groups.map(g=>g.name.toLowerCase()));
+    for(const c of row.catalog.categories){const target=groups.find(g=>g.name.toLowerCase()===c.name.toLowerCase())||groups[0];
+      if(!target){if(c.subcategories.length)groups.push({name:'',subcategories:c.subcategories.map(label=>({label,feed:true}))});continue;}
+      for(const label of c.subcategories){const existing=target.subcategories.find(e=>e.label.toLowerCase()===label.toLowerCase());if(existing)existing.feed=true;else target.subcategories.push({label,feed:true});}
+    }
+    return groups.map(g=>{const seen=new Set();return {name:g.name,subcategories:g.subcategories.filter(e=>{const key=e.label.toLowerCase();if(parentNames.has(key)||seen.has(key))return false;seen.add(key);return true;}).sort((a,b)=>a.label.localeCompare(b.label,undefined,{sensitivity:'base'}))};});
+  }
   function categoryEntries(row){
     const parents=[],subs=new Map(),seen=new Set(),feed=new Set(row.catalog.categories.flatMap(c=>c.subcategories).map(v=>v.toLowerCase()));
     for(const c of row.categories){const key=c.name.toLowerCase();if(!seen.has(key)){parents.push({label:c.name,feed:false});seen.add(key);}for(const label of c.subcategories)if(!subs.has(label.toLowerCase()))subs.set(label.toLowerCase(),label);}
@@ -71,5 +80,5 @@
   function weeklyTimeLabel(row){const seconds=weeklySeconds(row);return seconds===null?'—':(Math.round(seconds/1800)/2).toFixed(1)+' hr';}
   function searchable(p){return [p.title,p.catalog.title,p.catalog.author,...categoryLabels(p),p.membership.tier].join(' ').toLowerCase();}
   function preferences(s){s=u.plainObject(s);return {widths:Object.fromEntries(Object.entries(u.plainObject(s.widths)).filter(([key,v])=>['rating','title','author','status','activity','lastEpisode','weeklyTime','frequency','categories','membership','cost','website'].includes(key)&&Number.isFinite(v)).map(([key,v])=>[key,Math.max(60,Math.min(800,Math.round(v)))])),view:s.view==='pivots'?'pivots':'list',publisher:u.cleanLine(s.publisher,500)||'all',pivotQuery:u.cleanLine(s.pivotQuery,200),minimum:Number.isInteger(s.minimum)&&s.minimum>=1&&s.minimum<=2000?s.minimum:1,pivotSort:['name','count','average','score'].includes(s.pivotSort)?s.pivotSort:'count',pivotDirection:s.pivotDirection==='asc'?'asc':'desc',query:u.cleanLine(s.query,200),status:statuses.includes(s.status)?s.status:'all',activity:activities.includes(s.activity)?s.activity:'all',size:sizes.includes(s.size)?s.size:'all',frequency:frequencies.includes(s.frequency)?s.frequency:'all',category:u.cleanLine(s.category,200)||'all',membership:['Yes','No','Unknown'].includes(s.membership)?s.membership:'all',sort:['title','rating','status','activity','size','frequency','cost','author','lastEpisode','kind','averageSeconds','feedFetchedAt','sourceLast','sourceTime','weeklyTime'].includes(s.sort)?s.sort:'title',direction:s.direction==='desc'?'desc':'asc'};}
-  App.podcasts={frequencyLabel,categoryEntries,categoryLabels,weeklySeconds,weeklyTimeLabel,statuses,activities,sizes,frequencies,text,url,categories,catalog,normalize,normalizeList,effective,annual,sizeFor,estimate,searchable,preferences};
+  App.podcasts={frequencyLabel,categoryGroups,categoryEntries,categoryLabels,weeklySeconds,weeklyTimeLabel,statuses,activities,sizes,frequencies,text,url,categories,catalog,normalize,normalizeList,effective,annual,sizeFor,estimate,searchable,preferences};
 })();

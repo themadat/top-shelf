@@ -52,7 +52,7 @@
   $('#podcastsTable').style.width=columns.reduce((sum,c)=>sum+(prefs.widths[c[0]]||c[2]),0)+'px';
   $('#podcastsTable thead').innerHTML='<tr>'+columns.map(([key,label])=>'<th scope="col" data-column="'+key+'"'+(prefs.sort===key?' aria-sort="'+(prefs.direction==='asc'?'ascending':'descending')+'"':'')+'>'+(['categories','subcategories','membership','website'].includes(key)?esc(label).replace(/\n/g,'<br>'):'<button type="button" data-podcast-sort="'+key+'">'+esc(label).replace(/\n/g,'<br>')+(prefs.sort===key?' <span aria-hidden="true">'+App.icons.markup(prefs.direction==='asc'?'sortUp':'sortDown')+'</span>':'')+'</button>')+'<button type="button" class="podcast-resize" data-podcast-resize="'+key+'" aria-label="Resize '+esc(label.replace(/\n/g,' '))+' column" title="Drag or use arrow keys to resize"></button></th>').join('')+'</tr>';
   $('#podcastsRows').innerHTML=rows.map(r=>{
-   const amount=p.annual(r),website=p.effective(r,'website'),activity=p.effective(r,'activity'),cats=p.categoryEntries(r).map(c=>c.feed?'<strong>'+esc(c.label)+'</strong>':esc(c.label)).join('; '),linked=!!(r.catalog.appleId||r.catalog.feedUrl);
+   const amount=p.annual(r),website=p.effective(r,'website'),activity=p.effective(r,'activity'),cats=p.categoryGroups(r).map(g=>esc(g.name||'—')+(g.subcategories.length?' &gt; '+g.subcategories.map(c=>c.feed?'<strong>'+esc(c.label)+'</strong>':esc(c.label)).join(', '):'')).join('; '),linked=!!(r.catalog.appleId||r.catalog.feedUrl);
    const link=linked?'<span class="podcast-linked" role="img" aria-label="Catalog linked" title="'+esc(r.catalog.appleId?'Catalog linked · Apple ID '+r.catalog.appleId:'Public feed linked')+'">'+App.icons.markup('podcastLink')+'</span>':'';
    const cell=(text,title)=>({html:esc(text??'—'),title:title??String(text??'')});
    const cells={
@@ -79,10 +79,10 @@
  }
  async function refresh(){
   if(refreshing)return;const rows=state().workspace.podcasts,linked=rows.filter(r=>!r.deleted&&r.catalog.feedUrl);if(!linked.length){App.components.toast('Link a public RSS feed before refreshing.',{title:'No feeds to refresh'});return;}
-  refreshing=true;refreshController=new AbortController();const before=snapshot(),updates=new Map();let failed=0;render();$('#podcastsRefreshStop').hidden=false;
-  try{for(const row of linked){if(refreshController.signal.aborted)throw new Error('Refresh stopped. Saved podcasts are unchanged.');try{updates.set(row.id,await App.podcastFeed.refresh(row.catalog,refreshController.signal));}catch(e){if(refreshController.signal.aborted)throw new Error('Refresh stopped. Saved podcasts are unchanged.');failed++;}}
+  refreshing=true;refreshController=new AbortController();const before=snapshot(),updates=new Map();let failed=0,firstFailure='';render();$('#podcastsRefreshStop').hidden=false;
+  try{for(const row of linked){if(refreshController.signal.aborted)throw new Error('Refresh stopped. Saved podcasts are unchanged.');try{updates.set(row.id,await App.podcastFeed.refresh(row.catalog,refreshController.signal));}catch(e){if(refreshController.signal.aborted)throw new Error('Refresh stopped. Saved podcasts are unchanged.');failed++;if(!firstFailure)firstFailure=row.title+': '+e.message;}}
    if(updates.size)await commit(rows.map(row=>updates.has(row.id)?Object.assign({},row,{catalog:updates.get(row.id)}):row),before,'podcasts-refresh',()=>!refreshController.signal.aborted);
-   App.components.toast(updates.size+' refreshed; '+failed+' failed. Personal fields kept.',{title:'Podcast refresh complete'});
+   App.components.toast(updates.size+' refreshed; '+failed+' failed. Personal fields kept.'+(firstFailure?' '+firstFailure:''),{title:failed?'Some feeds could not be refreshed':'Podcast refresh complete',kind:failed?'error':'success'});
   }catch(e){App.components.toast(e.message,{title:'Podcasts not refreshed',kind:'error'});}finally{refreshing=false;refreshController=null;$('#podcastsRefreshStop').hidden=true;render();}
  }
  let tableSizeFrame=0;

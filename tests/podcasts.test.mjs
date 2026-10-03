@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 import vm from 'node:vm';
 function harness(fetch=async()=>{throw new Error('Offline');}){
- const c=vm.createContext({window:{},URL,TextEncoder,TextDecoder,AbortController,DOMException,structuredClone,fetch,setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?ms:0),clearTimeout});
- for(const f of ['config','core/utils','core/movies','core/tv','core/books','core/podcasts','core/podcasts-import','core/podcast-catalog'])vm.runInContext(readFileSync(new URL('../assets/js/'+f+'.js',import.meta.url),'utf8'),c);
+ const c=vm.createContext({window:{location:{protocol:'https:'}},URL,TextEncoder,TextDecoder,AbortController,DOMException,structuredClone,fetch,setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?ms:0),clearTimeout});
+ for(const f of ['config','core/utils','core/movies','core/tv','core/books','core/podcasts','core/podcasts-import','core/podcast-catalog','core/podcast-feed'])vm.runInContext(readFileSync(new URL('../assets/js/'+f+'.js',import.meta.url),'utf8'),c);
  const App=c.window.LocalApp;App.utils.sanitizeRichHtml=String;App.utils.richTextToPlainText=String;
  vm.runInContext(readFileSync(new URL('../assets/js/core/state.js',import.meta.url),'utf8'),c);return App;
 }
@@ -124,4 +124,21 @@ test('subcategory order and public origin remain distinct from manual parent lab
 test('weekly time rounds to half hours and always shows one decimal',()=>{
  for(const [seconds,label] of [[0,'0.0 hr'],[899,'0.0 hr'],[900,'0.5 hr'],[4500,'1.5 hr'],[7200,'2.0 hr'],[8100,'2.5 hr']])assert.equal(p.weeklyTimeLabel(row({frequency:'Weekly',catalog:{averageSeconds:seconds}})),label);
  assert.equal(p.weeklyTimeLabel(row()),'—');
+});
+
+test('category table groups keep manual hierarchy and append sorted feed subcategories',()=>{
+ const r=row({categories:[{name:'Personal',subcategories:['Zulu']} ,{name:'Technology',subcategories:['Design']}],catalog:{categories:[{name:'Technology',subcategories:['Software','design']},{name:'Other',subcategories:['Alpha']}]}});
+ assert.deepEqual(plain(p.categoryGroups(r)),[{name:'Personal',subcategories:[{label:'Alpha',feed:true},{label:'Zulu',feed:false}]},{name:'Technology',subcategories:[{label:'Design',feed:true},{label:'Software',feed:true}]}]);
+ assert.deepEqual(plain(p.categoryGroups(row({catalog:{categories:[{name:'Tech',subcategories:['Software']}]}}))),[{name:'',subcategories:[{label:'Software',feed:true}]}]);
+});
+test('browser feed failures explain CORS/network limits and HTTP errors without losing saved data',async()=>{
+ const offline=harness(async()=>{throw new TypeError('Load failed');});await assert.rejects(offline.podcastCatalog.request('https://example.com/feed.xml',undefined,true),/cross-origin access \(CORS\).*Saved feed details are kept/);
+ const forbidden=harness(async()=>({ok:false,status:403}));await assert.rejects(forbidden.podcastCatalog.request('https://example.com/feed.xml',undefined,true),/Feed request failed \(HTTP 403\)/);
+ const busy=harness(async()=>({ok:false,status:429}));await assert.rejects(busy.podcastCatalog.request('https://example.com/feed.xml',undefined,true),/Feed host is busy/);
+ let options;const readable=harness(async(url,o)=>{options=o;return {ok:true,text:async()=>'<rss/>'};});assert.equal(await readable.podcastCatalog.request('https://example.com/feed.xml',undefined,true),'<rss/>');assert.equal(options.cache,'no-store');assert.equal(options.credentials,'omit');
+});
+
+test('HTTPS pages upgrade legacy HTTP public feeds without changing saved identity',async()=>{
+ const app=harness();let requested;app.podcastCatalog.request=async url=>{requested=url;throw new Error('Intercepted');};
+ const c=app.podcasts.catalog({feedUrl:'http://example.com/feed.xml'});await assert.rejects(app.podcastFeed.refresh(c),/Intercepted/);assert.equal(requested,'https://example.com/feed.xml');assert.equal(c.feedUrl,'http://example.com/feed.xml');
 });

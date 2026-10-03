@@ -20,6 +20,6 @@
   const result=Object.assign({},old,estimates,{feedFetchedAt:new Date().toISOString()});
   Object.entries(fields).forEach(([key,v])=>{if(v.length)result[key]=v;});return p.catalog(result);
  }
- async function refresh(catalog,signal){if(!catalog.feedUrl)throw new Error('Link a public feed first.');return parse(await App.podcastCatalog.request(p.url(catalog.feedUrl,true),signal,true),catalog);}
+ async function refresh(catalog,signal){if(!catalog.feedUrl)throw new Error('Link a public feed first.');let feedUrl=p.url(catalog.feedUrl,true);if(window.location?.protocol==='https:'&&feedUrl.startsWith('http:'))feedUrl='https:'+feedUrl.slice(5);return parse(await App.podcastCatalog.request(feedUrl,signal,true),catalog);}
  App.podcastFeed={parse,refresh};
 })();
