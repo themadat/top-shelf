@@ -104,7 +104,7 @@
 #podcastsTable thead [data-column="rating"],#podcastsTable thead [data-column="title"] { background:var(--surface-2);z-index:2; }
 .podcasts-table-hint { margin:.35rem 0;font-size:.72rem; }
 
-#podcastsListView > .podcast-scroll { max-height:70dvh; }
+#podcastsListView > .podcast-scroll { max-height:none; }
 #podcastsTable { border-collapse:separate;border-spacing:0;min-width:0; }
 #podcastsTable thead th { position:sticky;top:0;z-index:3;background:var(--surface-2);height:2.8rem;white-space:normal; }
 #podcastsTable thead [data-column="rating"],#podcastsTable thead [data-column="title"] { z-index:4; }
@@ -114,5 +114,4 @@
 #podcastsTable thead .podcast-resize:hover,#podcastsTable thead .podcast-resize:focus-visible { background:var(--accent); }
 #podcastsTable [data-column="website"] a { display:inline-flex;align-items:center;vertical-align:middle; }
 #podcastsTable [data-column="website"] svg { width:20px;height:20px; }
-#podcastsRefresh { display:block;line-height:1.2; }
-#podcastsRefresh small { font-size:.65rem; }
+#podcastsRefresh { white-space:nowrap; }

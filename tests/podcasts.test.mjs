@@ -105,7 +105,7 @@ test('weekly time uses frequency and mean duration without inventing legacy unit
  for(const [frequency,seconds] of [['Daily',12600],['Several times a week',5400],['Weekly',1800],['Every two weeks',900],['Monthly',1800*(12/52)],['Seasonal',null],['Irregular',null],['Unknown',null]])assert.equal(p.weeklySeconds(row({frequency,catalog:{averageSeconds:1800},legacy:{time:999}})),seconds);
  assert.equal(p.weeklySeconds(row({frequency:'Weekly'})),null);
  assert.equal(p.weeklySeconds(row({catalog:{averageSeconds:1800,frequency:'Weekly'}})),1800);
- assert.equal(p.frequencyLabel('Every two weeks'),'2-weekly');assert.equal(p.frequencyLabel('Several times a week'),'Multi/week');
+ assert.equal(p.frequencyLabel('Every two weeks'),'2 Weeks');assert.equal(p.frequencyLabel('Several times a week'),'Multi/Week');
 });
 test('combined categories retain personal labels and append distinct feed subcategories',()=>{
  assert.deepEqual(plain(p.categoryLabels(row({categories:[{name:'Personal',subcategories:['Design']}],catalog:{categories:[{name:'Technology',subcategories:['design','Software','Personal']}]}}))),['Personal','Design','Software']);
@@ -115,4 +115,13 @@ test('podcast widths clamp and survive backups without entering sync',()=>{
  const local=model.normalize({workspace:{podcasts:[row()]},ui:{podcasts:{widths:{rating:80,title:1000,website:10,bogus:200,author:'bad'},sort:'weeklyTime'}}});
  assert.deepEqual(plain(local.ui.podcasts.widths),{rating:80,title:800,website:60});assert.equal(local.ui.podcasts.sort,'weeklyTime');
  assert.deepEqual(plain(model.prepare(model.exportEnvelope(local)).state.ui.podcasts.widths),{rating:80,title:800,website:60});assert.equal(JSON.stringify(model.syncPayload(local)).includes('widths'),false);
+});
+
+test('subcategory order and public origin remain distinct from manual parent labels',()=>{
+ const r=row({categories:[{name:'Personal',subcategories:['Zulu','Alpha']}],catalog:{categories:[{name:'Tech',subcategories:['alpha','Beta']}]}});
+ assert.deepEqual(plain(p.categoryEntries(r)),[{label:'Personal',feed:false},{label:'Alpha',feed:true},{label:'Beta',feed:true},{label:'Zulu',feed:false}]);
+});
+test('weekly time rounds to half hours and always shows one decimal',()=>{
+ for(const [seconds,label] of [[0,'0.0 hr'],[899,'0.0 hr'],[900,'0.5 hr'],[4500,'1.5 hr'],[7200,'2.0 hr'],[8100,'2.5 hr']])assert.equal(p.weeklyTimeLabel(row({frequency:'Weekly',catalog:{averageSeconds:seconds}})),label);
+ assert.equal(p.weeklyTimeLabel(row()),'—');
 });

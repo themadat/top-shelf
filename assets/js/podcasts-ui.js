@@ -12,7 +12,7 @@
   App.storage.replace(next,{saveRecovery:false,reason:'podcasts-save'});
  }
  function pref(patch){App.storage.mutate(s=>Object.assign(s.ui.podcasts,patch),{touch:false,reason:'podcasts-preference'});}
- const columns=[['rating','Rating',60],['title','Name',210],['author','Publisher',145],['status','My Status',125],['activity','Show\nStatus',100],['lastEpisode','Last\nEpisode',110],['weeklyTime','Weekly\nTime',100],['frequency','Frequency',105],['categories','Category',220],['membership','Membership',140],['cost','Cost',85],['website','Web',60]];
+ const columns=[['rating','Rating',60],['title','Name',210],['author','Publisher',145],['status','My Status',125],['activity','Show\nStatus',100],['lastEpisode','Last\nEpisode',110],['frequency','Frequency',105],['weeklyTime','Weekly\nTime',100],['categories','Category',220],['membership','Membership',140],['cost','Cost',85],['website','Web',60]];
  const dimensions=[['category','Categories'],['status','My Status'],['activity','Show Status'],['size','Length'],['frequency','Frequency'],['membership','Membership'],['author','Publishers']];
  let saving=false,refreshing=false,refreshController=null;
  function tone(value){return 'podcast-tone-'+({Listening:'blue',Stopped:'red',Active:'green',Inactive:'purple'}[value]||'muted');}
@@ -52,7 +52,7 @@
   $('#podcastsTable').style.width=columns.reduce((sum,c)=>sum+(prefs.widths[c[0]]||c[2]),0)+'px';
   $('#podcastsTable thead').innerHTML='<tr>'+columns.map(([key,label])=>'<th scope="col" data-column="'+key+'"'+(prefs.sort===key?' aria-sort="'+(prefs.direction==='asc'?'ascending':'descending')+'"':'')+'>'+(['categories','subcategories','membership','website'].includes(key)?esc(label).replace(/\n/g,'<br>'):'<button type="button" data-podcast-sort="'+key+'">'+esc(label).replace(/\n/g,'<br>')+(prefs.sort===key?' <span aria-hidden="true">'+App.icons.markup(prefs.direction==='asc'?'sortUp':'sortDown')+'</span>':'')+'</button>')+'<button type="button" class="podcast-resize" data-podcast-resize="'+key+'" aria-label="Resize '+esc(label.replace(/\n/g,' '))+' column" title="Drag or use arrow keys to resize"></button></th>').join('')+'</tr>';
   $('#podcastsRows').innerHTML=rows.map(r=>{
-   const amount=p.annual(r),website=p.effective(r,'website'),activity=p.effective(r,'activity'),cats=p.categoryLabels(r).join('; '),linked=!!(r.catalog.appleId||r.catalog.feedUrl);
+   const amount=p.annual(r),website=p.effective(r,'website'),activity=p.effective(r,'activity'),cats=p.categoryEntries(r).map(c=>c.feed?'<strong>'+esc(c.label)+'</strong>':esc(c.label)).join('; '),linked=!!(r.catalog.appleId||r.catalog.feedUrl);
    const link=linked?'<span class="podcast-linked" role="img" aria-label="Catalog linked" title="'+esc(r.catalog.appleId?'Catalog linked · Apple ID '+r.catalog.appleId:'Public feed linked')+'">'+App.icons.markup('podcastLink')+'</span>':'';
    const cell=(text,title)=>({html:esc(text??'—'),title:title??String(text??'')});
    const cells={
@@ -60,15 +60,15 @@
     title:{html:'<div class="podcast-title-line"><button class="podcast-name" data-podcast-open="'+esc(r.id)+'" title="'+esc(r.title)+'">'+esc(r.title)+'</button>'+link+'</div>'},
     status:{html:'<select class="'+tone(r.status)+'" data-podcast-edit="status" aria-label="My status for '+esc(r.title)+'">'+options(p.statuses,r.status)+'</select>'},
     activity:Object.assign(cell(r.kind==='Membership'?'—':activity,r.activity==='Unknown'?r.catalog.activityReason:'Manual show status'),{className:tone(activity)}),
-    weeklyTime:cell(p.weeklySeconds(r)===null?'—':Math.round(p.weeklySeconds(r)/60)+' min','Estimated weekly time: mean episode duration × weekly frequency (Multi/week ≈ 3; Monthly = 12/52)'),frequency:cell(p.frequencyLabel(p.effective(r,'frequency'))),categories:cell(cats||'—'),membership:cell(membership(r)),
+    weeklyTime:cell(p.weeklyTimeLabel(r),'Estimated weekly time: mean episode duration × weekly frequency (Multi/Week ≈ 3; Monthly = 12/52)'),frequency:cell(p.frequencyLabel(p.effective(r,'frequency'))),categories:{html:cats||'—'},membership:cell(membership(r)),
     cost:cell(amount===null?'—':'$'+amount,amount===null?'Annual cost unknown':r.membership.currency+' '+amount+(r.membership.basis==='Monthly'?' · Yearly estimate (monthly ×12)':'')),
     author:cell(r.catalog.author||'—'),lastEpisode:cell(r.catalog.lastEpisode.slice(0,10)||'—'),
     website:{html:website?'<a href="'+esc(website)+'" target="_blank" rel="noopener noreferrer" aria-label="Website for '+esc(r.title)+'">'+App.icons.markup('podcastWeb')+'</a>':'—',title:website}
    };
    return '<tr data-podcast-id="'+esc(r.id)+'">'+columns.map(([key])=>{const c=cells[key],tag=key==='title'?'th':'td';return '<'+tag+(tag==='th'?' scope="row"':'')+' data-column="'+key+'"'+(c.className?' class="'+c.className+'"':'')+(c.title?' title="'+esc(c.title)+'"':'')+'>'+c.html+'</'+tag+'>';}).join('')+'</tr>';
   }).join('');
-  const updated=all.map(r=>r.catalog.feedFetchedAt).filter(Boolean).sort().at(-1);$('#podcastsRefresh').innerHTML='Refresh Podcasts<br><small>('+esc(updated?new Date(updated).toLocaleString():'Never updated')+')</small>';$('#podcastsRefresh').disabled=refreshing;
-  renderPivots(rows);
+  const updated=all.map(r=>r.catalog.feedFetchedAt).filter(Boolean).sort().at(-1);$('#podcastsRefresh').textContent='Refresh ('+(updated?new Date(updated).toLocaleDateString():'Never updated')+')';$('#podcastsRefresh').disabled=refreshing;
+  renderPivots(rows);sizeTable();
  }
  async function edit(select){
   if(saving){render();return;}saving=true;
@@ -85,6 +85,8 @@
    App.components.toast(updates.size+' refreshed; '+failed+' failed. Personal fields kept.',{title:'Podcast refresh complete'});
   }catch(e){App.components.toast(e.message,{title:'Podcasts not refreshed',kind:'error'});}finally{refreshing=false;refreshController=null;$('#podcastsRefreshStop').hidden=true;render();}
  }
+ let tableSizeFrame=0;
+ function sizeTable(){cancelAnimationFrame(tableSizeFrame);tableSizeFrame=requestAnimationFrame(()=>{if($('#podcastsWorkspace').hidden||$('#podcastsListView').hidden)return;const scroll=$('#podcastsListView > .podcast-scroll'),hint=$('.podcasts-table-hint');const available=window.innerHeight-(scroll.getBoundingClientRect().top+window.scrollY)-hint.getBoundingClientRect().height-22;scroll.style.height=$('#podcastsEmpty').hidden?Math.max(180,Math.floor(available))+'px':'';});}
  function setWidth(key,size){pref({widths:Object.assign({},state().ui.podcasts.widths,{[key]:Math.max(60,Math.min(800,Math.round(size)))})});}
  function init(){
   for(const [field,values] of [['status',p.statuses],['activity',p.activities],['size',p.sizes],['frequency',p.frequencies],['membership',['Yes','No','Unknown']]])$('#podcasts'+field[0].toUpperCase()+field.slice(1)).innerHTML='<option value="all">All</option>'+options(values);
@@ -107,6 +109,8 @@
   $('#podcastsTable').addEventListener('click',e=>{const button=e.target.closest('[data-podcast-open]');if(button)App.podcastsEditor.open(button.dataset.podcastOpen,button);const sort=e.target.closest('[data-podcast-sort]');if(sort){const key=sort.dataset.podcastSort;pref({sort:key,direction:state().ui.podcasts.sort===key&&state().ui.podcasts.direction==='asc'?'desc':'asc'});$('#podcastsTable [data-podcast-sort="'+key+'"]').focus();}});
   $('#podcastsRows').addEventListener('change',e=>{if(e.target.matches('[data-podcast-edit]'))edit(e.target);});
   $('#podcastsPivotCards').addEventListener('click',e=>{const b=e.target.closest('[data-podcast-pivot]');if(b){$('.podcasts-filter-disclosure').open=true;pref({[b.dataset.podcastPivot==='author'?'publisher':b.dataset.podcastPivot]:b.dataset.value,view:'list'});}});
+  window.addEventListener('resize',sizeTable);window.visualViewport?.addEventListener('resize',sizeTable);$('#podcastsWorkspace .podcasts-filter-disclosure').addEventListener('toggle',sizeTable);
+  const observer=new ResizeObserver(sizeTable);for(const selector of ['.app-header','#mainContent','.podcasts-toolbar']){const el=$(selector);if(el)observer.observe(el);}
   window.addEventListener('app:statechange',render);render();
  }
  App.podcastsUI={init,render,snapshot,guard,commit,tone};

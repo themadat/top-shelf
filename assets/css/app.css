@@ -741,8 +741,8 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
   .shelf-tab-icon .sf-symbol { width: 24px; height: 27px; }
 }
 
-.shelf-tab { grid-template-columns:auto auto;grid-template-rows:28.5px auto;height:54px;gap:1px .3rem; }
-.shelf-tab-icon { grid-column:1;grid-row:1;justify-self:end; }
-.shelf-tab-count { grid-column:2;grid-row:1;align-self:center; }
-.shelf-tab-label { grid-column:1;grid-row:2;align-self:center; }
-.shelf-key { grid-column:2;grid-row:2;align-self:center; }
+.shelf-tab { display:flex;flex-direction:column;align-items:center;justify-content:center;height:48px;gap:1px;padding:2px .4rem;text-align:center; }
+.shelf-tab-top,.shelf-tab-bottom { display:flex;align-items:center;justify-content:center;gap:.3rem; }
+.shelf-tab-icon,.shelf-tab-count,.shelf-tab-label,.shelf-key { align-self:center; }
+.shelf-tab-count { padding:.05rem .25rem; }
+.shelf-tab-bottom .shelf-key { margin:0; }
