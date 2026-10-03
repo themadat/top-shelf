@@ -99,3 +99,20 @@ test('previous podcast envelopes remain readable and rating envelopes require an
  assert.throws(()=>model.prepareSync({syncFormat:'top-shelf-app-data',syncVersion:10,schemaVersion:14,data:{podcasts:[row({rating:4})]}}),/invalid/);
  const old=model.createDefaultState();old.schemaVersion=10;old.workspace.podcasts=[row({rating:3})];const migrated=model.prepare(old);assert.ok(migrated.migrations.includes('10→11'));assert.equal(migrated.state.workspace.podcasts[0].rating,3);
 });
+
+
+test('weekly time uses frequency and mean duration without inventing legacy units',()=>{
+ for(const [frequency,seconds] of [['Daily',12600],['Several times a week',5400],['Weekly',1800],['Every two weeks',900],['Monthly',1800*(12/52)],['Seasonal',null],['Irregular',null],['Unknown',null]])assert.equal(p.weeklySeconds(row({frequency,catalog:{averageSeconds:1800},legacy:{time:999}})),seconds);
+ assert.equal(p.weeklySeconds(row({frequency:'Weekly'})),null);
+ assert.equal(p.weeklySeconds(row({catalog:{averageSeconds:1800,frequency:'Weekly'}})),1800);
+ assert.equal(p.frequencyLabel('Every two weeks'),'2-weekly');assert.equal(p.frequencyLabel('Several times a week'),'Multi/week');
+});
+test('combined categories retain personal labels and append distinct feed subcategories',()=>{
+ assert.deepEqual(plain(p.categoryLabels(row({categories:[{name:'Personal',subcategories:['Design']}],catalog:{categories:[{name:'Technology',subcategories:['design','Software','Personal']}]}}))),['Personal','Design','Software']);
+ assert.deepEqual(plain(p.categoryLabels(row({catalog:{categories:[{name:'Technology',subcategories:['Software']}]}}))),['Software']);
+});
+test('podcast widths clamp and survive backups without entering sync',()=>{
+ const local=model.normalize({workspace:{podcasts:[row()]},ui:{podcasts:{widths:{rating:80,title:1000,website:10,bogus:200,author:'bad'},sort:'weeklyTime'}}});
+ assert.deepEqual(plain(local.ui.podcasts.widths),{rating:80,title:800,website:60});assert.equal(local.ui.podcasts.sort,'weeklyTime');
+ assert.deepEqual(plain(model.prepare(model.exportEnvelope(local)).state.ui.podcasts.widths),{rating:80,title:800,website:60});assert.equal(JSON.stringify(model.syncPayload(local)).includes('widths'),false);
+});
