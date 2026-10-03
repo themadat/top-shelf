@@ -294,7 +294,7 @@
         </section>
         <div class="podcast-edit-layout">
           <div class="podcast-personal-fields">
-            <label>Name<input id="podcast-title" maxlength="500" required></label>
+            <div class="podcast-name-search"><label>Name<input id="podcast-title" maxlength="500" required></label><button id="podcastNameSearch" type="button" class="button" aria-label="Search catalog using podcast name">Search</button></div>
             <fieldset class="podcast-rating-field"><legend>My Rating · 1–5</legend><input id="podcast-rating" type="hidden"><div id="podcastRatingButtons" class="podcast-rating-buttons" role="group" aria-label="Podcast rating"></div><small>Click the selected rating again to clear it.</small></fieldset>
             <label>Website<input id="podcast-website" type="url" maxlength="2000"></label>
             <label>Categories<textarea id="podcast-categories" rows="2" maxlength="10000" placeholder="Technology &gt; Software, Hardware"></textarea><small>One parent per line: Category &gt; Subcategory, Subcategory.</small></label>

@@ -121,3 +121,7 @@
 .podcast-linked.podcast-refresh-warning { color:light-dark(#927000,#f2d36c); }
 
 #podcastsTable .podcast-header-total { display:block;margin:.1rem 0;font-size:.7rem;font-weight:normal;line-height:1.15;opacity:1; }
+
+.podcast-name-search { display:flex;align-items:end;gap:.5rem;min-width:0; }
+.podcast-name-search > label { flex:1;min-width:0; }
+#podcastDialog #podcastNameSearch { flex:none;min-height:32px;height:32px;padding:.3rem .65rem; }
