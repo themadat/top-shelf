@@ -20,6 +20,27 @@
   const result=Object.assign({},old,estimates,{feedFetchedAt:new Date().toISOString()});
   Object.entries(fields).forEach(([key,v])=>{if(v.length)result[key]=v;});return p.catalog(result);
  }
+ // Keep XML token boundaries intact, including comments and CDATA; stop on a complete recent sample.
+ function sampler(){let raw='',offset=0,count=0;
+  return {push(chunk){raw+=chunk;if(/<!DOCTYPE|<!ENTITY/i.test(raw))throw new Error('RSS DTD or entity declarations are not supported.');
+   while(true){const start=raw.indexOf('<',offset);if(start<0)break;let end;
+    if(raw.startsWith('<![CDATA[',start)){end=raw.indexOf(']]>',start+9);if(end<0)break;offset=end+3;continue;}
+    if(raw.startsWith('<!--',start)){end=raw.indexOf('-->',start+4);if(end<0)break;offset=end+3;continue;}
+    let quote='';end=start+1;for(;end<raw.length;end++){const c=raw[end];if(quote){if(c===quote)quote='';}else if(c==='"'||c==="'")quote=c;else if(c==='>')break;}if(end>=raw.length)break;offset=end+1;
+    if(!/^<\/item\s*>$/.test(raw.slice(start,end+1)))continue;count++;if(count<20||count>200||count%5!==0)continue;
+    const prefix=raw.slice(0,offset)+'</channel></rss>',doc=new DOMParser().parseFromString(prefix,'application/xml');if(doc.querySelector('parsererror'))continue;
+    const items=Array.from(doc.querySelector('channel')?.children||[]).filter(e=>e.localName==='item'),seen=new Set(),dates=[];
+    for(const [i,item] of items.entries()){const value=name=>Array.from(item.children).find(e=>e.localName===name)?.textContent.trim()||'',date=Date.parse(value('pubDate')),id=value('guid')||Array.from(item.children).find(e=>e.localName==='enclosure')?.getAttribute('url')||'missing-'+i;if(!Number.isFinite(date)||date>Date.now()||['bonus','trailer'].includes(value('episodeType').toLowerCase())||seen.has(id))continue;seen.add(id);dates.push(date);}
+    if(dates.length>=20&&new Set(dates.slice(0,20)).size>=4&&dates.every((date,i)=>!i||date<=dates[i-1])&&parse(prefix).averageSeconds!==null)return prefix;
+
+   }return null;},value(){return raw;}};
+ }
+ async function readStream(reader,signal){const sample=sampler(),decoder=new TextDecoder();let bytes=0;
+  try{while(true){if(signal?.aborted)throw new DOMException('Feed read stopped.','AbortError');const part=await reader.read();if(signal?.aborted)throw new DOMException('Feed read stopped.','AbortError');if(part.done)break;const remaining=App.config.controls.maxImportBytes-bytes;bytes+=part.value.byteLength;const prefix=sample.push(decoder.decode(part.value.subarray(0,Math.max(0,remaining)),{stream:true}));if(prefix){if(new TextEncoder().encode(prefix).length>App.config.controls.maxImportBytes)throw new Error('Recent RSS sample exceeds 5 MiB.');await reader.cancel();return prefix;}if(bytes>App.config.controls.maxImportBytes)throw new Error('Could not collect a complete recent RSS sample within 5 MiB.');}
+   sample.push(decoder.decode());return sample.value();
+  }catch(e){await reader.cancel().catch(()=>{});throw e;}
+ }
+ async function readFile(file,signal){if(file.stream)return readStream(file.stream().getReader(),signal);if(file.size>App.config.controls.maxImportBytes)throw new Error('This browser cannot stream large RSS files.');return file.text();}
  async function refresh(catalog,signal){if(!catalog.feedUrl)throw new Error('Link a public feed first.');let feedUrl=p.url(catalog.feedUrl,true);if(window.location?.protocol==='https:'&&feedUrl.startsWith('http:'))feedUrl='https:'+feedUrl.slice(5);return parse(await App.podcastCatalog.request(feedUrl,signal,true),catalog);}
- App.podcastFeed={parse,refresh};
+ App.podcastFeed={parse,refresh,readStream,readFile};
 })();

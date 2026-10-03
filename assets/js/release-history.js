@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.14","date":"2026-10-03T12:00:00.000Z","title":"Podcast property locks and aligned sort arrows","summary":"Lock individual podcast properties against feed updates and keep sort arrows right-aligned beside column names.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.13","date":"2026-10-03T12:00:00.000Z","title":"Keyboard podcast search and automatic feed refresh","summary":"Tab from Name to Search and press Space; selecting a catalog match automatically refreshes its feed properties.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.12","date":"2026-10-03T12:00:00.000Z","title":"Podcast refresh progress and listening time","summary":"Watch live podcast refresh progress and total weekly listening time only for Listening shows.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.11","date":"2026-10-01T12:00:00.000Z","title":"Compact storage for large libraries","summary":"Store large libraries losslessly in compact form when browser storage fills, allowing GitHub pulls and subsequent local edits to persist.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

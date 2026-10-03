@@ -109,7 +109,7 @@ test('weekly time uses frequency and mean duration without inventing legacy unit
 });
 test('combined categories retain personal labels and append distinct feed subcategories',()=>{
  assert.deepEqual(plain(p.categoryLabels(row({categories:[{name:'Personal',subcategories:['Design']}],catalog:{categories:[{name:'Technology',subcategories:['design','Software','Personal']}]}}))),['Personal','Design','Software']);
- assert.deepEqual(plain(p.categoryLabels(row({catalog:{categories:[{name:'Technology',subcategories:['Software']}]}}))),['Software']);
+ assert.deepEqual(plain(p.categoryLabels(row({catalog:{categories:[{name:'Technology',subcategories:['Software']}]}}))),['Technology','Software']);
 });
 test('podcast widths clamp and survive backups without entering sync',()=>{
  const local=model.normalize({workspace:{podcasts:[row()]},ui:{podcasts:{widths:{rating:80,title:1000,website:10,bogus:200,author:'bad'},sort:'weeklyTime'}}});
@@ -129,7 +129,7 @@ test('weekly time rounds to half hours and always shows one decimal',()=>{
 test('category table groups keep manual hierarchy and append sorted feed subcategories',()=>{
  const r=row({categories:[{name:'Personal',subcategories:['Zulu']} ,{name:'Technology',subcategories:['Design']}],catalog:{categories:[{name:'Technology',subcategories:['Software','design']},{name:'Other',subcategories:['Alpha']}]}});
  assert.deepEqual(plain(p.categoryGroups(r)),[{name:'Personal',subcategories:[{label:'Alpha',feed:true},{label:'Zulu',feed:false}]},{name:'Technology',subcategories:[{label:'Design',feed:true},{label:'Software',feed:true}]}]);
- assert.deepEqual(plain(p.categoryGroups(row({catalog:{categories:[{name:'Tech',subcategories:['Software']}]}}))),[{name:'',subcategories:[{label:'Software',feed:true}]}]);
+ assert.deepEqual(plain(p.categoryGroups(row({catalog:{categories:[{name:'Tech',subcategories:['Software']}]}}))),[{name:'Tech',subcategories:[{label:'Software',feed:true}]}]);
 });
 test('browser feed failures explain CORS/network limits and HTTP errors without losing saved data',async()=>{
  const offline=harness(async()=>{throw new TypeError('Load failed');});await assert.rejects(offline.podcastCatalog.request('https://example.com/feed.xml',undefined,true),/cross-origin access \(CORS\).*Saved feed details are kept/);

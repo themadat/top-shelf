@@ -65,7 +65,7 @@
   function refreshResults(value){return Object.fromEntries(Object.entries(u.plainObject(value)).slice(0,App.config.controls.maxPodcasts).flatMap(([id,result])=>{try{if(!/^[a-z0-9_-]+$/i.test(id)||typeof result?.success!=='boolean')return [];const feedUrl=url(result.feedUrl,true);return feedUrl?[[id,{feedUrl,success:result.success}]]:[];}catch(_){return [];}}));}
   function frequencyLabel(value){return {'Every two weeks':'2 Weeks','Several times a week':'Multi/Week'}[value]||value;}
   function categoryGroups(row){
-    const groups=row.categories.map(c=>({name:c.name,subcategories:c.subcategories.map(label=>({label,feed:false}))}));
+    const groups=(row.categories.length?row.categories:row.catalog.categories).map(c=>({name:c.name,subcategories:c.subcategories.map(label=>({label,feed:false}))}));
     const parentNames=new Set(groups.map(g=>g.name.toLowerCase()));
     for(const c of row.catalog.categories){const target=groups.find(g=>g.name.toLowerCase()===c.name.toLowerCase())||groups[0];
       if(!target){if(c.subcategories.length)groups.push({name:'',subcategories:c.subcategories.map(label=>({label,feed:true}))});continue;}
@@ -73,12 +73,7 @@
     }
     return groups.map(g=>{const seen=new Set();return {name:g.name,subcategories:g.subcategories.filter(e=>{const key=e.label.toLowerCase();if(parentNames.has(key)||seen.has(key))return false;seen.add(key);return true;}).sort((a,b)=>compareNames(a.label,b.label))};});
   }
-  function categoryEntries(row){
-    const parents=[],subs=new Map(),seen=new Set(),feed=new Set(row.catalog.categories.flatMap(c=>c.subcategories).map(v=>v.toLowerCase()));
-    for(const c of row.categories){const key=c.name.toLowerCase();if(!seen.has(key)){parents.push({label:c.name,feed:false});seen.add(key);}for(const label of c.subcategories)if(!subs.has(label.toLowerCase()))subs.set(label.toLowerCase(),label);}
-    for(const c of row.catalog.categories)for(const label of c.subcategories)if(!subs.has(label.toLowerCase()))subs.set(label.toLowerCase(),label);
-    return parents.concat([...subs].filter(([key])=>!seen.has(key)).map(([key,label])=>({label,feed:feed.has(key)})).sort((a,b)=>compareNames(a.label,b.label)));
-  }
+  function categoryEntries(row){const seen=new Set();return categoryGroups(row).flatMap(g=>[{label:g.name,feed:false},...g.subcategories]).filter(e=>{const key=e.label.toLowerCase();if(!key||seen.has(key))return false;seen.add(key);return true;});}
   function categoryLabels(row){return categoryEntries(row).map(e=>e.label);}
   function weeklySeconds(row){const rate={Daily:7,'Several times a week':3,Weekly:1,'Every two weeks':0.5,Monthly:12/52}[effective(row,'frequency')];return row.catalog.averageSeconds===null||rate===undefined?null:row.catalog.averageSeconds*rate;}
   function weeklyTimeLabel(row){const seconds=weeklySeconds(row);return seconds===null?'—':(Math.round(seconds/1800)/2).toFixed(1)+' hr';}

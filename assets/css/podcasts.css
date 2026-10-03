@@ -126,7 +126,7 @@
 .podcast-name-search > label { flex:1;min-width:0; }
 #podcastDialog #podcastNameSearch { flex:none;min-height:32px;height:32px;padding:.3rem .65rem; }
 
-#podcastDialog #podcastNameSearch:focus-visible { outline:3px solid var(--accent-strong);outline-offset:2px;background:var(--accent-soft);color:var(--accent-strong); }
+#podcastDialog #podcastNameSearch:focus { outline:3px solid var(--accent-strong);outline-offset:2px;background:var(--accent-soft);color:var(--accent-strong); }
 
 #podcastsTable thead [data-podcast-sort] { display:flex;align-items:flex-start;justify-content:space-between;width:100%;gap:.25rem; }
 .podcast-column-label { min-width:0; }
