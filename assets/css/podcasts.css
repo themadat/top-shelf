@@ -119,3 +119,5 @@
 .podcast-linked.podcast-refresh-success { color:light-dark(#23723a,#8cdda0); }
 .podcast-linked.podcast-refresh-failed { color:light-dark(#b12d39,#ff9ba4); }
 .podcast-linked.podcast-refresh-warning { color:light-dark(#927000,#f2d36c); }
+
+#podcastsTable .podcast-header-total { display:block;margin:.1rem 0;font-size:.7rem;font-weight:normal;line-height:1.15;opacity:1; }
