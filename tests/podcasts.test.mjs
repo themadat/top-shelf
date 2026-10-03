@@ -142,3 +142,16 @@ test('HTTPS pages upgrade legacy HTTP public feeds without changing saved identi
  const app=harness();let requested;app.podcastCatalog.request=async url=>{requested=url;throw new Error('Intercepted');};
  const c=app.podcasts.catalog({feedUrl:'http://example.com/feed.xml'});await assert.rejects(app.podcastFeed.refresh(c),/Intercepted/);assert.equal(requested,'https://example.com/feed.xml');assert.equal(c.feedUrl,'http://example.com/feed.xml');
 });
+
+test('alphabetical podcast sorting ignores only a leading The',()=>{
+ assert.deepEqual(['Zebra','The Beta','Alpha','the Delta','Theatre','A Story'].sort(p.compareNames),['A Story','Alpha','The Beta','the Delta','Theatre','Zebra']);
+ assert.ok(p.compareNames('The Episode 2','Episode 10')<0);
+});
+test('refresh icon status distinguishes new failure, retained success and changed feed',()=>{
+ const r=row({catalog:{feedUrl:'https://example.com/feed.xml'}}),failed={feedUrl:r.catalog.feedUrl,success:false};
+ assert.equal(p.refreshStatus(r,failed),'failed');assert.equal(p.refreshStatus(r,{...failed,success:true}),'success');assert.equal(p.refreshStatus(r,undefined),'');
+ r.catalog.feedFetchedAt='2026-10-03T12:00:00Z';assert.equal(p.refreshStatus(r,failed),'warning');assert.equal(p.refreshStatus(r,undefined),'success');
+ r.catalog.feedUrl='https://example.com/new.xml';r.catalog.feedFetchedAt='';assert.equal(p.refreshStatus(r,failed),'');
+ const local=model.normalize({workspace:{podcasts:[r]},ui:{podcasts:{refreshResults:{[r.id]:failed,bad:{feedUrl:'https://example.com/?token=secret',success:false}}}}});
+ assert.deepEqual(plain(local.ui.podcasts.refreshResults),{[r.id]:failed});assert.deepEqual(plain(model.prepare(model.exportEnvelope(local)).state.ui.podcasts.refreshResults),{[r.id]:failed});assert.equal(JSON.stringify(model.syncPayload(local)).includes('refreshResults'),false);
+});
