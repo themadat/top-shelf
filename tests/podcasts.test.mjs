@@ -155,3 +155,12 @@ test('refresh icon status distinguishes new failure, retained success and change
  const local=model.normalize({workspace:{podcasts:[r]},ui:{podcasts:{refreshResults:{[r.id]:failed,bad:{feedUrl:'https://example.com/?token=secret',success:false}}}}});
  assert.deepEqual(plain(local.ui.podcasts.refreshResults),{[r.id]:failed});assert.deepEqual(plain(model.prepare(model.exportEnvelope(local)).state.ui.podcasts.refreshResults),{[r.id]:failed});assert.equal(JSON.stringify(model.syncPayload(local)).includes('refreshResults'),false);
 });
+
+test('property locks preserve legacy edits and protect individual fields through refresh and round trips',()=>{
+ const r=row({size:'L',frequency:'Daily',website:'https://example.com/manual',catalog:{size:'M',frequency:'Weekly',activity:'Active',website:'https://example.com/feed'}});
+ assert.equal(r.locks.size,true);r.locks.frequency=false;r.locks.activity=true;
+ const refreshed=p.applyCatalog(r,{...r.catalog,size:'S',frequency:'Monthly',activity:'Inactive'});
+ assert.equal(refreshed.size,'L');assert.equal(refreshed.frequency,'Monthly');assert.equal(refreshed.activity,'Unknown');assert.equal(p.effective(refreshed,'activity'),'Unknown');assert.equal(refreshed.website,'https://example.com/manual');
+ const local=model.normalize({workspace:{podcasts:[refreshed]}});assert.deepEqual(plain(model.prepare(model.exportEnvelope(local)).state.workspace.podcasts[0].locks),plain(refreshed.locks));assert.deepEqual(plain(model.prepareSync(model.syncPayload(local)).state.workspace.podcasts[0].locks),plain(refreshed.locks));
+ const unlocked=p.applyCatalog({...r,locks:{activity:false,size:false,frequency:false,website:false}},r.catalog);assert.equal(unlocked.size,'M');assert.equal(unlocked.website,'https://example.com/feed');assert.equal(p.effective(unlocked,'activity'),'Active');
+});

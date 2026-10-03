@@ -127,3 +127,12 @@
 #podcastDialog #podcastNameSearch { flex:none;min-height:32px;height:32px;padding:.3rem .65rem; }
 
 #podcastDialog #podcastNameSearch:focus-visible { outline:3px solid var(--accent-strong);outline-offset:2px;background:var(--accent-soft);color:var(--accent-strong); }
+
+#podcastsTable thead [data-podcast-sort] { display:flex;align-items:flex-start;justify-content:space-between;width:100%;gap:.25rem; }
+.podcast-column-label { min-width:0; }
+.podcast-sort-arrow { flex:none;margin-left:auto;line-height:1.15; }
+.podcast-property-row { display:grid;grid-template-columns:minmax(0,1fr) 50px;align-items:center;gap:.5rem;min-width:0; }
+#podcastDialog .podcast-property-lock { display:flex;align-items:center;gap:.25rem;font-size:.7rem; }
+#podcastDialog .podcast-property-lock input[type="checkbox"] { width:16px;height:16px;min-height:0;padding:0; }
+#podcastDialog .podcast-select-stack > label { padding-right:58px; }
+#podcastDialog .podcast-select-stack .podcast-property-row > label:first-child { display:grid;grid-template-columns:85px minmax(0,1fr);align-items:center;gap:.5rem; }

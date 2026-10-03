@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV, Books and Podcasts available.",
-      "version": "2.0.0.13",
-      "buildId": "2.0.0.13",
+      "version": "2.0.0.14",
+      "buildId": "2.0.0.14",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -161,7 +161,7 @@
       "danger": "#a74747"
     },
     "releases": [
-      {"version":"2.0.0.13","date":"2026-10-03T12:00:00.000Z","title":"Keyboard podcast search and automatic feed refresh","summary":"Tab from Name to Search and press Space; selecting a catalog match automatically refreshes its feed properties.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
+      {"version":"2.0.0.14","date":"2026-10-03T12:00:00.000Z","title":"Podcast property locks and aligned sort arrows","summary":"Lock individual podcast properties against feed updates and keep sort arrows right-aligned beside column names.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
     ],
     "roadmap": [{"id": "movie-people-lookup", "title": "Look Up Movies By Actor Or Director", "description": "From the spreadsheet backlog: look up movies by actors and directors and sort the results.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 2, "createdAt": "2026-09-13"}, {"id": "movie-selection-link", "title": "Open A TMDB Search For Selected Text", "description": "From the spreadsheet backlog: add a lookup button that opens a TMDB link using the current text.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 1, "createdAt": "2026-09-13"}],
     "help": [

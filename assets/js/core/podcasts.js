@@ -34,11 +34,12 @@
     if(currency && !/^[A-Z]{3}$/.test(currency)) throw new Error('Use a three-letter currency code.');
     const amount=number(m.amount,1000000); if(amount!==null && !currency) throw new Error('Enter the price currency.');
     const checkedAt=text(m.checkedAt,10); if(checkedAt && !/^\d{4}-\d{2}-\d{2}$/.test(checkedAt)) throw new Error('Enter a valid checked date.');
-    return {id,title,rating:rating(s.rating),kind:choice(s.kind,['Podcast','Membership'],'Podcast'),status:choice(s.status,statuses,'Listening'),activity:choice(s.activity,activities.concat(''),'Unknown'),size:choice(s.size,sizes,'Unknown'),frequency:choice(s.frequency,frequencies,'Unknown'),categories:categories(s.categories),website:url(s.website),
+    return {id,title,locks:Object.fromEntries(['activity','size','frequency','website'].map(key=>[key,typeof s.locks?.[key]==='boolean'?s.locks[key]:!!s[key]&&s[key]!=='Unknown'])),rating:rating(s.rating),kind:choice(s.kind,['Podcast','Membership'],'Podcast'),status:choice(s.status,statuses,'Listening'),activity:choice(s.activity,activities.concat(''),'Unknown'),size:choice(s.size,sizes,'Unknown'),frequency:choice(s.frequency,frequencies,'Unknown'),categories:categories(s.categories),website:url(s.website),
       membership:{available:choice(m.available,['Unknown','Yes','No'],'Unknown'),amount,currency,basis:choice(m.basis,['Annual','Monthly','Variable','Unknown'],'Unknown'),tier:text(m.tier,200),url:url(m.url),checkedAt},
       legacy:{active:typeof l.active==='boolean'?l.active:null,last:text(l.last,100),time:number(l.time,1000000),recurrence:text(l.recurrence,100),url:url(l.url),sourceName:text(l.sourceName,500)},
       sourceKey:text(s.sourceKey,100),catalog:catalog(s.catalog)};
   }
+  function applyCatalog(row,observations){const next=normalize(Object.assign({},row,{catalog:observations}));for(const key of ['activity','size','frequency','website']){if(!next.locks[key]&&next[key]!==''&&next[key]!=='Unknown'&&next.catalog[key]&&next.catalog[key]!=='Unknown')next[key]=next.catalog[key];}return next;}
   function normalizeList(value) {
     if(value==null) return []; if(!Array.isArray(value)||value.length>App.config.controls.maxPodcasts) throw new Error('Too many podcasts.');
     if(new TextEncoder().encode(JSON.stringify(value)).length>App.config.controls.maxImportBytes) throw new Error('Podcast library exceeds the size limit.');
@@ -46,7 +47,7 @@
     return value.map(s=>{if(!s?.id) throw new Error('Missing podcast identity.');const p=normalize(s);if(ids.has(p.id)) throw new Error('Duplicate podcast identity.');ids.add(p.id);
       if(!p.deleted){if(p.catalog.appleId && links.has(p.catalog.appleId)||p.catalog.feedUrl && feeds.has(p.catalog.feedUrl)) throw new Error('This catalog show is already linked to another entry.');if(p.catalog.appleId) links.add(p.catalog.appleId);if(p.catalog.feedUrl) feeds.add(p.catalog.feedUrl);}return p;});
   }
-  function effective(p,key) { const own=p[key]; return own==='Unknown'||Array.isArray(own)&&!own.length||own==='' ? p.catalog[key] ?? own : own; }
+  function effective(p,key) { const own=p[key];if(p.locks?.[key])return own; return own==='Unknown'||Array.isArray(own)&&!own.length||own==='' ? p.catalog[key] ?? own : own; }
   function annual(p) {const m=p.membership;return m.available==='Yes'&&m.amount!==null?(m.basis==='Annual'?m.amount:m.basis==='Monthly'?Math.round(m.amount*1200)/100:null):null;}
   function sizeFor(seconds) {return seconds<1800?'S':seconds<3600?'M':seconds<5400?'L':'XL';}
   function estimate(episodes,complete,now) {
@@ -83,5 +84,5 @@
   function weeklyTimeLabel(row){const seconds=weeklySeconds(row);return seconds===null?'—':(Math.round(seconds/1800)/2).toFixed(1)+' hr';}
   function searchable(p){return [p.title,p.catalog.title,p.catalog.author,...categoryLabels(p),p.membership.tier].join(' ').toLowerCase();}
   function preferences(s){s=u.plainObject(s);return {refreshResults:refreshResults(s.refreshResults),widths:Object.fromEntries(Object.entries(u.plainObject(s.widths)).filter(([key,v])=>['rating','title','author','status','activity','lastEpisode','weeklyTime','frequency','categories','membership','cost','website'].includes(key)&&Number.isFinite(v)).map(([key,v])=>[key,Math.max(60,Math.min(800,Math.round(v)))])),view:s.view==='pivots'?'pivots':'list',publisher:u.cleanLine(s.publisher,500)||'all',pivotQuery:u.cleanLine(s.pivotQuery,200),minimum:Number.isInteger(s.minimum)&&s.minimum>=1&&s.minimum<=2000?s.minimum:1,pivotSort:['name','count','average','score'].includes(s.pivotSort)?s.pivotSort:'count',pivotDirection:s.pivotDirection==='asc'?'asc':'desc',query:u.cleanLine(s.query,200),status:statuses.includes(s.status)?s.status:'all',activity:activities.includes(s.activity)?s.activity:'all',size:sizes.includes(s.size)?s.size:'all',frequency:frequencies.includes(s.frequency)?s.frequency:'all',category:u.cleanLine(s.category,200)||'all',membership:['Yes','No','Unknown'].includes(s.membership)?s.membership:'all',sort:['title','rating','status','activity','size','frequency','cost','author','lastEpisode','kind','averageSeconds','feedFetchedAt','sourceLast','sourceTime','weeklyTime'].includes(s.sort)?s.sort:'title',direction:s.direction==='desc'?'desc':'asc'};}
-  App.podcasts={compareNames,refreshStatus,frequencyLabel,categoryGroups,categoryEntries,categoryLabels,weeklySeconds,weeklyTimeLabel,statuses,activities,sizes,frequencies,text,url,categories,catalog,normalize,normalizeList,effective,annual,sizeFor,estimate,searchable,preferences};
+  App.podcasts={applyCatalog,compareNames,refreshStatus,frequencyLabel,categoryGroups,categoryEntries,categoryLabels,weeklySeconds,weeklyTimeLabel,statuses,activities,sizes,frequencies,text,url,categories,catalog,normalize,normalizeList,effective,annual,sizeFor,estimate,searchable,preferences};
 })();
