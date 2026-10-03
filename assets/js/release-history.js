@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.16","date":"2026-10-03T12:00:00.000Z","title":"Podcast listening cost totals and compact table","summary":"Total yearly costs for Listening podcasts, right-align link icons, and remove the resize guidance.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.15","date":"2026-10-03T12:00:00.000Z","title":"Reliable podcast keyboard search and sampled RSS","summary":"Focus Search with Tab, read recent episodes from large RSS feeds, and update automatic categories in the editor and table.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.14","date":"2026-10-03T12:00:00.000Z","title":"Podcast property locks and aligned sort arrows","summary":"Lock individual podcast properties against feed updates and keep sort arrows right-aligned beside column names.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.13","date":"2026-10-03T12:00:00.000Z","title":"Keyboard podcast search and automatic feed refresh","summary":"Tab from Name to Search and press Space; selecting a catalog match automatically refreshes its feed properties.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

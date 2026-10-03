@@ -138,3 +138,5 @@
 
 #podcastsRows .podcast-title-line .podcast-name { flex:1;min-width:0; }
 #podcastsRows .podcast-linked { margin-left:auto; }
+
+#podcastDialog .podcast-select-stack .podcast-property-row > label:first-child input { min-width:0; }

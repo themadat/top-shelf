@@ -164,3 +164,11 @@ test('property locks preserve legacy edits and protect individual fields through
  const local=model.normalize({workspace:{podcasts:[refreshed]}});assert.deepEqual(plain(model.prepare(model.exportEnvelope(local)).state.workspace.podcasts[0].locks),plain(refreshed.locks));assert.deepEqual(plain(model.prepareSync(model.syncPayload(local)).state.workspace.podcasts[0].locks),plain(refreshed.locks));
  const unlocked=p.applyCatalog({...r,locks:{activity:false,size:false,frequency:false,website:false}},r.catalog);assert.equal(unlocked.size,'M');assert.equal(unlocked.website,'https://example.com/feed');assert.equal(p.effective(unlocked,'activity'),'Active');
 });
+
+test('manual average length drives weekly time and respects lock, refresh, backup and sync',()=>{
+ const r=row({frequency:'Weekly',averageSeconds:5400,catalog:{averageSeconds:1800}});assert.equal(r.locks.averageSeconds,true);assert.equal(p.weeklyTimeLabel(r),'1.5 hr');assert.equal(p.applyCatalog(r,{averageSeconds:2400}).averageSeconds,5400);
+ const unlocked=p.applyCatalog({...r,locks:{...r.locks,averageSeconds:false}},{averageSeconds:3600});assert.equal(unlocked.averageSeconds,3600);assert.equal(p.weeklyTimeLabel(unlocked),'1.0 hr');
+ const automatic=row({frequency:'Weekly',catalog:{averageSeconds:1800}});assert.equal(automatic.averageSeconds,null);assert.equal(p.weeklyTimeLabel(automatic),'0.5 hr');
+ const local=model.normalize({workspace:{podcasts:[r]},ui:{podcasts:{sort:'categories'}}});assert.equal(local.ui.podcasts.sort,'categories');assert.equal(model.prepare(model.exportEnvelope(local)).state.workspace.podcasts[0].averageSeconds,5400);assert.equal(model.prepareSync(model.syncPayload(local)).state.workspace.podcasts[0].averageSeconds,5400);
+ assert.throws(()=>row({averageSeconds:-1}),/number/);assert.throws(()=>row({averageSeconds:'30'}),/number/);
+});

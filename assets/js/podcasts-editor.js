@@ -4,7 +4,8 @@
  const state=()=>App.storage.getState(),status=t=>$('#podcastEditorStatus').textContent=t;
  function stop(){sequence++;controller?.abort();controller=null;$('#podcastStop').hidden=true;}
  function read(){if(!draft)return;for(const k of ['title','kind','status','activity','size','frequency','website']){const value=$('#podcast-'+k).value;if(!(Object.hasOwn(automaticDisplay,k)&&automaticDisplay[k]===value))draft[k]=value;}
-  for(const key of ['activity','size','frequency','website'])draft.locks[key]=$('#podcast-lock-'+key).checked;
+  const average=$('#podcast-averageSeconds').value;if(automaticDisplay.averageSeconds!==average)draft.averageSeconds=average===''?null:Number(average)*60;
+  for(const key of ['activity','size','frequency','website','averageSeconds'])draft.locks[key]=$('#podcast-lock-'+key).checked;
   draft.rating=$('#podcast-rating').value===''?null:Number($('#podcast-rating').value);
   if(automaticDisplay.categories!==$('#podcast-categories').value)draft.categories=$('#podcast-categories').value.split('\n').filter(s=>s.trim()).map(line=>{const [name,...subs]=line.split('>');return {name:name.trim(),subcategories:subs.join('>').split(',').map(s=>s.trim()).filter(Boolean)};});
   for(const k of ['available','currency','basis','tier','url','checkedAt'])draft.membership[k]=$('#podcast-member-'+k).value;
@@ -14,6 +15,7 @@
   $('#podcastRatingButtons').innerHTML=[1,2,3,4,5].map(n=>'<button type="button" data-podcast-rating="'+n+'" aria-label="Rate '+n+' out of 5" aria-pressed="'+(draft.rating===n)+'" style="--rating-color:'+App.movies.color(n,false)+'">'+n+'</button>').join('');
  }
  function properties(){automaticDisplay={};for(const key of ['activity','size','frequency','website']){const value=p.effective(draft,key);if(!draft.locks[key]&&(draft[key]==='Unknown'||draft[key]===''))automaticDisplay[key]=value;$('#podcast-'+key).value=value;$('#podcast-lock-'+key).checked=draft.locks[key];}
+  const average=p.effective(draft,'averageSeconds'),averageText=average===null?'':String(average/60);if(!draft.locks.averageSeconds&&draft.averageSeconds===null)automaticDisplay.averageSeconds=averageText;$('#podcast-averageSeconds').value=averageText;$('#podcast-lock-averageSeconds').checked=draft.locks.averageSeconds;
   const categoryText=p.categoryGroups(draft).map(g=>g.name+(g.subcategories.length?' > '+g.subcategories.map(c=>c.label).join(', '):'')).join('\n');automaticDisplay.categories=categoryText;$('#podcast-categories').value=categoryText;
   $('#podcast-activity').className=App.podcastsUI.tone(p.effective(draft,'activity'));
  }
@@ -36,12 +38,12 @@
  async function feed(file){if(busy)return;stop();read();const token=sequence,snapshot=u.stableJson(draft),signal=(controller=new AbortController()).signal;$('#podcastStop').hidden=false;status('Reading public feed…');try{const c=file?App.podcastFeed.parse(await App.podcastFeed.readFile(file,signal),draft.catalog):await App.podcastFeed.refresh(draft.catalog,signal);if(token!==sequence)return;read();App.podcastsUI.guard(before);if(snapshot!==u.stableJson(draft))throw new Error('Draft changed. Refresh again.');draft=p.applyCatalog(draft,c);metadata();status('Feed information refreshed in your draft. Locked fields are kept. Save to keep these changes.');}catch(e){if(token===sequence)status(e.message);}finally{if(token===sequence)$('#podcastStop').hidden=true;}}
  async function searchName(){const name=$('#podcast-title').value.trim();if(!name){status('Enter a podcast name to search.');$('#podcast-title').focus();return;}$('#podcastQuery').value=name;await search();$('#podcastMatches').scrollIntoView({block:'nearest'});}
  function init(){for(const [id,values] of [['status',p.statuses],['activity',p.activities],['size',p.sizes],['frequency',p.frequencies]])$('#podcast-'+id).innerHTML=values.map(v=>'<option value="'+v+'">'+p.frequencyLabel(v)+'</option>').join('');
-  for(const key of ['activity','size','frequency','website'])$('#podcast-lock-'+key).addEventListener('change',()=>{if($('#podcast-lock-'+key).checked)delete automaticDisplay[key];read();metadata();});
+  for(const key of ['activity','size','frequency','website','averageSeconds'])$('#podcast-lock-'+key).addEventListener('change',()=>{if($('#podcast-lock-'+key).checked)delete automaticDisplay[key];read();metadata();});
   $('#podcastNameSearch').addEventListener('click',searchName);
   $('#podcast-title').addEventListener('keydown',e=>{if(e.key==='Tab'&&!e.shiftKey){e.preventDefault();$('#podcastNameSearch').focus();}});
   $('#podcastNameSearch').addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();e.stopPropagation();$('#podcastNameSearch').click();}else if(e.key==='Tab'&&e.shiftKey){e.preventDefault();$('#podcast-title').focus();}});
 
-  for(const key of ['activity','size','frequency','website'])$('#podcast-'+key).addEventListener('change',()=>{delete automaticDisplay[key];read();metadata();});
+  for(const key of ['activity','size','frequency','website','averageSeconds'])$('#podcast-'+key).addEventListener('change',()=>{delete automaticDisplay[key];read();metadata();});
   $('#podcastRatingButtons').addEventListener('click',e=>{const button=e.target.closest('[data-podcast-rating]');if(!button||!draft)return;const score=Number(button.dataset.podcastRating);draft.rating=draft.rating===score?null:score;$('#podcast-rating').value=draft.rating??'';$('#podcastRatingButtons').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.podcastRating)===draft.rating)));});
   for(const key of ['status','activity'])$('#podcast-'+key).addEventListener('change',e=>e.target.className=App.podcastsUI.tone(e.target.value));
   $('#podcastForm').addEventListener('submit',save);$('#podcastDelete').addEventListener('click',remove);$('#podcastClose').addEventListener('click',close);$('#podcastCancel').addEventListener('click',close);
