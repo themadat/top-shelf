@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV, Books and Podcasts available.",
-      "version": "2.0.0.11",
-      "buildId": "2.0.0.11",
+      "version": "2.0.0.12",
+      "buildId": "2.0.0.12",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -161,7 +161,7 @@
       "danger": "#a74747"
     },
     "releases": [
-      {"version":"2.0.0.11","date":"2026-10-01T12:00:00.000Z","title":"Compact storage for large libraries","summary":"Store large libraries losslessly in compact form when browser storage fills, allowing GitHub pulls and subsequent local edits to persist.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
+      {"version":"2.0.0.12","date":"2026-10-03T12:00:00.000Z","title":"Podcast refresh progress and listening time","summary":"Watch live podcast refresh progress and total weekly listening time only for Listening shows.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
     ],
     "roadmap": [{"id": "movie-people-lookup", "title": "Look Up Movies By Actor Or Director", "description": "From the spreadsheet backlog: look up movies by actors and directors and sort the results.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 2, "createdAt": "2026-09-13"}, {"id": "movie-selection-link", "title": "Open A TMDB Search For Selected Text", "description": "From the spreadsheet backlog: add a lookup button that opens a TMDB link using the current text.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 1, "createdAt": "2026-09-13"}],
     "help": [

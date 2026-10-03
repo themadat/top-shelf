@@ -18,6 +18,6 @@ Static, local-first HTML/CSS/JavaScript; no build step, runtime dependencies, ba
 ## Finish
 
 - Run `node scripts/check.mjs` and focused browser checks; use `docs/TESTING.md` for release coverage. Stop preview servers.
-- Batch related edits. Cut releases with `node scripts/release.mjs` (see `--help`); no manual version bookkeeping or documentation-only bumps.
+- Batch related edits. Increment the build for every app update. Cut releases with `node scripts/release.mjs` (see `--help`); no manual version bookkeeping or documentation-only bumps.
 - Document contracts and safeguards, not every cosmetic edit. Keep current behavior in topic docs and history in Git/release-history.js.
 - Summarize outcome, verification and limitations briefly. Include one copy-ready final command staging only task files, committing as `Version - Text`, and pushing to `origin main`. Execute commit/push only when explicitly requested.
