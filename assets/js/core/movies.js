@@ -35,17 +35,26 @@
       }).sort(function (a, b) { return howRank(a) - howRank(b); }).join(' / ');
     }).filter(function (part) { const key = part.toLowerCase(); if (!part || seen.has(key)) return false; seen.add(key); return true; }).sort(function (a, b) { return howRank(a) - howRank(b); }).join(', ') + suffix;
   }
+  function subgenreName(value) {
+    const text = String(value || '').trim().replace(/^subgenre(?:\s*:\s*|\s+)/i, '').replace(/\s+/g, ' ').replace(/\s*[-–—]\s*/g, '-').toLowerCase();
+    if (text === 'homesian' || text === 'holmesian') return 'Holmesian';
+    return text.replace(/(^|[\s/-])\p{L}/gu, function (letter) { return letter.toUpperCase(); });
+  }
   function cleanOther(value) {
-    const parts = u.cleanText(value, 4000).split(/([,\n])/), result = [];
-    let found = false;
+    const text = u.cleanText(value, 4000), parts = text.split(/([,\n])/), result = [];
+    const seen = new Set();
     for (let i = 0; i < parts.length; i += 2) {
-      const isHolmesian = /^\s*Subgenre(?:\s*:\s*|\s+)(?:Homesian|Holmesian)\s*$/i.test(parts[i]);
-      if (isHolmesian && found) continue;
+      const match = /^\s*Subgenre(?:\s*:\s*|\s+)(.+?)\s*$/i.exec(parts[i]);
+      const name = match ? subgenreName(match[1]) : '';
+      if (name && seen.has(name)) continue;
       if (result.length && i > 0) result.push(parts[i - 1]);
-      result.push(isHolmesian ? parts[i].replace(/Homesian|Holmesian/i, 'Holmesian') : parts[i]);
-      if (isHolmesian) found = true;
+      result.push(name ? (parts[i].match(/^\s*/)[0] + 'Subgenre: ' + name) : parts[i]);
+      if (name) seen.add(name);
     }
-    return result.join('');
+    // Expanded prefixes must never cause a later normalization to truncate a
+    // full legacy field. The picker checks capacity before composing new tags.
+    const normalized = result.join('');
+    return normalized.length <= 4000 ? normalized : text;
   }
   function date(value) {
     const text = u.cleanLine(value, 10);
@@ -115,7 +124,7 @@
   }
   function bulkPivots(movies, pivots, targets) {
     const unique = function (values) { const seen = new Set(); return values.filter(function (value) { const key = value.toLocaleLowerCase(); if (!value || seen.has(key)) return false; seen.add(key); return true; }); };
-    const tags = unique(String(pivots).split(/[,\n]/).map(function (tag) { return tag.trim(); }));
+    const tags = unique(String(pivots).split(/[,\n]/).map(function (tag) { const text = tag.trim(); return text.length > 4000 ? text : cleanOther(text); }));
     const lines = unique(String(targets).split(/\r?\n/).map(function (line) { return line.trim(); }));
     if (!tags.length) throw new Error('Enter at least one pivot.');
     if (!lines.length) throw new Error('Enter at least one movie title or TMDB ID, one per line.');
@@ -129,7 +138,7 @@
       const movie = matches[0];
       if (seen.has(movie.id)) return { input: line, title: movie.title, duplicate: true };
       seen.add(movie.id);
-      const existing = new Set((movie.other || '').split(/[,\n]/).map(function (tag) { return tag.trim().toLocaleLowerCase(); }));
+      const existing = new Set(cleanOther(movie.other).split(/[,\n]/).map(function (tag) { return tag.trim().toLocaleLowerCase(); }));
       const additions = tags.filter(function (tag) { return !existing.has(tag.toLocaleLowerCase()); });
       const other = movie.other + (movie.other && additions.length ? '\n' : '') + additions.join(', ');
       if (other.length > 4000) return { input: line, error: movie.title + ': adding these pivots would exceed the 4,000-character limit' };
@@ -173,4 +182,5 @@
     }, null, 2);
   }
   App.movies = { cleanOther: cleanOther, averageBand: averageBand, howProvider: howProvider, howRank: howRank, analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  App.movies.subgenreName = subgenreName;
 })();

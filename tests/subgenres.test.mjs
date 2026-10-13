@@ -73,6 +73,41 @@ test('typo tags normalize to a single Holmesian without changing review status o
  assert.equal(A.movies.normalize(entry).other,entry.other);
 });
 
+test('all subgenre entry paths normalize spelling, casing, whitespace and prefixes without duplicate categories',()=>{
+ const entry=movie(30,{other:'Favorite, SUBGENRE : time   TRAVEL, Subgenre Time Travel\nsubgenre neo - noir, Subgenre: homesian',subgenreReviewed:false});
+ assert.equal(entry.other,'Favorite, Subgenre: Time Travel\nSubgenre: Neo-Noir, Subgenre: Holmesian');
+ assert.deepEqual(Array.from(A.subgenres.tags(entry)),['Time Travel','Neo-Noir','Holmesian']);
+ assert.equal(entry.subgenreReviewed,false);
+ const imports=A.subgenres.preview([entry,movie(31)],result([row(31,{subgenres:['  TIME   travel  ','neo - noir','Homesian']})]));
+ assert.deepEqual(Array.from(imports[0].added),['Time Travel','Neo-Noir','Holmesian']);
+ assert.equal(A.movies.bulkPivots([entry],'subgenre time travel, Subgenre: TIME   TRAVEL','30').changes.length,0);
+});
+
+test('picker composition preserves ordinary Other text and checks names and combined capacity',()=>{
+ const ordinary='Favorite\nOriginal availability note: later, Rewatch';
+ const other=ordinary+'\nSubgenre: Time Travel, Subgenre Neo-Noir';
+ assert.equal(A.subgenres.withoutTags(other),ordinary);
+ const changed=A.subgenres.withTags(A.subgenres.withoutTags(other),['neo - noir','Holmesian','NEO-NOIR']);
+ assert.equal(changed,ordinary+'\nSubgenre: Neo-Noir, Subgenre: Holmesian');
+ assert.equal(A.subgenres.withTags(A.subgenres.withoutTags(other),[]),ordinary);
+ for(const names of [['A, B'],['A\nB'],['x'.repeat(161)]])assert.throws(()=>A.subgenres.withTags('',names),/one subgenre name/);
+ assert.throws(()=>A.subgenres.withTags('x'.repeat(3990),['Holmesian']),/4,000/);
+ const full='x'.repeat(3978)+', Subgenre Time Travel';
+ assert.equal(full.length,4000);
+ assert.equal(A.movies.cleanOther(full),full);
+ assert.equal(A.movies.cleanOther(A.movies.cleanOther(full)),full);
+ assert.deepEqual(Array.from(A.subgenres.tags({other:full})),['Time Travel']);
+});
+
+test('normalized selections retain review status and names through backup and content sync',()=>{
+ const state=A.stateModel.createDefaultState();
+ state.workspace.movies=[movie(40,{other:A.subgenres.withTags('Favorite',['time   travel','neo - noir']),subgenreReviewed:true})];
+ for(const copy of [A.stateModel.prepare(A.stateModel.exportEnvelope(state)).state,A.stateModel.prepareSync(A.stateModel.syncPayload(state)).state]){
+  assert.equal(copy.workspace.movies[0].other,'Favorite\nSubgenre: Time Travel, Subgenre: Neo-Noir');
+  assert.equal(copy.workspace.movies[0].subgenreReviewed,true);
+ }
+});
+
 test('cloud data carries personal and TMDB ratings, legacy labels, and How through round trips',()=>{
  const state=A.stateModel.createDefaultState({demo:false});
  state.workspace.movies=[movie(21,{status:'watched',rating:4.25,how:'* HBO Max',other:'Subgenre Homesian'}),movie(22,{tmdbAverage:7.8,how:'Prime',priority:1}),movie(23,{status:'watched',historicalRating:'YES',how:'Cinema'})];
@@ -81,7 +116,7 @@ test('cloud data carries personal and TMDB ratings, legacy labels, and How throu
  assert.equal(payload.data.movies[0].rating,4.25);
  assert.equal(restored[0].rating,4.25);
  assert.equal(restored[0].how,'* HBO Max');
- assert.equal(restored[0].other,'Subgenre Holmesian');
+ assert.equal(restored[0].other,'Subgenre: Holmesian');
  assert.equal(restored[1].tmdbAverage,7.8);
  assert.equal(restored[1].how,'Prime');
  assert.equal(restored[2].historicalRating,'YES');

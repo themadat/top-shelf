@@ -2,12 +2,28 @@
   'use strict';
   const App = window.LocalApp;
   function tags(movie) {
-    return App.movies.cleanOther(movie.other).split(/[,\n]/).map(function (tag) { const match = /^Subgenre(?:\s*:\s*|\s+)(.+)$/i.exec(tag.trim()); return match ? match[1].trim() : ''; }).filter(Boolean);
+    return Array.from(new Set(App.movies.cleanOther(movie.other).split(/[,\n]/).map(function (tag) { const match = /^Subgenre(?:\s*:\s*|\s+)(.+)$/i.exec(tag.trim()); return match ? App.movies.subgenreName(match[1]) : ''; }).filter(Boolean)));
   }
   function vocabulary(movies) {
     const names = new Map([['holmesian', 'Holmesian']]);
     movies.filter(function (movie) { return !movie.deleted; }).forEach(function (movie) { tags(movie).forEach(function (name) { const key = name.toLowerCase(); if (!names.has(key)) names.set(key, name); }); });
     return Array.from(names.values()).sort(function (a, b) { return a.localeCompare(b); });
+  }
+  function withoutTags(other) {
+    const parts = String(other || '').split(/([,\n])/), result = [];
+    for (let i = 0; i < parts.length; i += 2) {
+      if (/^\s*Subgenre(?:\s*:\s*|\s+)\S/i.test(parts[i])) continue;
+      if (result.length && i > 0) result.push(parts[i - 1]);
+      result.push(parts[i]);
+    }
+    return result.join('').trim();
+  }
+  function withTags(other, names) {
+    if (names.some(function (name) { return /[,\n\r]/.test(name) || String(name).trim().length > 160; })) throw new Error('Use one subgenre name, up to 160 characters, without commas or new lines.');
+    const selected = Array.from(new Set(names.map(App.movies.subgenreName).filter(Boolean)));
+    const text = String(other || '') + (other && selected.length ? '\n' : '') + selected.map(function (name) { return 'Subgenre: ' + name; }).join(', ');
+    if (text.length > 4000) throw new Error('Other Pivots and subgenres together must fit within 4,000 characters.');
+    return App.movies.cleanOther(text);
   }
   function queue(movies) { return movies.filter(function (movie) { return !movie.deleted && !movie.subgenreReviewed; }).sort(function (a, b) { return a.title.localeCompare(b.title); }); }
   function request(movies) {
@@ -32,19 +48,19 @@
     const supported = new Map(vocabulary(movies).map(function (name) { return [name.toLowerCase(), name]; }));
     const seen = new Set();
     return input.reviews.map(function (row) {
-      if (!row || typeof row.id !== 'string' || !Number.isSafeInteger(row.tmdbId) || typeof row.reviewed !== 'boolean' || !Array.isArray(row.subgenres) || row.subgenres.some(function (name) { return typeof name !== 'string' || !supported.has(name.toLowerCase()); })) throw new Error('Every result needs exact movie IDs, a reviewed boolean, and only supported subgenre names.');
+      if (!row || typeof row.id !== 'string' || !Number.isSafeInteger(row.tmdbId) || typeof row.reviewed !== 'boolean' || !Array.isArray(row.subgenres) || row.subgenres.some(function (name) { return typeof name !== 'string' || !supported.has(App.movies.subgenreName(name).toLowerCase()); })) throw new Error('Every result needs exact movie IDs, a reviewed boolean, and only supported subgenre names.');
       if (seen.has(row.id)) throw new Error('Duplicate movie in results: ' + row.id);
       seen.add(row.id);
       const movie = movies.find(function (item) { return !item.deleted && item.id === row.id && item.tmdbId === row.tmdbId; });
       if (!movie) throw new Error('Movie not found or IDs disagree: ' + row.id);
       if (!row.reviewed && row.subgenres.length) throw new Error('Uncertain movies must use reviewed:false and an empty subgenres array.');
       const existing = new Set(tags(movie).map(function (name) { return name.toLowerCase(); }));
-      const added = Array.from(new Set(row.subgenres.map(function (name) { return supported.get(name.toLowerCase()); }))).filter(function (name) { return !existing.has(name.toLowerCase()); });
+      const added = Array.from(new Set(row.subgenres.map(function (name) { return supported.get(App.movies.subgenreName(name).toLowerCase()); }))).filter(function (name) { return !existing.has(name.toLowerCase()); });
       if (movie.subgenreReviewed && added.length) throw new Error(movie.title + ' is already reviewed. Uncheck Subgenres Reviewed in its editor before changing it through this import.');
       const other = movie.other + (added.length ? (movie.other ? '\n' : '') + added.map(function (name) { return 'Subgenre: ' + name; }).join(', ') : '');
       if (other.length > 4000) throw new Error(movie.title + ': Other Pivots would exceed 4,000 characters.');
       return { id: movie.id, title: movie.title, before: movie.other, wasReviewed: movie.subgenreReviewed, other: other, added: added, reviewed: row.reviewed, change: row.reviewed && !movie.subgenreReviewed };
     });
   }
-  App.subgenres = { tags: tags, vocabulary: vocabulary, queue: queue, request: request, preview: preview };
+  App.subgenres = { tags: tags, vocabulary: vocabulary, withoutTags: withoutTags, withTags: withTags, queue: queue, request: request, preview: preview };
 })();

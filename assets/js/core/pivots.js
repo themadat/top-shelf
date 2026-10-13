@@ -13,9 +13,9 @@
   ];
   const sections = ["Numeric Ratings", "Legacy Ratings", "Others", "Subgenres", "Collections", "Actors", "Directors", "Companies"];
   function otherTags(movie) {
-    return (movie.other || '').split(/\n/).filter(function (line) { return !line.trim().startsWith('Original availability note:'); }).join(',').split(',').map(function (value) {
+    return App.movies.cleanOther(movie.other).split(/\n/).filter(function (line) { return !line.trim().startsWith('Original availability note:'); }).join(',').split(',').map(function (value) {
       const tag = value.trim(), match = /^Subgenre(?:\s*:\s*|\s+)(.+)$/i.exec(tag);
-      return { name: match ? match[1].trim() : tag, section: match ? 'Subgenres' : 'Others' };
+      return { name: match ? App.movies.subgenreName(match[1]) : tag, section: match ? 'Subgenres' : 'Others' };
     }).filter(function (tag) { return tag.name; });
   }
   function score(count, average, settings) {

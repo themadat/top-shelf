@@ -8,10 +8,12 @@
   function initBulkPivots() {
     let reviewed = null;
     function invalidate() { reviewed = null; $('#bulkPivotApply').disabled = true; $('#bulkPivotPreview').textContent = ''; $('#bulkPivotError').textContent = ''; $('#bulkPivotMovies').removeAttribute('aria-invalid'); }
+    const subgenrePicker = App.subgenresUI.createPicker('#bulkSubgenrePicker', invalidate);
+    function pivots() { subgenrePicker.pending(); return App.subgenres.withTags($('#bulkPivotTags').value, subgenrePicker.selected()); }
     function preview() {
       invalidate();
       try {
-        const result = model.bulkPivots(saved(), $('#bulkPivotTags').value, $('#bulkPivotMovies').value);
+        const result = model.bulkPivots(saved(), pivots(), $('#bulkPivotMovies').value);
         const issues = result.rows.filter(function (row) { return row.error; });
         const matched = result.rows.filter(function (row) { return !row.error; });
         const issueList = issues.length ? '<section class="bulk-pivot-issues" aria-labelledby="bulkPivotIssuesTitle"><h3 id="bulkPivotIssuesTitle">Needs Attention (' + issues.length + ')</h3><ul>' + issues.map(function (row) {
@@ -32,6 +34,7 @@
     }
     $('#bulkPivotsButton').addEventListener('click', function (event) {
       $('#bulkPivotsForm').reset(); invalidate();
+      subgenrePicker.reset([]);
       App.components.openDialog('#bulkPivotsDialog', { trigger: event.currentTarget, focus: '#bulkPivotTags' });
     });
     $('#bulkPivotTags').addEventListener('input', invalidate);
@@ -41,7 +44,7 @@
       event.preventDefault();
       if (!reviewed) return;
       try {
-        const current = model.bulkPivots(saved(), $('#bulkPivotTags').value, $('#bulkPivotMovies').value);
+        const current = model.bulkPivots(saved(), pivots(), $('#bulkPivotMovies').value);
         if (JSON.stringify(current) !== JSON.stringify(reviewed)) { preview(); $('#bulkPivotError').textContent = 'Movie data changed. Review the refreshed matches before applying.'; return; }
         if (!App.storage.saveRecovery('Before bulk pivot entry')) throw new Error('Could not save a recovery copy. No movies were changed.');
         const changes = new Map(current.changes.map(function (row) { return [row.id, row.after]; }));

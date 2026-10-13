@@ -4,6 +4,33 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const movies = function () { return App.storage.getState().workspace.movies; };
   let pending = null, reviewed = null, generation = 0;
+  function createPicker(selector, changed) {
+    const root = $(selector), options = root.querySelector('[data-subgenre-options]'), input = root.querySelector('input[type="text"]'), error = root.querySelector('[role="alert"]');
+    const selected = function () { return Array.from(options.querySelectorAll('input:checked'), function (checkbox) { return checkbox.value; }); };
+    function reset(names) {
+      const checked = new Set((names || []).map(App.movies.subgenreName));
+      const choices = model.vocabulary(movies().concat(Array.from(checked, function (name) { return { other: 'Subgenre: ' + name }; })));
+      options.innerHTML = choices.map(function (name) { return '<label class="subgenre-option"><input type="checkbox" value="' + esc(name) + '"' + (checked.has(name) ? ' checked' : '') + '><span>' + esc(name) + '</span></label>'; }).join('');
+      input.value = ''; error.textContent = '';
+    }
+    function add() {
+      try {
+        const value = input.value;
+        if (!value.trim()) throw new Error('Enter a subgenre name.');
+        model.withTags('', [value]);
+        const name = App.movies.subgenreName(value);
+        if (!name) throw new Error('Enter a subgenre name.');
+        reset(selected().concat(name));
+        const checkbox = Array.from(options.querySelectorAll('input')).find(function (item) { return item.value === name; });
+        checkbox.focus(); changed?.();
+      } catch (failure) { error.textContent = failure.message; input.focus(); }
+    }
+    root.querySelector('button').addEventListener('click', add);
+    input.addEventListener('keydown', function (event) { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); add(); } });
+    options.addEventListener('change', function () { changed?.(); });
+    input.addEventListener('input', function () { error.textContent = ''; changed?.(); });
+    return { reset: reset, selected: selected, pending: function () { if (input.value.trim()) throw new Error('Add the typed subgenre or clear it before saving.'); } };
+  }
   function clear() { pending = null; reviewed = null; $('#subgenreApply').disabled = true; $('#subgenrePreview').textContent = ''; $('#subgenreError').textContent = ''; }
   function render() {
     const items = movies(), queue = model.queue(items), supported = model.vocabulary(items);
@@ -11,7 +38,7 @@
     $('#subgenreReviewButton').setAttribute('aria-label', 'Subgenre Review (' + queue.length + ')');
     $('#subgenreReviewSummary').textContent = queue.length + ' movies need review · ' + supported.length + ' supported subgenres';
     $('#subgenreQueue').innerHTML = queue.map(function (movie) { return '<li>' + esc(movie.title) + ' (' + esc(movie.releaseDate.slice(0, 4) || '????') + ') · TMDB ' + movie.tmdbId + '</li>'; }).join('') || '<li>All movies have been reviewed.</li>';
-    $('#subgenreVocabulary').innerHTML = supported.map(function (name) { return '<li>' + esc(name) + '</li>'; }).join('') || '<li>Add Subgenre: Name tags in Other Pivots to define supported subgenres first.</li>';
+    $('#subgenreVocabulary').innerHTML = supported.map(function (name) { return '<li>' + esc(name) + '</li>'; }).join('') || '<li>Add subgenres in a movie editor to define supported subgenres first.</li>';
     $('#subgenreExport').disabled = !queue.length || !supported.length;
   }
   function showPreview() {
@@ -50,5 +77,5 @@
     });
     window.addEventListener('app:statechange', function (event) { if (event.detail?.reason !== 'edit-document') render(); }); render();
   }
-  App.subgenresUI = { init: init };
+  App.subgenresUI = { init: init, createPicker: createPicker };
 })();

@@ -3,7 +3,7 @@
   const App = window.LocalApp, u = App.utils, model = App.movies;
   const $ = function (selector) { return document.querySelector(selector); };
   const esc = u.escapeHtml;
-  let draft = null, lookupController = null, generation = 0;
+  let draft = null, lookupController = null, generation = 0, subgenrePicker = null;
   let responseController = null, responseGeneration = 0, responses = {};
   const TOKEN_MASK = '••••••••••••';
   function tokenSettings() {
@@ -54,7 +54,11 @@
   let filter = "all", query = "", incompleteOnly = false;
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
-  function fields() { const form = $("#movieForm"); return Object.assign(Object.fromEntries(new FormData(form).entries()), { subgenreReviewed: form.elements.subgenreReviewed.checked, incompleteOverride: form.elements.incompleteOverride.checked }); }
+  function fields() {
+    const form = $("#movieForm");
+    subgenrePicker.pending();
+    return Object.assign(Object.fromEntries(new FormData(form).entries()), { other: App.subgenres.withTags(form.elements.other.value, subgenrePicker.selected()), subgenreReviewed: form.elements.subgenreReviewed.checked, incompleteOverride: form.elements.incompleteOverride.checked });
+  }
   function statusFields() {
     const watched = $("#movieStatus").value === "watched";
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.editorState === (watched ? 'watched' : 'wishlist'))); });
@@ -74,6 +78,8 @@
   }
   function metadata() {
     const v = draft || {};
+    $('#movieGenres').textContent = (v.genres || []).join(', ') || 'No genres listed';
+    $('#movieGenreSummary').hidden = !v.tmdbId;
     $("#movieMetadata").innerHTML = [["TMDB ID", v.tmdbId], ["Release Date", v.releaseDate || "Not announced"], ["Genres", (v.genres || []).join(", ")], ["Production Companies", (v.productionCompanies || []).join(", ")], ["Director", (v.directors || []).join(", ")], ["Actors", (v.actors || []).join(", ")], ["Collections", (v.collections || []).join(", ")]].map(function (entry) { return '<div><dt>' + entry[0] + '</dt><dd>' + esc(String(entry[1] || "—")) + '</dd></div>'; }).join("");
     $("#movieMetadata").hidden = !v.tmdbId;
     $("#movieRefreshButton").hidden = !v.tmdbId;
@@ -86,6 +92,8 @@
     $("#movieForm").reset();
     Object.entries(draft).forEach(function (entry) { const field = $("#movieForm").elements[entry[0]]; if (field) field.value = entry[1] == null ? "" : entry[1]; });
     $("#movieForm").elements.subgenreReviewed.checked = draft.subgenreReviewed === true;
+    $("#movieForm").elements.other.value = App.subgenres.withoutTags(draft.other);
+    subgenrePicker.reset(App.subgenres.tags(draft));
     $("#movieForm").elements.incompleteOverride.checked = draft.incompleteOverride === true;
     $("#movieDialogTitle").textContent = current ? "Edit Movie" : "Add Movie";
     $("#movieLookupQuery").value = current ? String(current.tmdbId) : "";
@@ -95,7 +103,6 @@
     $('#movieDetails').open = false;
     $('#movieStreamingStatus').textContent = '';
     $("#tmdbCredentialStatus").textContent = App.tmdb.token() ? "TMDB token is configured in this browser." : "A TMDB API Read Access Token is required for lookup.";
-    $("#movieSubgenreOptions").textContent = "(" + (App.subgenres.vocabulary(saved()).join(", ") || "No subgenres defined") + ")";
     metadata(); statusFields();
     if (current && !current.how) fillEditorStreaming(current.tmdbId, generation);
     App.components.openDialog("#movieDialog", { trigger: trigger, focus: current ? "#movieTitle" : "#movieLookupQuery" });
@@ -269,6 +276,7 @@
     App.storage.saveNow(); App.components.closeDialog("#movieDialog"); render();
   }
   function init() {
+    subgenrePicker = App.subgenresUI.createPicker('#movieSubgenrePicker');
     App.movieTools.init();
     $('#wishlistRatingsButton').addEventListener('click', batches.ratings);
     $('#movieIncompleteButton').addEventListener('click', function () { incompleteOnly = !incompleteOnly; render(); });

@@ -10,6 +10,15 @@ for (const path of ['config.js', 'icons.js', 'core/utils.js', 'core/movies.js', 
   vm.runInContext(read('assets/js/' + path), context);
 }
 const App = context.window.LocalApp;
+
+test('movie editor scripts reference controls present in the shipped page', () => {
+  const ids = new Set(Array.from(read('index.html').matchAll(/\bid="([^"]+)"/g), match => match[1]));
+  for (const file of ['movies-ui.js', 'movie-tools.js', 'subgenres-ui.js']) {
+    for (const match of read('assets/js/' + file).matchAll(/(?:\$|querySelector)\(["']#([A-Za-z][\w:-]*)["']\)/g)) {
+      assert.ok(ids.has(match[1]), file + ' references missing #' + match[1]);
+    }
+  }
+});
 App.utils = { ...App.utils, sanitizeRichHtml: String, richTextToPlainText: String };
 vm.runInContext(read('assets/js/core/state.js'), context);
 
