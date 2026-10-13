@@ -35,6 +35,8 @@ GitHub Sync targets `themadat/app-data/main/data/top-shelf.json`. To provision i
 3. Enter it only in **Settings → Data Sync**, then Test and Save. Configure each browser separately.
 4. Verify a Notes upload/download round trip. Divergent edits require an explicit choice; timestamps do not choose winners.
 
+After the first sync, saved content uploads automatically after a short pause. Every load/reload checks GitHub for the latest data, as do reconnecting, returning to the app, and five-minute checks while visible. Downloads wait until editors close and require a recovery copy. Offline edits remain available and sync after reconnecting; conflicts require a choice through Sync Now.
+
 Movie column widths are independent per All/Wishlist/Watched. TV has separate local widths, sorting and filters. Pivot widths and local sorting stay on each device, appear in full backups, and are excluded from content sync. Credentials are always excluded. More setup detail: [RESET](docs/RESET.md).
 
 ## Development

@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV, Books and Podcasts available.",
-      "version": "2.0.0.17",
-      "buildId": "2.0.0.17",
+      "version": "2.0.0.18",
+      "buildId": "2.0.0.18",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -115,6 +115,7 @@
     "controls": {
       "shortcutHintModifier": "ShiftControlOption",
       "autosaveDelayMs": 180,
+      "syncAutosaveDelayMs": 1500,
       "syncCheckIntervalMs": 300000,
       "whatsNewAutoDismissMs": 20000,
       "maxImportBytes": 5242880,
@@ -161,7 +162,7 @@
       "danger": "#a74747"
     },
     "releases": [
-      {"version":"2.0.0.17","date":"2026-10-03T12:00:00.000Z","title":"Manual podcast average length and category sorting","summary":"Set and lock average episode length in minutes for weekly time estimates, and sort podcasts by category.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
+      {"version":"2.0.0.18","date":"2026-10-12T12:00:00.000Z","title":"Automatic data sync","summary":"Saved edits automatically update GitHub, and each load, reload, reconnect, and return checks for the latest data. Recovery, editor protection, and explicit conflict choices keep local content safe.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
     ],
     "roadmap": [{"id": "movie-people-lookup", "title": "Look Up Movies By Actor Or Director", "description": "From the spreadsheet backlog: look up movies by actors and directors and sort the results.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 2, "createdAt": "2026-09-13"}, {"id": "movie-selection-link", "title": "Open A TMDB Search For Selected Text", "description": "From the spreadsheet backlog: add a lookup button that opens a TMDB link using the current text.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 1, "createdAt": "2026-09-13"}],
     "help": [
@@ -196,7 +197,7 @@
         "title": "GitHub Synchronization",
         "section": "Data",
         "keywords": "github cloud sync token conflict merge",
-        "html": "<p>GitHub Sync is optional. This app uses <code>themadat/app-data/main/data/top-shelf.json</code>. Create that file with <code>{}</code>, then create a fine-grained token restricted to <strong>app-data</strong> with <strong>Contents: Read and write</strong>. Enter it only in Settings → Data Sync, choose whether to remember it, then Test and Save. Sync Notes, movies, TV shows and books with Sync Now and verify them on another configured browser. The JSON preview shows the upload content; appearance and settings stay on each device. Conflicts ask which copy to keep. Full JSON backups also preserve settings.</p>"
+        "html": "<p>GitHub Sync is optional. This app uses <code>themadat/app-data/main/data/top-shelf.json</code>. Create that file with <code>{}</code>, then create a fine-grained token restricted to <strong>app-data</strong> with <strong>Contents: Read and write</strong>. Enter it only in Settings → Data Sync, choose whether to remember it, then Test and Save. Use Sync Now to choose the first copy when prompted. After setup, saved Notes, movies, TV shows, books and podcasts upload automatically after a short pause. The app checks for newer GitHub data on every load/reload, reconnect, return to the app and every five minutes while visible. Downloads wait until editors close and require a recovery copy. Offline edits upload after reconnecting. Conflicts ask which copy to keep. The JSON preview shows the upload content; appearance and settings stay on each device. Full JSON backups also preserve settings.</p>"
       },
       {
         "id": "install",

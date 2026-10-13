@@ -7,12 +7,18 @@ import vm from 'node:vm';
 function harness({ token = 'test-token', online = true } = {}) {
   const events = [], requests = [], toasts = [], replacements = [];
   const listeners = new Map();
+  const documentListeners = new Map(), timers = new Map(), intervals = [];
+  let timerId = 0;
   const window = {
-    addEventListener(name, callback) { listeners.set(name, callback); },
-    dispatchEvent(event) { events.push(event); listeners.get(event.type)?.(event); },
-    setInterval() {}, setTimeout() {}
+    addEventListener(name, callback) { listeners.set(name, [...(listeners.get(name) || []), callback]); },
+    dispatchEvent(event) { events.push(event); for (const listener of listeners.get(event.type) || []) listener(event); },
+    setInterval(callback) { intervals.push(callback); },
+    setTimeout(callback) { timers.set(++timerId, callback); return timerId; },
+    clearTimeout(id) { timers.delete(id); }
   };
-  const context = vm.createContext({ window, navigator: { onLine: online }, document: { addEventListener() {} },
+  const document = { visibilityState: 'visible', querySelector: () => h.editing ? {} : null,
+    addEventListener(name, callback) { documentListeners.set(name, callback); } };
+  const context = vm.createContext({ window, navigator: { onLine: online }, document,
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options?.detail; } },
     TextEncoder, TextDecoder, Uint8Array, AbortController, structuredClone, atob, btoa, URL, console,
     fetch: async (url, options) => { requests.push({ url, options }); return h.respond(url, options); }
@@ -28,14 +34,21 @@ function harness({ token = 'test-token', online = true } = {}) {
   const App = window.LocalApp;
   let state = App.stateModel.normalize(App.stateModel.createDefaultState({ demo: false }));
   const h = { App, context, events, requests, toasts, replacements, get state() { return state; }, get token() { return token; },
-    respond: () => response(500), recoveryWorks: true, confirmation: false, choice: 'cancel', recovery: null, legacy: false, choices: []
+    respond: () => response(500), recoveryWorks: true, confirmation: false, choice: 'cancel', recovery: null, legacy: false, choices: [],
+    editing: false, saveWorks: true, timers, intervals,
+    async runTimers() { const pending = [...timers.values()]; timers.clear(); for (const callback of pending) await callback(); },
+    async fireWindow(name) { for (const callback of listeners.get(name) || []) await callback({ type: name }); },
+    fireDocument(name) { return documentListeners.get(name)?.(); }
   };
   App.storage = {
     getState: () => state, hasSecret: () => Boolean(token), getSecret: () => token,
     setSecret(value) { token = value; return true; }, clearSecret() { token = ''; },
-    mutate(callback, options = {}) { callback(state); if (options.touch !== false) App.stateModel.touch(state); state = App.stateModel.normalize(state); },
+    mutate(callback, options = {}) { callback(state); if (options.touch !== false) App.stateModel.touch(state); state = App.stateModel.normalize(state);
+      window.dispatchEvent(new context.CustomEvent('app:statechange', { detail: { reason: options.reason || 'change' } })); },
+    saveNow: () => h.saveWorks,
     async saveRecoveryAsync() { if (!h.recoveryWorks) return false; h.recovery = structuredClone(state); return true; },
-    replace(next, options) { replacements.push(options); state = next; }
+    replace(next, options) { replacements.push(options); state = next;
+      window.dispatchEvent(new context.CustomEvent('app:statechange', { detail: { reason: options.reason } })); }
   };
   App.components = {
     toast: (message, options) => toasts.push({ message, ...options }),
@@ -184,7 +197,7 @@ test('large GitHub files fall back to the blob API and future uploads are compac
 });
 
 test('network unavailability is neutral and reconnect can recover', async () => {
-  const h = harness(); h.sync.init();
+  const h = harness(); await h.sync.init();
   h.respond = () => { throw new Error('Failed to fetch'); };
   await h.sync.check(true);
   assert.equal(h.sync.getInfo().state, 'offline');
@@ -192,6 +205,154 @@ test('network unavailability is neutral and reconnect can recover', async () => 
   h.respond = h.file;
   await h.sync.check(true);
   assert.equal(h.sync.getInfo().state, 'upToDate', h.sync.getInfo().message);
+});
+
+function acceptWrites(h) {
+  h.respond = (url, options) => {
+    if (options.method !== 'PUT') return h.file();
+    const body = JSON.parse(options.body);
+    assert.equal(body.sha, h.remoteSha());
+    h.remote = h.App.stateModel.prepareSync(JSON.parse(Buffer.from(body.content, 'base64').toString())).state;
+    return response(200, { content: { sha: h.remoteSha() } });
+  };
+}
+function writes(h) { return h.requests.filter(request => request.options.method === 'PUT'); }
+
+test('startup automatically fetches and recovers remote-only content without uploading or losing preferences', async () => {
+  const h = harness(); h.setBaseline(); h.state.preferences.appearance.mode = 'dark';
+  changeNotes(h.remote, 'Latest GitHub notes');
+  await h.sync.init();
+  assert.equal(h.state.workspace.documents[0].html, 'Latest GitHub notes');
+  assert.equal(h.state.preferences.appearance.mode, 'dark');
+  assert.equal(h.recovery.workspace.documents[0].html, '');
+  assert.equal(h.replacements.length, 1);
+  assert.equal(h.replacements[0].overwriteLocal, false);
+  assert.equal(writes(h).length, 0);
+  assert.equal(h.toasts.length, 0);
+  assert.equal(h.timers.size, 0);
+  assert.equal(h.sync.getInfo().state, 'upToDate');
+  await h.sync.init();
+  assert.equal(h.intervals.length, 1, 'initialization is idempotent');
+});
+
+test('saved edits debounce automatic uploads and preference/metadata saves never queue content uploads', async () => {
+  const h = harness(); acceptWrites(h); await h.sync.init();
+  h.App.storage.mutate(s => changeNotes(s, 'First edit'));
+  h.App.storage.mutate(s => changeNotes(s, 'Final edit'));
+  assert.equal(h.timers.size, 1);
+  assert.equal(writes(h).length, 0);
+  await h.runTimers();
+  assert.equal(writes(h).length, 1);
+  assert.equal(h.remote.workspace.documents[0].html, 'Final edit');
+  assert.equal(h.requests.at(-2).options.method, undefined, 'upload first fetches the current remote revision');
+  assert.equal(h.sync.getInfo().state, 'upToDate');
+  h.App.storage.mutate(s => { s.preferences.appearance.mode = 'dark'; s.ui.search = 'local filter'; });
+  assert.equal(h.timers.size, 0);
+  assert.equal(h.toasts.length, 0);
+});
+
+test('initial load keeps different unestablished copies and conflicts for an explicit choice', async () => {
+  const first = harness(); changeNotes(first.remote, 'Unestablished cloud copy');
+  await first.sync.init();
+  assert.equal(first.sync.getInfo().change, 'first-sync');
+  assert.equal(first.replacements.length, 0); assert.equal(first.choices.length, 0); assert.equal(writes(first).length, 0);
+  const missing = harness(); missing.respond = () => response(404);
+  await missing.sync.init();
+  assert.equal(missing.sync.getInfo().change, 'first-sync'); assert.equal(writes(missing).length, 0);
+  const h = harness(); await h.sync.init();
+  h.App.storage.mutate(s => changeNotes(s, 'Local change'));
+  changeNotes(h.remote, 'Concurrent remote change');
+  await h.runTimers();
+  assert.equal(h.sync.getInfo().change, 'conflict');
+  assert.equal(h.state.workspace.documents[0].html, 'Local change');
+  assert.equal(h.replacements.length, 0); assert.equal(writes(h).length, 0); assert.equal(h.choices.length, 0);
+});
+
+test('offline edits automatically upload on reconnect', async () => {
+  const h = harness({ online: false }); h.setBaseline(); acceptWrites(h); await h.sync.init();
+  h.App.storage.mutate(s => changeNotes(s, 'Edited offline'));
+  await h.runTimers();
+  assert.equal(h.requests.length, 0);
+  h.context.navigator.onLine = true;
+  await h.fireWindow('online');
+  assert.equal(writes(h).length, 1);
+  assert.equal(h.remote.workspace.documents[0].html, 'Edited offline');
+  assert.equal(h.sync.getInfo().state, 'upToDate');
+});
+
+test('an edit during an automatic upload queues a fresh comparison and a second upload', async () => {
+  const h = harness(), started = deferred(), gate = deferred(); acceptWrites(h); await h.sync.init();
+  const respond = h.respond;
+  h.respond = async (url, options) => {
+    if (options.method === 'PUT' && writes(h).length === 1) { started.resolve(); await gate.promise; }
+    return respond(url, options);
+  };
+  h.App.storage.mutate(s => changeNotes(s, 'First upload'));
+  const uploading = h.runTimers(); await started.promise;
+  h.App.storage.mutate(s => changeNotes(s, 'Edited during upload'));
+  await h.runTimers();
+  assert.equal(writes(h).length, 1);
+  gate.resolve(); await uploading;
+  assert.equal(h.sync.getInfo().change, 'local');
+  await h.runTimers();
+  assert.equal(writes(h).length, 2);
+  assert.equal(h.remote.workspace.documents[0].html, 'Edited during upload');
+  assert.equal(h.sync.getInfo().state, 'upToDate');
+});
+
+test('automatic download waits for editors, including one opened during recovery', async () => {
+  const h = harness(); h.setBaseline(); changeNotes(h.remote, 'Remote update'); h.editing = true;
+  await h.sync.init();
+  assert.equal(h.replacements.length, 0); assert.equal(h.sync.getInfo().change, 'remote');
+  h.editing = false; h.fireDocument('close');
+  const recover = h.App.storage.saveRecoveryAsync;
+  h.App.storage.saveRecoveryAsync = async () => { h.editing = true; return recover(); };
+  await h.runTimers();
+  assert.equal(h.replacements.length, 0); assert.equal(h.toasts.length, 0);
+  h.App.storage.saveRecoveryAsync = recover; h.editing = false; h.fireDocument('focusout'); await h.runTimers();
+  assert.equal(h.state.workspace.documents[0].html, 'Remote update');
+  assert.equal(h.sync.getInfo().state, 'upToDate');
+});
+
+test('automatic download requires recovery and rejects concurrent edits and persistence failures', async () => {
+  const h = harness(); h.setBaseline(); changeNotes(h.remote, 'Remote update'); h.recoveryWorks = false;
+  await h.sync.init();
+  assert.equal(h.replacements.length, 0); assert.equal(h.sync.getInfo().state, 'failed');
+  assert.match(h.sync.getInfo().message, /recovery copy/);
+  const concurrent = harness(), started = deferred(), gate = deferred(); concurrent.setBaseline(); changeNotes(concurrent.remote, 'Remote update');
+  concurrent.App.storage.saveRecoveryAsync = async () => { started.resolve(); await gate.promise; return true; };
+  const downloading = concurrent.sync.init(); await started.promise;
+  concurrent.App.storage.mutate(s => changeNotes(s, 'Concurrent local edit'));
+  gate.resolve(); await downloading; await concurrent.runTimers();
+  assert.equal(concurrent.state.workspace.documents[0].html, 'Concurrent local edit');
+  assert.equal(concurrent.replacements.length, 0); assert.equal(writes(concurrent).length, 0);
+  assert.equal(concurrent.sync.getInfo().change, 'conflict');
+  const full = harness(); full.setBaseline(); changeNotes(full.remote, 'Cannot fit');
+  const baseline = full.state.modules.cloudSync.baselineHash;
+  full.App.storage.replace = () => { throw new Error('Storage is full'); };
+  await full.sync.init();
+  assert.equal(full.state.modules.cloudSync.baselineHash, baseline); assert.equal(full.sync.getInfo().state, 'failed');
+  assert.equal(full.toasts.some(t => t.title === 'Sync complete'), false);
+});
+
+test('failed local persistence and authentication never automatically upload', async () => {
+  const h = harness(); acceptWrites(h); await h.sync.init(); h.saveWorks = false;
+  h.App.storage.mutate(s => changeNotes(s, 'Unsaved local edit')); await h.runTimers();
+  assert.equal(writes(h).length, 0); assert.match(h.sync.getInfo().message, /local changes could not be saved/);
+  h.saveWorks = true; await h.fireWindow('online'); assert.equal(writes(h).length, 1);
+  h.respond = () => response(401);
+  h.App.storage.mutate(s => changeNotes(s, 'Authentication failed')); await h.runTimers();
+  assert.equal(writes(h).length, 1); assert.equal(h.sync.getInfo().state, 'authenticationRequired');
+});
+
+test('returning to the app forces a fresh fetch and hidden periodic checks do nothing', async () => {
+  const h = harness(); await h.sync.init(); changeNotes(h.remote, 'New remote while away');
+  h.context.document.visibilityState = 'hidden'; const count = h.requests.length;
+  await h.intervals[0](); await h.fireDocument('visibilitychange');
+  assert.equal(h.requests.length, count);
+  h.context.document.visibilityState = 'visible'; await h.fireDocument('visibilitychange');
+  assert.equal(h.requests.length, count + 1);
+  assert.equal(h.state.workspace.documents[0].html, 'New remote while away');
 });
 
 test('upload direction stays static; an edit during upload remains pending after completion', async () => {

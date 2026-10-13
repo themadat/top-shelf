@@ -17,6 +17,8 @@ Use focused browser checks for ordinary changes. Release cuts additionally cover
 | Network/offline | Service worker controls page; offline reload/edit/save/reload; no stale TMDB response application; abort/401/429 feedback; assets cached under current build. |
 | Sync | Mocked restore/merge/upload, conflict choices, local preferences retained, concurrent edits protected, failed persistence never reports success. |
 
+Automatic sync regression: `node tests/sync-auto.browser.cjs` against the local preview on port 8000 (or set `SYNC_TEST_URL`). It uses synthetic content and mocked GitHub in a fresh Chromium profile to verify initial load/reload, debounced Notes uploads, deferred downloads while editing, recovery, offline edit/reload/reconnect, local preferences, conflicts, and mobile Settings. Unit sync tests also cover failed recovery/persistence/authentication and edits or editors appearing during in-flight operations.
+
 With Playwright available, run `node tests/notes-editor.browser.cjs` against the local preview on port 8000 (or set `NOTES_TEST_URL`). It uses a fresh Chromium profile with synthetic Notes and covers folding, heading editing, formatting shortcuts, safe links, undo/redo, persistence and responsive widths.
 
 Topic regressions belong with their change, not in a growing per-version checklist. Streaming and provider boundaries are in `docs/STREAMING-RULES.md`; subgenre, bulk-pivot and legacy-rating contracts are in `docs/MOVIES.md`. Automated tests preserve detailed cases; historical verification is available in Git.

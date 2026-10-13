@@ -61,9 +61,15 @@
     requestSequence: 0,
     controller: null
   };
+  let initialized = false;
+  let observedHash = "";
+  let automaticTimer = 0;
+  let automaticRunning = false;
+  let automaticPending = false;
 
   function emit() {
     window.dispatchEvent(new CustomEvent("app:syncchange", { detail: { info: getInfo() } }));
+    if (automaticPending && !automaticTimer && !automaticRunning && !getInfo().busy) scheduleAutomatic();
   }
 
   function settings() {
@@ -122,10 +128,14 @@
     }, { reason: "sync-settings" });
     resetRuntime();
     emit();
+    scheduleAutomatic();
     return next;
   }
 
   function resetRuntime() {
+    window.clearTimeout(automaticTimer);
+    automaticTimer = 0;
+    automaticPending = false;
     if (runtime.controller) runtime.controller.abort();
     Object.assign(runtime, {
       busy: false,
@@ -409,10 +419,11 @@
       throw error;
     } finally {
       if (currentRequest(context)) { runtime.checking = false; runtime.operation = ""; emit(); }
+      if (currentRequest(context) && !runtime.error) scheduleAutomatic();
     }
   }
 
-  async function performUpload() {
+  async function performUpload(automatic) {
     const context = requestContext("uploading");
     runtime.busy = true;
     runtime.operation = "uploading";
@@ -426,7 +437,7 @@
       rememberBaseline(sha, hash);
       runtime.remoteState = state;
       runtime.remoteNeedsRewrite = false;
-      App.components.toast("This device’s latest data is now on GitHub.", { title: "Sync complete", kind: "success" });
+      if (!automatic) App.components.toast("This device’s latest data is now on GitHub.", { title: "Sync complete", kind: "success" });
       return true;
     } catch (error) {
       if (!currentRequest(context) || error && error.name === "AbortError") return false;
@@ -439,7 +450,11 @@
     }
   }
 
-  async function performDownload() {
+  function editing() {
+    return Boolean(document.querySelector('dialog[open], input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus'));
+  }
+
+  async function performDownload(automatic) {
     if (!runtime.remoteState) throw new Error("No remote data is available to download.");
     const context = requestContext("downloading");
     runtime.busy = true;
@@ -451,12 +466,15 @@
       const next = model.applySync(storage.getState(), runtime.remoteState);
       const recovered = await storage.saveRecoveryAsync("Before downloading GitHub data");
       if (!currentRequest(context)) return false;
+      if (automatic && editing()) return false;
       if (u.stableJson(storage.getState()) !== before) throw new Error("Local data changed while saving recovery. Check cloud sync again before restoring.");
-      storage.replace(next, { saveRecovery: false, reason: "sync-download", touch: false, overwriteLocal: true });
+      if (automatic && !recovered) throw new Error("Automatic download paused because a recovery copy could not be saved. Export a backup or use Restore from Cloud.");
+      storage.replace(next, { saveRecovery: false, reason: "sync-download", touch: false, overwriteLocal: !automatic });
       rememberBaseline(runtime.remoteSha, runtime.remoteHash);
-      App.components.toast(recovered ? "This device now uses the GitHub copy. The previous local copy is recoverable in Developer Tools." : "This device now uses the GitHub copy. A recovery copy could not be saved.", { title: "Sync complete", kind: "success", duration: 5000 });
+      if (!automatic) App.components.toast(recovered ? "This device now uses the GitHub copy. The previous local copy is recoverable in Developer Tools." : "This device now uses the GitHub copy. A recovery copy could not be saved.", { title: "Sync complete", kind: "success", duration: 5000 });
       return true;
     } catch (error) {
+      if (!currentRequest(context) || error && error.name === "AbortError") return false;
       recordError(error, "Download failed.");
       App.components.toast(runtime.error, { title: "Sync Failed", kind: "danger", duration: 6000 });
       return false;
@@ -564,18 +582,67 @@
     emit();
   }
 
+  function scheduleAutomatic() {
+    if (!initialized) return;
+    automaticPending = true;
+    window.clearTimeout(automaticTimer);
+    automaticTimer = window.setTimeout(function () {
+      automaticTimer = 0;
+      return automaticSync(true);
+    }, config.controls.syncAutosaveDelayMs);
+  }
+
+  async function automaticSync(force) {
+    if (automaticRunning || getInfo().busy) { automaticPending = true; return; }
+    automaticPending = false;
+    if (!config.features.cloudSync || !configured() || navigator.onLine === false) { emit(); return; }
+    automaticRunning = true;
+    try {
+      await check(force);
+      if (runtime.error || runtime.offline || !configured() || getInfo().busy) return;
+      // Always compare fresh content against the shared baseline. Divergent or
+      // unestablished copies remain a user decision, even in the background.
+      const change = reconciliation();
+      if (change === "local") {
+        if (!storage.saveNow()) {
+          recordError(new Error("Automatic sync paused because local changes could not be saved."));
+          return;
+        }
+        await performUpload(true);
+      } else if (change === "remote" && !editing()) {
+        await performDownload(true);
+      }
+    } finally {
+      automaticRunning = false;
+      emit();
+    }
+  }
+
   function init() {
+    if (initialized) return;
+    initialized = true;
+    observedHash = localHash();
+    window.addEventListener("app:statechange", function (event) {
+      const hash = localHash();
+      if (hash === observedHash) return;
+      observedHash = hash;
+      // Downloads already match GitHub; edits during an upload need another pass.
+      if (event.detail.reason !== "sync-download") scheduleAutomatic();
+    });
     window.addEventListener("online", function () {
       runtime.offline = false;
       runtime.error = "";
       emit();
-      check(true);
+      return automaticSync(true);
     });
     window.addEventListener("offline", function () { runtime.offline = true; emit(); });
-    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") check(false); });
-    window.setInterval(function () { check(false); }, config.controls.syncCheckIntervalMs);
-    window.setTimeout(function () { check(false); }, 700);
+    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") return automaticSync(true); });
+    // A remote update waits for open editors and buffered Notes to finish.
+    document.addEventListener("close", function () { if (reconciliation() === "remote") scheduleAutomatic(); }, true);
+    document.addEventListener("focusout", function () { if (reconciliation() === "remote") scheduleAutomatic(); });
+    window.setInterval(function () { if (document.visibilityState === "visible") return automaticSync(false); }, config.controls.syncCheckIntervalMs);
     emit();
+    return automaticSync(true);
   }
 
   App.sync = {
