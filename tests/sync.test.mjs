@@ -773,7 +773,7 @@ test('bulk pivots append without overwriting and reject unresolved or oversized 
   const result = model.bulkPivots(items, 'existing, Subgenre Loop, Subgenre Loop\nFavorite', ' alpha, beta \n1\nTMDB: 2');
   assert.equal(result.valid, true);
   assert.equal(result.changes.length, 2);
-  assert.equal(result.changes[0].after, items[0].other + '\nSubgenre Loop, Favorite');
+  assert.equal(result.changes[0].after, items[0].other + '\nSubgenre: Loop, Favorite');
   assert.equal(result.rows[1].duplicate, true);
   assert.equal(JSON.stringify(items), before);
   assert.equal(model.bulkPivots(items, 'Tag', 'Duplicate\nMissing').valid, false);
