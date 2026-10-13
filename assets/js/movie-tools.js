@@ -9,7 +9,7 @@
     let reviewed = null;
     function invalidate() { reviewed = null; $('#bulkPivotApply').disabled = true; $('#bulkPivotPreview').textContent = ''; $('#bulkPivotError').textContent = ''; $('#bulkPivotMovies').removeAttribute('aria-invalid'); }
     const subgenrePicker = App.subgenresUI.createPicker('#bulkSubgenrePicker', invalidate);
-    function pivots() { subgenrePicker.pending(); return App.subgenres.withTags($('#bulkPivotTags').value, subgenrePicker.selected()); }
+    function pivots() { return App.subgenres.withTags($('#bulkPivotTags').value, subgenrePicker.selected()); }
     function preview() {
       invalidate();
       try {

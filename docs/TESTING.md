@@ -23,7 +23,7 @@ With Playwright available, run `node tests/notes-editor.browser.cjs` against the
 
 Topic regressions belong with their change, not in a growing per-version checklist. Streaming and provider boundaries are in `docs/STREAMING-RULES.md`; subgenre, bulk-pivot and legacy-rating contracts are in `docs/MOVIES.md`. Automated tests preserve detailed cases; historical verification is available in Git.
 
-Movie editor regression: `node tests/movies-editor.browser.cjs` against the local preview (or set `MOVIES_TEST_URL`). Synthetic movies and mocked TMDB cover subgenre selection/add/remove and name normalization, invalid/unadded input, saved review/personal fields, reload, bulk preview/recovery, linked/empty provider genres outside Details, safe labels, and 390/320px layout.
+Movie editor regression: `node tests/movies-editor.browser.cjs` against the local preview (or set `MOVIES_TEST_URL`). Synthetic movies and mocked TMDB cover selection-only subgenres and name normalization, lookup/state/incomplete and genre/review row placement, saved review/personal fields, reload, bulk preview/recovery, linked/empty provider genres outside Details, safe labels, and 390/320px layout.
 
 Live multi-device GitHub verification remains a separate setup step (README). A local release cut never authorizes committing, pushing or modifying the cloud data repository.
 

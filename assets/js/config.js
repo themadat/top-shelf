@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV, Books and Podcasts available.",
-      "version": "2.0.0.20",
-      "buildId": "2.0.0.20",
+      "version": "2.0.0.21",
+      "buildId": "2.0.0.21",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -162,7 +162,7 @@
       "danger": "#a74747"
     },
     "releases": [
-      {"version":"2.0.0.20","date":"2026-10-12T12:00:00.000Z","title":"Restore saved movie editing","summary":"Restore opening and editing saved movies with the complete subgenre editor update. Add checks for missing editor controls and real add, save, edit, and reload flows.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
+      {"version":"2.0.0.21","date":"2026-10-12T12:00:00.000Z","title":"Refine movie editor layout","summary":"Place Genres directly above selection-only Subgenres with the review checkbox inline. Move State and Exclude from Incomplete into the title and ID lookup row.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
     ],
     "roadmap": [{"id": "movie-people-lookup", "title": "Look Up Movies By Actor Or Director", "description": "From the spreadsheet backlog: look up movies by actors and directors and sort the results.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 2, "createdAt": "2026-09-13"}, {"id": "movie-selection-link", "title": "Open A TMDB Search For Selected Text", "description": "From the spreadsheet backlog: add a lookup button that opens a TMDB link using the current text.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 1, "createdAt": "2026-09-13"}],
     "help": [

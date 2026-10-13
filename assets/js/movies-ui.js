@@ -56,7 +56,6 @@
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
   function fields() {
     const form = $("#movieForm");
-    subgenrePicker.pending();
     return Object.assign(Object.fromEntries(new FormData(form).entries()), { other: App.subgenres.withTags(form.elements.other.value, subgenrePicker.selected()), subgenreReviewed: form.elements.subgenreReviewed.checked, incompleteOverride: form.elements.incompleteOverride.checked });
   }
   function statusFields() {
@@ -78,8 +77,7 @@
   }
   function metadata() {
     const v = draft || {};
-    $('#movieGenres').textContent = (v.genres || []).join(', ') || 'No genres listed';
-    $('#movieGenreSummary').hidden = !v.tmdbId;
+    $('#movieGenres').textContent = (v.genres || []).join(', ') || (v.tmdbId ? 'No genres listed' : 'Link a movie to see genres');
     $("#movieMetadata").innerHTML = [["TMDB ID", v.tmdbId], ["Release Date", v.releaseDate || "Not announced"], ["Genres", (v.genres || []).join(", ")], ["Production Companies", (v.productionCompanies || []).join(", ")], ["Director", (v.directors || []).join(", ")], ["Actors", (v.actors || []).join(", ")], ["Collections", (v.collections || []).join(", ")]].map(function (entry) { return '<div><dt>' + entry[0] + '</dt><dd>' + esc(String(entry[1] || "—")) + '</dd></div>'; }).join("");
     $("#movieMetadata").hidden = !v.tmdbId;
     $("#movieRefreshButton").hidden = !v.tmdbId;
