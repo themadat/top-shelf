@@ -29,6 +29,10 @@
     $('#movieDetailsResponse').innerHTML = responses.details ? jsonTree(responses.details, [], false) : 'No response loaded yet.';
     $('#movieProvidersResponse').innerHTML = responses.providers ? jsonTree(responses.providers, [], true) : 'No response loaded yet.';
   }
+  function openDatePicker(input) {
+    if (typeof input.showPicker !== 'function') return;
+    try { input.showPicker(); } catch (_) { /* Keep native date entry available when the browser cannot open its picker. */ }
+  }
   function dateFields() {
     $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.parentElement.classList.toggle('is-empty', !input.value); });
   }
@@ -221,6 +225,7 @@
       } catch (error) { form.querySelector('[role="alert"]').textContent = error.message; }
     });
     button.replaceWith(form); input.focus();
+    if (input.type === 'date') { input.addEventListener('click', function () { openDatePicker(input); }); openDatePicker(input); }
     if (field === 'priority') { input.inputMode = 'numeric'; input.select(); }
   }
   function sortPreference() { return model.sortPreference(App.storage.getState().ui.movieSorts?.[filter], filter); }
@@ -279,7 +284,7 @@
     $('#wishlistRatingsButton').addEventListener('click', batches.ratings);
     $('#movieIncompleteButton').addEventListener('click', function () { incompleteOnly = !incompleteOnly; render(); });
     document.querySelectorAll('[data-editor-priority]').forEach(function (button) { button.addEventListener('click', function () { const input = $('#movieForm').elements.priority; input.value = input.value === button.dataset.editorPriority ? '' : button.dataset.editorPriority; statusFields(); }); });
-    $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.addEventListener('input', dateFields); input.addEventListener('change', dateFields); });
+    $('#movieForm').querySelectorAll('.movie-date-field input').forEach(function (input) { input.addEventListener('input', dateFields); input.addEventListener('change', dateFields); input.addEventListener('click', function () { openDatePicker(input); }); });
     document.querySelectorAll('[data-editor-state]').forEach(function (button) { button.addEventListener('click', function () { $('#movieStatus').value = button.dataset.editorState; statusFields(); if (button.dataset.editorState === 'watched') $('#movieForm').elements.rating.focus(); else $('[data-editor-priority]').focus(); }); });
     $('#wishlistRulesDate').textContent = 'User-supplied US rules snapshot: ' + App.streamingRules.reviewedOn + '. Timing is estimated from the US theatrical opening (wide, then limited). Rights confidence does not guarantee a date. Older catalog needs title-specific research. Rules and title exceptions are bundled; no automatic web research runs during checks.';
     $('#wishlistRulesList').innerHTML = App.streamingRules.rules.map(function (rule) { return '<li>' + esc(rule.studio) + ' → ' + esc(rule.services.join(' / ')) + ' · ' + esc(rule.window) + ' · typical ' + (rule.typicalDays ? rule.typicalDays.join('–') + ' days' : 'unknown') + ' · min ' + (rule.minDays ? rule.minDays.join('–') : 'unknown') + ' · max ' + (rule.maxDays ? rule.maxDays.join('–') : 'unknown') + ' · ' + esc(rule.confidence) + ' rights confidence. ' + esc(rule.notes) + '</li>'; }).join('');

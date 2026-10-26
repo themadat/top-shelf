@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.23","date":"2026-10-26T12:00:00.000Z","title":"Clearer text selection","summary":"Made selected text easier to see with a consistent blue highlight and white text throughout the app.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.22","date":"2026-10-26T12:00:00.000Z","title":"TMDB settings in Data Sync","summary":"Moved TMDB Lookup Settings into Data Sync and updated the movie lookup shortcut.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.21","date":"2026-10-12T12:00:00.000Z","title":"Refine movie editor layout","summary":"Place Genres directly above selection-only Subgenres with the review checkbox inline. Move State and Exclude from Incomplete into the title and ID lookup row.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.20","date":"2026-10-12T12:00:00.000Z","title":"Restore saved movie editing","summary":"Restore opening and editing saved movies with the complete subgenre editor update. Add checks for missing editor controls and real add, save, edit, and reload flows.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

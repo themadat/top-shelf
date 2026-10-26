@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV, Books and Podcasts available.",
-      "version": "2.0.0.23",
-      "buildId": "2.0.0.23",
+      "version": "2.0.0.24",
+      "buildId": "2.0.0.24",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -162,7 +162,7 @@
       "danger": "#a74747"
     },
     "releases": [
-      {"version":"2.0.0.23","date":"2026-10-26T12:00:00.000Z","title":"Clearer text selection","summary":"Made selected text easier to see with a consistent blue highlight and white text throughout the app.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
+      {"version":"2.0.0.24","date":"2026-10-26T12:00:00.000Z","title":"Movie date picker","summary":"Open the calendar when clicking movie date fields or editing dates in the movie list.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
     ],
     "roadmap": [{"id": "movie-people-lookup", "title": "Look Up Movies By Actor Or Director", "description": "From the spreadsheet backlog: look up movies by actors and directors and sort the results.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 2, "createdAt": "2026-09-13"}, {"id": "movie-selection-link", "title": "Open A TMDB Search For Selected Text", "description": "From the spreadsheet backlog: add a lookup button that opens a TMDB link using the current text.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 1, "createdAt": "2026-09-13"}],
     "help": [
