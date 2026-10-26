@@ -79,9 +79,7 @@ img { max-width: 100%; }
 a { color: var(--accent-strong); }
 [hidden] { display: none !important; }
 
-::selection { color: var(--text); background-color: var(--accent-soft); }
-.global-search-wrap input::selection,
-.notes-textarea::selection { color: #fff; background-color: var(--accent-strong); }
+::selection { color: #fff; background-color: #005fcc; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .visually-hidden {
   position: absolute !important;

@@ -271,7 +271,6 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
 
 .movie-column-sort { display: inline-flex; align-items: center; gap: .2rem; padding: .15rem 0; border: 0; background: transparent; color: inherit; font: inherit; font-weight: inherit; cursor: pointer; }
 .movie-column-sort .sf-symbol { width: 12px; height: 12px; }
-.movie-table ::selection { background: #005fcc; color: #fff; }
 .movie-table .movie-inline-button:focus-visible, .movie-table .movie-inline-form:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; background: var(--accent-soft); }
 
 .movie-add > .button { display: inline-flex; align-items: center; gap: .3rem; }
