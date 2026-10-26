@@ -20,7 +20,7 @@ Fields: id, tmdbId, title, releaseDate, status, how, other, genres, productionCo
 
 ## TMDB and review workflows
 
-TMDB search requires explicit result selection. Details append credits. Settings → TMDB Lookup Settings holds masked token presence, with device/tab retention. Raw details/provider JSON is session-only, escaped, collapsible; US starts open, other countries/rent/buy closed. Abort stale lookups on close/switch. User edits win over asynchronous results.
+TMDB search requires explicit result selection. Details append credits. Settings → Data Sync → TMDB Lookup Settings holds masked token presence, with device/tab retention. Raw details/provider JSON is session-only, escaped, collapsible; US starts open, other countries/rent/buy closed. Abort stale lookups on close/switch. User edits win over asynchronous results.
 
 The movie editor shows linked TMDB genres immediately above Subgenres without opening Details, immediately after linking/refreshing and when reopening a saved movie. The review checkbox shares the genre text row. Unlinked drafts show a link prompt; linked movies without genres show an explicit empty value. State and Exclude from Incomplete share the title/ID lookup row, wrapping on narrow screens. These provider genres remain separate from personal subgenres.
 

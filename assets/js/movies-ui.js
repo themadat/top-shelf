@@ -106,7 +106,7 @@
     App.components.openDialog("#movieDialog", { trigger: trigger, focus: current ? "#movieTitle" : "#movieLookupQuery" });
   }
   function lookupSettings(trigger) {
-    App.application.openSupport('settings', trigger);
+    App.application.openSupport('dataSync', trigger);
     tokenSettings();
     $('#tmdbSettings').open = true;
     $('#tmdbCredentialStatus').textContent = App.tmdb.token() ? 'TMDB token is configured in this browser.' : 'Add your TMDB API Read Access Token to enable lookups.';

@@ -112,7 +112,7 @@
     const shows = saved().filter(function (s) { return s.tmdbId; });
     const message = $('#tvBatchStatus');
     if (!shows.length) { message.textContent = 'No linked shows to refresh. Find a TMDB match in a show’s editor.'; return; }
-    if (!App.tmdb.token()) { message.textContent = 'Save a token in Settings → TMDB Lookup Settings first.'; return; }
+    if (!App.tmdb.token()) { message.textContent = 'Save a token in Settings → Data Sync → TMDB Lookup Settings first.'; return; }
     if (navigator.onLine === false) { message.textContent = 'You’re offline. Saved shows and ratings can still be edited.'; return; }
     if (!App.storage.saveRecovery('Before refreshing all TV shows')) { message.textContent = 'Could not save recovery. No shows were changed.'; return; }
     const controller = new AbortController(); batch = controller;

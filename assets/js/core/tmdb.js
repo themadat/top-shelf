@@ -12,7 +12,7 @@
   }
   function forget() { try { localStorage.removeItem(App.config.storage.tmdbSecretKey); sessionStorage.removeItem(App.config.storage.tmdbSecretKey); } catch (error) { throw new Error("This browser could not forget the TMDB token."); } }
   async function request(path, params, signal) {
-    if (!token()) throw new Error("Add your TMDB API Read Access Token in Settings → TMDB Lookup Settings.");
+    if (!token()) throw new Error("Add your TMDB API Read Access Token in Settings → Data Sync → TMDB Lookup Settings.");
     if (navigator.onLine === false) throw new Error("TMDB lookup needs an internet connection. Saved movies and TV remain available offline.");
     const url = new URL("https://api.themoviedb.org/3/" + path);
     Object.entries(Object.assign({ language: "en-US" }, params)).forEach(function (entry) { url.searchParams.set(entry[0], entry[1]); });
