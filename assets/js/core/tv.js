@@ -194,7 +194,7 @@
         if (!e.orphaned && e.rating !== 1 && (e.watched || e.rating > 1) && (!latest || after(point, latest))) latest = point;
       });
     });
-    const seasons = show.seasons.filter(function (s) { return s.number > 0 && !s.orphaned && (!s.airDate || s.airDate <= day); });
+    const seasons = show.seasons.filter(function (s) { return s.number > 0 && s.episodeCount > 0 && !s.orphaned && (!s.airDate || s.airDate <= day); });
     const aired = seasons.flatMap(function (s) {
       return s.episodes.filter(function (e) { return !e.orphaned && e.airDate && e.airDate <= day; }).map(function (e) { return { season: s.number, episode: e.number }; });
     }).sort(function (a, b) { return a.season - b.season || a.episode - b.episode; });

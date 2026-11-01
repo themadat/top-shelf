@@ -3,7 +3,7 @@
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (selector) { return document.querySelector(selector); };
   let draft = null, baseline = '', initial = '', existing = false, controller = null, generation = 0;
-  let compactEpisodes = false;
+  let compactEpisodes = false, progressFieldsEdited = false;
   const openSeasons = new Set(), pages = new Map();
   function saved(id) { return App.storage.getState().workspace.tvShows.find(function (s) { return s.id === id && !s.deleted; }); }
   function status(message) { $('#tvEditorStatus').textContent = message; }
@@ -102,19 +102,30 @@
     if (!draft) return;
     draft.title = $('#tvName').value.trim(); draft.status = $('#tvStatus').value;
     draft.priority = $('#tvPriority').value === '' ? null : Number($('#tvPriority').value);
-    draft.lastWatched = $('#tvLastWatched').value; draft.notes = $('#tvNotes').value; draft.seasonRanking = $('#tvSeasonRanking').value;
+    if (progressFieldsEdited) {
+      const season = $('#tvWatchedSeason').value, episode = $('#tvWatchedEpisode').value;
+      draft.lastWatched = season || episode ? 'S' + season + ' E' + episode : '';
+    }
+    draft.notes = $('#tvNotes').value; draft.seasonRanking = $('#tvSeasonRanking').value;
+  }
+  function fillWatchedFields() {
+    const position = tv.position(draft.lastWatched);
+    if (progressFieldsEdited && draft.lastWatched && !position) return;
+    $('#tvWatchedSeason').value = position?.season ?? ''; $('#tvWatchedEpisode').value = position?.episode ?? '';
+    $('#tvWatchedSeason').required = $('#tvWatchedEpisode').required = !!position;
+    progressFieldsEdited = false;
   }
   function renderProgress() {
     const p = tv.progress(draft);
     $('#tvProgress').textContent = (p.label ? 'Latest watched: ' + p.label + '. ' : 'Set your latest watched episode to track new releases. ')
-      + (draft.lastWatched && !p.latest ? 'Use S2 E4 format to check for new episodes. ' : '')
+      + (draft.lastWatched && !p.latest ? 'Enter both a season number and an episode number to track progress. ' : '')
       + (p.available ? p.available + ' new aired episode' + (p.available === 1 ? '' : 's') + '.' + (draft.status === 'Caught Up' ? ' Shown as Watching until you catch up.' : '') : 'No new aired episodes in saved details. Refresh to check for updates.');
     $('#tvProgress').classList.toggle('tv-has-new-episodes', p.available > 0);
     $('#tvCheckEpisodes').hidden = !draft.tmdbId;
   }
   function fill() {
     $('#tvName').value = draft.title; $('#tvStatus').innerHTML = options(tv.statuses, draft.status);
-    $('#tvLastWatched').value = draft.lastWatched; $('#tvNotes').value = draft.notes; $('#tvSeasonRanking').value = draft.seasonRanking;
+    fillWatchedFields(); $('#tvNotes').value = draft.notes; $('#tvSeasonRanking').value = draft.seasonRanking;
     $('#tvPriority').value = draft.priority ?? '';
     $('#tvPriorityField').hidden = draft.status !== 'Want to Watch';
     $('#tvShowRatingField').hidden = draft.status === 'Want to Watch';
@@ -123,7 +134,7 @@
     metadata(); renderSeasons(); renderProgress();
   }
   function open(id, trigger) {
-    stop(); openSeasons.clear(); pages.clear();
+    stop(); openSeasons.clear(); pages.clear(); progressFieldsEdited = false;
     const show = id ? saved(id) : null;
     if (id && !show) return;
     existing = !!show; baseline = show ? u.stableJson(show) : '';
@@ -153,6 +164,7 @@
     event.preventDefault(); readFields();
     try {
       guard();
+      if (progressFieldsEdited && draft.lastWatched && !tv.position(draft.lastWatched)) throw new Error('Enter both season and episode as whole numbers from 1–100000, or leave both blank.');
       if (!draft.title) throw new Error('Enter a show title.');
       const show = tv.normalize(draft), all = App.storage.getState().workspace.tvShows;
       const next = existing ? all.map(function (s) { return s.id === show.id ? show : s; }) : all.concat(show);
@@ -221,7 +233,13 @@
     });
   }
   function init() {
-    $('#tvLastWatched').addEventListener('input', function () { readFields(); renderProgress(); });
+    ['#tvWatchedSeason', '#tvWatchedEpisode'].forEach(function (selector) {
+      $(selector).addEventListener('input', function () {
+        progressFieldsEdited = true;
+        $('#tvWatchedSeason').required = $('#tvWatchedEpisode').required = !!($('#tvWatchedSeason').value || $('#tvWatchedEpisode').value);
+        readFields(); renderProgress();
+      });
+    });
     $('#tvCheckEpisodes').addEventListener('click', refresh);
     let lastEpisodeWidth = 0;
     new ResizeObserver(function (entries) { const width = entries[0].contentRect.width; if (width !== lastEpisodeWidth) { lastEpisodeWidth = width; requestAnimationFrame(function () { layoutEpisodes(); }); } }).observe($('#tvSeasons'));
@@ -273,7 +291,7 @@
         const s = seasonByKey(button.dataset.season), e = s?.episodes.find(function (e) { return episodeKey(e) === button.dataset.episode; });
         if (!s || !e) return;
         draft.lastWatched = 'S' + s.number + ' E' + e.number;
-        $('#tvLastWatched').value = draft.lastWatched; renderProgress(); renderSeasons();
+        fillWatchedFields(); renderProgress(); renderSeasons();
       } else if (button.dataset.tvMatch) link(Number(button.dataset.tvMatch));
       else if (button.dataset.loadSeason) loadSeason(button.dataset.loadSeason);
       else if (button.dataset.moreEpisodes) { const key = button.dataset.moreEpisodes; pages.set(key, (pages.get(key) || 50) + 50); renderSeasons(); }

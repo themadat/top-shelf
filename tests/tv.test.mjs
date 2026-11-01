@@ -329,3 +329,31 @@ test('TV buttons work without progress, missing episode lists, and after reachin
   s.lastWatched = 'S1 E10';
   assert.equal(tv.advance(s, false).lastWatched, 'S2 E1');
 });
+
+test('empty placeholder seasons do not hide the latest released episode or prevent catch-up', () => {
+  for (const loaded of [false, true]) {
+    const s = show({ lastWatched: 'S1 E1', seasons: [
+      { number: 1, loaded: true, episodes: [{ number: 1, airDate: '2020-01-01' }, { number: 2, airDate: '2020-01-02' }] },
+      { number: 2, episodeCount: 0, loaded, airDate: '2020-02-01' },
+      { number: 3, episodeCount: 0 }
+    ] });
+    assert.equal(tv.progress(s).releasedLabel, 'S1 E2');
+    assert.equal(tv.progress(s).complete, true);
+    assert.equal(tv.advance(s, true).lastWatched, 'S1 E2');
+    assert.equal(tv.progress(tv.advance(s, true)).caughtUp, true);
+  }
+  assert.equal(tv.progress(show({ seasons: [{ number: 1, episodeCount: 0 }] })).releasedLabel, '');
+});
+
+test('TV refresh skips empty seasons and loads the last nonempty season when progress is blank', async () => {
+  const calls = [], raw = series();
+  raw.seasons.push({ id: 72, season_number: 2, name: 'Placeholder', episode_count: 0, air_date: '2020-02-01' });
+  const A = harness(async url => {
+    calls.push(new URL(url).pathname);
+    return { ok: true, json: async () => url.includes('/season/') ? season() : raw };
+  });
+  const fresh = await A.tmdb.tvDetailsWithProgress(show());
+  assert.deepEqual(calls, ['/3/tv/123', '/3/tv/123/season/1']);
+  assert.equal(A.tv.progress(fresh).releasedLabel, 'S1 E1');
+  assert.equal(fresh.seasons[1].episodeCount, 0);
+});

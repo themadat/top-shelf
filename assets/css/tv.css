@@ -40,6 +40,9 @@
 .tv-fields { display: grid; grid-template-columns: minmax(200px, 2fr) 1fr 1.2fr; gap: .7rem; margin: 1rem 0; }
 .tv-fields label, .tv-lookup-row label, .tv-notes-label, .tv-manual-row label { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; }
 .tv-fields input, .tv-fields select, .tv-notes-label textarea { width: 100%; min-width: 0; }
+.tv-watched-fields { min-width: 0; margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .4rem; }
+.tv-watched-fields legend { padding: 0; margin-bottom: .2rem; font-size: .85rem; }
+.tv-watched-fields label { font-size: .75rem; }
 .tv-notes-label { margin: .8rem 0; }
 .tv-notes-label textarea { min-height: 100px; resize: vertical; }
 .tv-rating-field { padding: .5rem; margin: .65rem 0; border: 1px solid var(--line); border-radius: .6rem; }
