@@ -87,16 +87,21 @@
       + '<span class="tv-progress-actions"><button type="button" data-tv-advance="one"' + ' aria-label="Watch next episode of ' + esc(show.title) + '" title="Mark one more episode watched">' + App.icons.markup('tvAdvance') + '</button>'
       + '<button type="button" data-tv-advance="all"' + ' aria-label="Mark all caught up on ' + esc(show.title) + '" title="Mark all aired episodes watched">' + App.icons.markup('tvCatchUp') + '</button></span></div>';
   }
+  function setBatchStatus(message) {
+    $('#tvBatchStatus').textContent = message;
+    $('#tvStatusDismiss').hidden = !message;
+    $('.tv-batch').hidden = !message && !batch;
+  }
   function advance(id, all, trigger) {
-    if (App.tvEditor.isEditing(id)) { $('#tvBatchStatus').textContent = 'Save or close this show’s editor before changing its progress.'; return; }
+    if (App.tvEditor.isEditing(id)) { setBatchStatus('Save or close this show’s editor before changing its progress.'); return; }
     const snapshot = saved().find(function (s) { return s.id === id; }); if (!snapshot) return;
     const next = tv.advance(snapshot, all);
-    if (next === snapshot) { $('#tvBatchStatus').textContent = all && !tv.progress(snapshot).released ? 'Latest episode is unknown. Refresh Show Data or load episode details, then try again.' : 'Already at the latest episode.'; return; }
+    if (next === snapshot) { setBatchStatus(all && !tv.progress(snapshot).released ? 'Latest episode is unknown. Refresh Show Data or load episode details, then try again.' : 'Already at the latest episode.'); return; }
     const state = u.clone(App.storage.getState()), index = state.workspace.tvShows.findIndex(function (s) { return s.id === id; });
-    if (index < 0 || u.stableJson(state.workspace.tvShows[index]) !== u.stableJson(snapshot)) { $('#tvBatchStatus').textContent = 'This show changed. Try updating progress again.'; return; }
+    if (index < 0 || u.stableJson(state.workspace.tvShows[index]) !== u.stableJson(snapshot)) { setBatchStatus('This show changed. Try updating progress again.'); return; }
     state.workspace.tvShows[index] = next;
     try { App.storage.replace(state, { saveRecovery: false, reason: 'tv-progress' }); }
-    catch (error) { $('#tvBatchStatus').textContent = error.message; return; }
+    catch (error) { setBatchStatus(error.message); return; }
     const row = $('#tvTable').querySelector('[data-tv-id="' + id + '"]');
     const control = row?.querySelector('[data-tv-advance="' + trigger + '"]:not(:disabled)') || row?.querySelector('.tv-watched-episode');
     (control || $('#tvFilter')).focus();
@@ -104,7 +109,7 @@
   function render() {
     const shows = saved(), p = pref(), needle = p.query.toLowerCase();
     const filtersView = p.view === 'pivots';
-    $('#tvListView').hidden = filtersView; $('#tvPivotsView').hidden = !filtersView;
+    $('#tvListView').hidden = filtersView; $('#tvPivotsView').hidden = !filtersView; $('#tvFiltersDisclosure').hidden = filtersView;
     document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.tvView === (filtersView ? 'pivots' : 'list'))); });
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
     const rows = shows.filter(function (s) { return (p.filter === 'all' || tv.viewingStatus(s) === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
@@ -157,13 +162,12 @@
   async function refreshShows(id) {
     if (batch) return;
     const shows = saved().filter(function (s) { return s.tmdbId && (!id || s.id === id); });
-    const message = $('#tvBatchStatus');
-    if (id && App.tvEditor.isEditing(id)) { message.textContent = 'Save or close this show’s editor before refreshing it.'; return; }
-    if (!shows.length) { message.textContent = 'No linked shows to refresh. Find a TMDB match in a show’s editor.'; return; }
-    if (!App.tmdb.token()) { message.textContent = 'Save a token in Settings → Data Sync → TMDB Lookup Settings first.'; return; }
-    if (navigator.onLine === false) { message.textContent = 'You’re offline. Saved shows and ratings can still be edited.'; return; }
+    if (id && App.tvEditor.isEditing(id)) { setBatchStatus('Save or close this show’s editor before refreshing it.'); return; }
+    if (!shows.length) { setBatchStatus('No linked shows to refresh. Find a TMDB match in a show’s editor.'); return; }
+    if (!App.tmdb.token()) { setBatchStatus('Save a token in Settings → Data Sync → TMDB Lookup Settings first.'); return; }
+    if (navigator.onLine === false) { setBatchStatus('You’re offline. Saved shows and ratings can still be edited.'); return; }
     const controller = new AbortController(); batch = controller;
-    $('#tvStop').hidden = false; $('#tvRefresh').disabled = true; render();
+    $('#tvStop').hidden = false; $('#tvRefresh').disabled = true; setBatchStatus('Preparing recovery…'); render();
     if (id) $('#tvStop').focus();
     let updated = 0, skipped = 0, errorMessage = '';
     try {
@@ -173,7 +177,7 @@
       for (let index = 0; index < shows.length; index++) {
         if (controller.signal.aborted) break;
         const old = shows[index];
-        message.textContent = id ? 'Refreshing ' + old.title + '…' : 'Refreshing all ' + shows.length + ' linked shows · ' + (index + 1) + '/' + shows.length + ': ' + old.title;
+        setBatchStatus(id ? 'Refreshing ' + old.title + '…' : 'Refreshing all ' + shows.length + ' linked shows · ' + (index + 1) + '/' + shows.length + ': ' + old.title);
         if (App.tvEditor.isEditing(old.id)) { skipped++; continue; }
         const snapshot = u.stableJson(old), fresh = await App.tmdb.tvDetailsWithProgress(old, controller.signal);
         if (controller.signal.aborted) break;
@@ -190,7 +194,7 @@
       const restoreFocus = document.activeElement === $('#tvStop') || document.activeElement === document.body;
       batch = null; $('#tvStop').hidden = true; $('#tvRefresh').disabled = false; render();
       if (restoreFocus) ($('#tvTable').querySelector('[data-tv-refresh-id="' + id + '"]') || $('#tvRefresh')).focus();
-      message.textContent = (controller.signal.aborted ? 'Stopped. ' : '') + updated + ' of ' + shows.length + ' shows refreshed; ' + skipped + ' skipped because they were being edited or changed. ' + errorMessage;
+      setBatchStatus((controller.signal.aborted ? 'Stopped. ' : '') + updated + ' of ' + shows.length + ' shows refreshed; ' + skipped + ' skipped because they were being edited or changed. ' + errorMessage);
     }
   }
   async function clearLegacyNotes() {
@@ -211,10 +215,18 @@
     } catch (error) {
       // Failed replacements leave the original state intact and may safely retry.
       if (marked) localStorage.removeItem(key);
-      $('#tvBatchStatus').textContent = error.message;
+      setBatchStatus(error.message);
     }
   }
   async function init() {
+    const workspace = $('#tvWorkspace'), header = $('.app-header'), controls = $('.tv-sticky-controls');
+    const measureSticky = function () {
+      workspace.style.setProperty('--tv-header-height', header.getBoundingClientRect().height + 'px');
+      workspace.style.setProperty('--tv-controls-height', controls.getBoundingClientRect().height + 'px');
+    };
+    const stickyObserver = new ResizeObserver(measureSticky); stickyObserver.observe(header); stickyObserver.observe(controls); measureSticky();
+    $('#tvStatusDismiss').addEventListener('click', function () { setBatchStatus(''); ($('#tvStop').hidden ? $('#tvRefresh') : $('#tvStop')).focus(); });
+
     $('#tvFilter').innerHTML = '<option value="all">All shows</option>' + options(tv.statuses, pref().filter);
     await clearLegacyNotes();
     App.tvPivotsUI.init();

@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.30","date":"2026-11-01T12:00:00.000Z","title":"TV controls and season totals","summary":"Use custom TV icons, fit full show titles and compact progress controls, and total unwatched episodes across seasons.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.29","date":"2026-11-01T12:00:00.000Z","title":"TV show refresh and links","summary":"Refresh one linked TV show from its row and open its TMDB page using a right-aligned Show column link.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.28","date":"2026-11-01T12:00:00.000Z","title":"TV numeric progress entry","summary":"Enter watched season and episode separately, and keep empty placeholder seasons from hiding the latest released episode.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.27","date":"2026-11-01T12:00:00.000Z","title":"TV progress and sync review","summary":"Keep TV progress buttons available, simplify episode labels, review sync differences, and save TV refresh recovery outside localStorage.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

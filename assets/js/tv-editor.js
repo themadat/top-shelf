@@ -3,7 +3,7 @@
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (selector) { return document.querySelector(selector); };
   let draft = null, baseline = '', initial = '', existing = false, controller = null, generation = 0;
-  let compactEpisodes = false, progressFieldsEdited = false;
+  let compactEpisodes = false, progressFieldsEdited = false, deleting = false;
   const openSeasons = new Set(), pages = new Map();
   function saved(id) { return App.storage.getState().workspace.tvShows.find(function (s) { return s.id === id && !s.deleted; }); }
   function status(message) { $('#tvEditorStatus').textContent = message; }
@@ -174,13 +174,22 @@
     } catch (error) { status(error.message); }
   }
   async function remove() {
+    if (deleting) return;
     if (!await App.components.confirm({ title: 'Delete this show?', message: 'The show and its season/episode ratings will be removed. A recovery copy is saved first.', confirmLabel: 'Delete', danger: true })) return;
+    deleting = true; $('#tvDelete').disabled = true;
     try {
+      guard(); stop(); readFields(); App.storage.saveNow();
+      const id = draft.id, before = u.stableJson(App.storage.getState()), draftBefore = u.stableJson(draft);
+      if (!await App.storage.saveRecoveryAsync('Before deleting TV show')) throw new Error('Could not save recovery. The show was not deleted.');
+      readFields();
+      if (!$('#tvDialog').open || draft?.id !== id || draftBefore !== u.stableJson(draft) || before !== u.stableJson(App.storage.getState())) throw new Error('Saved data or the draft changed while preparing recovery. The show was not deleted. Try again.');
       guard();
-      if (!App.storage.saveRecovery('Before deleting TV show')) throw new Error('Could not save recovery. The show was not deleted.');
-      App.storage.mutate(function (state) { state.workspace.tvShows = state.workspace.tvShows.map(function (s) { return s.id === draft.id ? { id: s.id, tmdbId: s.tmdbId, deleted: true } : s; }); }, { reason: 'tv-delete' });
-      App.storage.saveNow(); App.components.closeDialog('#tvDialog');
+      const next = u.clone(App.storage.getState());
+      next.workspace.tvShows = next.workspace.tvShows.map(function (s) { return s.id === id ? { id: s.id, tmdbId: s.tmdbId, deleted: true } : s; });
+      App.storage.replace(next, { saveRecovery: false, reason: 'tv-delete' });
+      App.components.closeDialog('#tvDialog');
     } catch (error) { status(error.message); }
+    finally { deleting = false; $('#tvDelete').disabled = false; }
   }
   async function request(action) {
     stop(); const sequence = generation, id = draft?.id;

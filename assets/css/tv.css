@@ -1,4 +1,10 @@
 .tv-workspace { min-width: 0; padding: .25rem 0; }
+.tv-sticky-controls { position: sticky; top: var(--tv-header-height, 0px); z-index: 12; background: var(--bg); padding: .3rem 0; max-height: min(55dvh, calc(100dvh - var(--tv-header-height, 0px) - 8rem)); overflow-y: auto; }
+#tvListView > .tv-table-scroll { max-height: max(10rem, calc(100dvh - var(--tv-header-height, 0px) - var(--tv-controls-height, 4rem) - 1.5rem)); }
+#tvTable thead th { position: sticky; top: 0; z-index: 2; }
+.tv-status-dismiss { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 1.7rem; height: 1.7rem; padding: .2rem; background: transparent; border: 0; border-radius: .3rem; color: var(--muted); cursor: pointer; }
+.tv-status-dismiss .sf-symbol { width: 1rem; height: 1rem; }
+.tv-status-dismiss:hover { background: var(--accent-soft); color: var(--text); }
 .tv-toolbar, .tv-lookup-row, .tv-manual-row, .tv-season-tools, .tv-batch { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .tv-toolbar { margin-bottom: .4rem; }
 .tv-toolbar input, .tv-toolbar select { min-height: 2.5rem; }

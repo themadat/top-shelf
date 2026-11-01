@@ -23,7 +23,7 @@ const assert = require('node:assert/strict');
       return route.fulfill({ json: { id: 123, name: 'Progress Example', status: 'Returning Series', in_production: true, seasons: [{ id: 71, season_number: 1, name: 'Season 1', episode_count: 3, air_date: '2020-01-01' }, { id: 72, season_number: 2, name: 'Placeholder', episode_count: 0, air_date: '2020-02-01' }] } });
     });
     await page.goto(process.env.TV_TEST_URL || 'http://localhost:8000');
-    await page.waitForSelector('html.app-ready');
+    await page.waitForSelector('html.app-ready').catch(error => { throw new Error(error.message + '\nPage errors: ' + JSON.stringify(errors)); });
     await page.evaluate(() => {
       const a = window.LocalApp, state = a.utils.clone(a.storage.getState());
       state.workspace.tvShows = [a.tv.normalize({ id: 'progress', tmdbId: 123, title: 'Progress Example', status: 'Caught Up', lastWatched: 'S1 E1', seasons: [{ tmdbId: 71, number: 1, loaded: true, episodeCount: 1, episodes: [{ tmdbId: 91, number: 1, title: 'Pilot', airDate: '2020-01-01', rating: 8, notes: 'Keep my notes', watched: true }] }] })];
@@ -87,6 +87,11 @@ const assert = require('node:assert/strict');
     await page.waitForFunction(() => !document.querySelector('#tvRefresh').disabled);
     assert.match(await page.locator('#tvBatchStatus').innerText(), /1 of 1 shows refreshed/);
     assert.deepEqual(tmdbCalls, ['/3/tv/123', '/3/tv/123/season/1']);
+    assert.equal(await page.locator('.tv-batch > :first-child').getAttribute('id'), 'tvStatusDismiss');
+    await page.getByRole('button', { name: 'Dismiss TV status', exact: true }).click();
+    assert.equal(await page.locator('#tvBatchStatus').innerText(), '');
+    assert.equal(await page.locator('.tv-batch').isHidden(), true);
+
     assert.equal(await page.evaluate(() => {
       const a = window.LocalApp; return a.utils.stableJson(a.storage.getState().workspace.tvShows.filter(s => s.id !== 'progress'));
     }), otherShows);
@@ -121,6 +126,9 @@ const assert = require('node:assert/strict');
     await open();
     assert.match(await page.locator('#tvProgress').innerText(), /1 new aired episode.*Shown as Watching/);
     await setWatched(1, '');
+    assert.equal(await page.locator('#tvWatchedSeason').inputValue(), '1');
+    assert.equal(await page.locator('#tvWatchedEpisode').inputValue(), '');
+    assert.equal(await page.locator('#tvWatchedEpisode').evaluate(el => el.required), true);
     await page.getByRole('button', { name: 'Save Show', exact: true }).click();
     assert.equal(await page.locator('#tvDialog').evaluate(el => el.open), true);
     assert.equal(await page.locator('#tvWatchedEpisode').evaluate(el => el.validity.valueMissing), true);
@@ -225,6 +233,73 @@ const assert = require('node:assert/strict');
       const a = window.LocalApp; a.storage.replace = window.tvReplace;
       return a.utils.stableJson(a.storage.getState().workspace.tvShows) === window.tvBeforeFailedWrite;
     }), true);
+    const confirmDelete = async () => {
+      await page.locator('#tvDelete').click();
+      await page.waitForSelector('#confirmDialog[open]');
+      await page.locator('#confirmDialog [data-confirm-action]').click();
+    };
+    // Failed deletion persistence keeps the show and editor; recovery uses IndexedDB.
+    await open();
+    await page.evaluate(() => {
+      const a = window.LocalApp; window.deleteReplace = a.storage.replace;
+      a.storage.replace = () => { throw new Error('Synthetic delete write failure'); };
+    });
+    await confirmDelete();
+    await page.waitForFunction(() => document.querySelector('#tvEditorStatus').textContent.includes('Synthetic delete write failure'));
+    assert.equal(await page.locator('#tvDialog').evaluate(el => el.open), true);
+    assert.equal(await page.evaluate(() => window.LocalApp.storage.getState().workspace.tvShows[0].deleted), undefined);
+    await page.evaluate(() => { window.LocalApp.storage.replace = window.deleteReplace; });
+    // A change while the async recovery is pending rejects the destructive operation.
+    await page.evaluate(() => {
+      const a = window.LocalApp; window.deleteRecovery = a.storage.saveRecoveryAsync;
+      a.storage.saveRecoveryAsync = () => new Promise(resolve => { window.finishDeleteRecovery = () => resolve(true); });
+    });
+    await confirmDelete();
+    await page.waitForFunction(() => typeof window.finishDeleteRecovery === 'function');
+    await page.evaluate(() => {
+      const a = window.LocalApp;
+      a.storage.mutate(state => { state.workspace.tvShows[0].notes = 'Concurrent edit during delete recovery'; }, { reason: 'tv-test' });
+      window.finishDeleteRecovery(); a.storage.saveRecoveryAsync = window.deleteRecovery;
+    });
+    await page.waitForFunction(() => document.querySelector('#tvEditorStatus').textContent.includes('changed while preparing recovery'));
+    assert.equal(await page.evaluate(() => window.LocalApp.storage.getState().workspace.tvShows[0].deleted), undefined);
+    await page.locator('#tvCancel').click();
+    await open(); await confirmDelete();
+    await page.waitForSelector('#tvDialog:not([open])', { state: 'attached' });
+    const deleted = await page.evaluate(() => {
+      const a = window.LocalApp;
+      return { show: a.storage.getState().workspace.tvShows[0], reason: a.storage.recoveryInfo().reason, rawRecovery: localStorage.getItem(a.config.storage.recoveryKey), movies: a.storage.getState().workspace.movies.length };
+    });
+    assert.equal(deleted.show.deleted, true); assert.equal(deleted.reason, 'Before deleting TV show');
+    assert.equal(deleted.rawRecovery, null); assert.equal(deleted.movies, 400);
+    await page.reload(); await page.waitForSelector('html.app-ready');
+    assert.equal(await page.evaluate(() => window.LocalApp.storage.getState().workspace.tvShows[0].deleted), true);
+    await page.evaluate(async () => { await window.LocalApp.storage.restoreRecovery(); });
+    assert.equal(await page.evaluate(() => window.LocalApp.storage.getState().workspace.tvShows[0].notes), 'Concurrent edit during delete recovery');
+    // Long lists and pivots retain the toolbar below the app header on desktop and mobile.
+    await page.evaluate(() => {
+      const a = window.LocalApp;
+      a.storage.mutate(state => { state.workspace.tvShows.push(...Array.from({ length: 80 }, (_, i) => a.tv.normalize({ id: 'scroll-' + i, title: 'Scroll fixture ' + i, genres: ['Genre ' + i], networks: ['Network ' + i], type: 'Type ' + i }))); }, { reason: 'tv-test' });
+    });
+    for (const width of [1440, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.locator('[data-tv-view="list"]').click();
+      await page.evaluate(() => { const table = document.querySelector('#tvListView > .tv-table-scroll'); table.scrollTop = 500; window.scrollTo(0, document.documentElement.scrollHeight); });
+      await page.waitForTimeout(200);
+      const layout = await page.evaluate(() => {
+        const toolbar = document.querySelector('.tv-sticky-controls'), header = document.querySelector('.app-header').getBoundingClientRect();
+        const table = document.querySelector('#tvListView > .tv-table-scroll').getBoundingClientRect(), th = document.querySelector('#tvTable th').getBoundingClientRect();
+        return { position: getComputedStyle(toolbar).position, top: toolbar.getBoundingClientRect().top, headerBottom: header.bottom, headerGap: Math.abs(th.top - table.top), overflow: document.documentElement.scrollWidth > innerWidth };
+      });
+      assert.equal(layout.position, 'sticky'); assert.ok(layout.top >= layout.headerBottom - 1); assert.ok(layout.headerGap <= 2); assert.equal(layout.overflow, false);
+      assert.equal(await page.locator('#tvSearch').isVisible(), true);
+      await page.locator('[data-tv-view="pivots"]').click();
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight)); await page.waitForTimeout(150);
+      assert.equal(await page.locator('#tvFiltersDisclosure').isHidden(), true);
+      assert.ok(await page.locator('.tv-sticky-controls').evaluate(el => el.getBoundingClientRect().top >= document.querySelector('.app-header').getBoundingClientRect().bottom - 1));
+      assert.equal(await page.locator('#tvSearch').isVisible(), true);
+      if (width === 390) await page.screenshot({ path: '/tmp/top-shelf-tv-sticky.png' });
+    }
     assert.deepEqual(errors, []);
     console.log('TV progress browser checks passed: refresh, highlights, status filters, episode selection, stale draft, offline reload and mobile.');
   } finally { await browser.close(); }
