@@ -26,7 +26,7 @@ const assert = require('node:assert/strict');
     await page.waitForSelector('html.app-ready').catch(error => { throw new Error(error.message + '\nPage errors: ' + JSON.stringify(errors)); });
     await page.evaluate(() => {
       const a = window.LocalApp, state = a.utils.clone(a.storage.getState());
-      state.workspace.tvShows = [a.tv.normalize({ id: 'progress', tmdbId: 123, title: 'Progress Example', status: 'Caught Up', lastWatched: 'S1 E1', seasons: [{ tmdbId: 71, number: 1, loaded: true, episodeCount: 1, episodes: [{ tmdbId: 91, number: 1, title: 'Pilot', airDate: '2020-01-01', rating: 8, notes: 'Keep my notes', watched: true }] }] })];
+      state.workspace.tvShows = [a.tv.normalize({ id: 'progress', tmdbId: 123, title: 'Progress Example', rating: 4, status: 'Caught Up', lastWatched: 'S1 E1', seasons: [{ tmdbId: 71, number: 1, loaded: true, episodeCount: 1, episodes: [{ tmdbId: 91, number: 1, title: 'Pilot', airDate: '2020-01-01', rating: 8, notes: 'Keep my notes', watched: true }] }] })];
       state.ui.selectedShelf = 'tv';
       a.storage.replace(state, { saveRecovery: false, reason: 'import' });
       a.tmdb.saveToken('synthetic-test-token', false);
@@ -42,6 +42,11 @@ const assert = require('node:assert/strict');
     const open = async () => { await row.locator('[data-tv-open]').first().click(); await page.waitForSelector('#tvDialog[open]'); };
     const save = async () => { await page.getByRole('button', { name: 'Save Show', exact: true }).click(); await page.waitForSelector('#tvDialog:not([open])', { state: 'attached' }); };
     assert.equal(await row.locator('[data-tv-edit="status"]').inputValue(), 'Caught Up');
+    assert.equal(await row.locator('.tv-rating-select .movie-score').innerText(), '4.0');
+    assert.match(await row.locator('[data-tv-edit="rating"] option[value="0"]').innerText(), /^0\.0 ·/);
+    assert.match(await row.locator('[data-tv-edit="rating"] option[value="4"]').innerText(), /^4\.0 ·/);
+    assert.match(await row.locator('[data-tv-edit="rating"] option[value="4.5"]').innerText(), /^4\.5 ·/);
+
     await page.evaluate(() => {
       const a = window.LocalApp;
       a.storage.mutate(s => { const show = s.workspace.tvShows[0]; show.lastWatched = ''; show.seasons[0].episodes[0].rating = null; show.seasons[0].episodes[0].watched = false; }, { reason: 'tv-test' });
@@ -98,12 +103,22 @@ const assert = require('node:assert/strict');
     assert.equal(await row.locator('[data-tv-refresh-id]').isEnabled(), true);
     await page.evaluate(() => window.LocalApp.storage.mutate(state => { state.workspace.tvShows = state.workspace.tvShows.filter(s => s.id === 'progress'); }, { reason: 'tv-test' }));
     assert.equal(await row.locator('.tv-behind').innerText(), '-1');
+    assert.ok(await row.locator('.tv-progress-cell').evaluate(el => {
+      const badge = el.querySelector('.tv-behind').getBoundingClientRect(), actions = el.querySelector('.tv-progress-actions').getBoundingClientRect();
+      return Math.abs(actions.left - badge.right - parseFloat(getComputedStyle(el).gap)) < 1;
+    }));
+
     assert.equal(await row.locator('[data-tv-edit="status"]').inputValue(), 'Watching');
     assert.deepEqual(await page.locator('#tvTable thead [data-tv-sort]').allTextContents(), ['#', 'Ave', 'Show ↑', 'Networks', 'My Status', 'Status', 'S', 'E', 'Last Air', 'Latest', 'Progress', 'Type', 'Genres', 'Notes']);
     assert.equal(await row.locator('td').nth(9).innerText(), 'S1 E2');
     assert.equal(await row.locator('[data-tv-advance="one"]').isEnabled(), true);
     await row.locator('[data-tv-advance="one"]').click();
     assert.equal(await row.locator('.tv-caught-up').getAttribute('aria-label'), 'Caught up');
+    assert.ok(await row.locator('.tv-progress-cell').evaluate(el => {
+      const badge = el.querySelector('.tv-caught-up').getBoundingClientRect(), actions = el.querySelector('.tv-progress-actions').getBoundingClientRect();
+      return Math.abs(actions.left - badge.right - parseFloat(getComputedStyle(el).gap)) < 1;
+    }));
+
     assert.equal(await row.locator('[data-tv-advance="one"]').isEnabled(), true);
     await open(); await setWatched(1, 1); await save();
     await row.locator('[data-tv-advance="all"]').click();
@@ -142,6 +157,10 @@ const assert = require('node:assert/strict');
     await setWatched(1, 1);
 
     await page.locator('[data-season-key="id-71"] > summary').click();
+    assert.equal(await page.locator('#tvShowRating [data-score="4"] strong').innerText(), '4.0');
+    assert.match(await page.locator('[data-episode-rating][data-episode="id-91"] option[value="8"]').innerText(), /^8\.0 ·/);
+    assert.equal(await page.locator('[data-episode-rating][data-episode="id-91"]').locator('..').locator('.movie-score').innerText(), '8.0');
+
     await page.getByRole('button', { name: 'Watched through season 1 episode 2', exact: true }).click();
     assert.equal(await watchedValue(), 'S1 E2');
     await save();

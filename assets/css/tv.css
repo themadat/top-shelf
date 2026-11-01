@@ -34,7 +34,8 @@
 .tv-episode-air-date { display: block; color: var(--muted); margin-top: .2rem; }
 .tv-progress-cell { display: flex; align-items: center; gap: .5rem; white-space: nowrap; }
 .tv-progress-cell .tv-watched-episode { flex: 0 0 auto; min-width: 0; }
-.tv-progress-actions { display: inline-flex; gap: .2rem; margin-left: auto; }
+.tv-progress-actions { display: inline-flex; gap: .2rem; }
+.tv-caught-up, .tv-behind, .tv-progress-unknown { margin-left: auto; text-align: right; }
 .tv-progress-actions button { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; padding: .15rem; border: 0; border-radius: .3rem; background: transparent; color: var(--accent-strong); cursor: pointer; }
 .tv-progress-actions svg { width: 1.4rem; height: 1.4rem; }
 .tv-show-actions button:hover, .tv-show-actions a:hover, .tv-progress-actions button:hover { background: var(--accent-soft); }

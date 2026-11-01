@@ -16,13 +16,13 @@
     const labels = show ? tv.showLabels : tv.episodeLabels;
     return (show ? Array.from({ length: 11 }, function (_, i) { return i / 2; }) : labels.map(function (_, i) { return i; }).slice(1)).map(function (score) {
       const label = show ? tv.showRatingLabel(score) : labels[score];
-      return '<button type="button" class="tv-rating-button" ' + attributes + ' data-score="' + score + '" aria-pressed="' + (value === score) + '" title="' + esc(label) + '"><strong>' + score + '</strong><small>' + esc(label) + '</small></button>';
+      return '<button type="button" class="tv-rating-button" ' + attributes + ' data-score="' + score + '" aria-pressed="' + (value === score) + '" title="' + esc(label) + '"><strong>' + score.toFixed(1) + '</strong><small>' + esc(label) + '</small></button>';
     }).join('') + '<button type="button" class="button small" ' + attributes + ' data-score="" aria-label="Clear rating">Clear</button>';
   }
   function episodeRating(value) {
     return '<option value="">— Unrated</option>' + Array.from({ length: 19 }, function (_, i) {
       const score = 1 + i / 2, label = tv.episodeLabels[score] || 'Between ' + Math.floor(score) + ' and ' + Math.ceil(score);
-      return '<option value="' + score + '"' + (value === score ? ' selected' : '') + '>' + score + ' · ' + esc(label) + '</option>';
+      return '<option value="' + score + '"' + (value === score ? ' selected' : '') + '>' + score.toFixed(1) + ' · ' + esc(label) + '</option>';
     }).join('');
   }
   function averages() {
@@ -78,7 +78,7 @@
       html += '<div class="tv-table-scroll"><table class="tv-episodes" style="width:' + widths.reduce(function (a, b) { return a + b; }, 0) + 'px"><colgroup>' + widths.map(function (width) { return '<col style="width:' + width + 'px">'; }).join('') + '</colgroup><thead><tr>' + ['Episode', '#', 'Notes'].map(function (label, i) { return '<th scope="col">' + label + '<span class="pivot-resizer" role="separator" tabindex="0" data-episode-resize="' + i + '" aria-orientation="vertical" aria-label="Resize ' + episodeColumns[i] + ' column" aria-valuenow="' + widths[i] + '" title="Drag or use arrow keys to resize">' + '</span></th>'; }).join('') + '</tr></thead><tbody>';
       html += s.episodes.slice(0, count).map(function (e) {
         const attr = ' data-season="' + key + '" data-episode="' + episodeKey(e) + '"';
-        return '<tr><td><strong>' + e.number + '</strong> · ' + esc(e.title || 'Untitled episode') + (e.airDate ? '<small class="tv-episode-air-date">' + (e.airDate > tv.today() ? 'Airs ' : 'Aired ') + esc(e.airDate) + '</small>' : '') + (s.number > 0 && !s.orphaned && !e.orphaned ? '<button type="button" class="tv-progress-link" data-watched-through' + attr + ' aria-label="Watched through season ' + s.number + ' episode ' + e.number + '">Watched through here</button>' : '') + (e.orphaned ? '<small class="tv-orphan">Retained · missing from latest response</small>' : '') + '</td><td><span class="tv-episode-score"><span class="movie-score" style="background:' + (e.rating === null ? 'var(--surface-2)' : App.movies.color(e.rating / 2, false)) + ';color:' + (e.rating === null ? 'var(--text)' : '#fff') + '" aria-hidden="true">' + (e.rating ?? '—') + '</span><select data-episode-rating' + attr + ' aria-label="Rating for episode ' + e.number + '">' + episodeRating(e.rating) + '</select></span></td><td><textarea class="tv-episode-note-input" rows="1" maxlength="20000" data-episode-notes' + attr + ' aria-label="Notes for episode ' + e.number + '" placeholder="Add notes…">' + esc(e.notes) + '</textarea></td></tr>' ;
+        return '<tr><td><strong>' + e.number + '</strong> · ' + esc(e.title || 'Untitled episode') + (e.airDate ? '<small class="tv-episode-air-date">' + (e.airDate > tv.today() ? 'Airs ' : 'Aired ') + esc(e.airDate) + '</small>' : '') + (s.number > 0 && !s.orphaned && !e.orphaned ? '<button type="button" class="tv-progress-link" data-watched-through' + attr + ' aria-label="Watched through season ' + s.number + ' episode ' + e.number + '">Watched through here</button>' : '') + (e.orphaned ? '<small class="tv-orphan">Retained · missing from latest response</small>' : '') + '</td><td><span class="tv-episode-score"><span class="movie-score" style="background:' + (e.rating === null ? 'var(--surface-2)' : App.movies.color(e.rating / 2, false)) + ';color:' + (e.rating === null ? 'var(--text)' : '#fff') + '" aria-hidden="true">' + (e.rating === null ? '—' : e.rating.toFixed(1)) + '</span><select data-episode-rating' + attr + ' aria-label="Rating for episode ' + e.number + '">' + episodeRating(e.rating) + '</select></span></td><td><textarea class="tv-episode-note-input" rows="1" maxlength="20000" data-episode-notes' + attr + ' aria-label="Notes for episode ' + e.number + '" placeholder="Add notes…">' + esc(e.notes) + '</textarea></td></tr>' ;
       }).join('') + '</tbody></table></div>';
       if (count < s.episodes.length) html += '<button type="button" class="button small" data-more-episodes="' + key + '">Show next 50 episodes (' + count + '/' + s.episodes.length + ')</button>';
     }
@@ -95,7 +95,7 @@
       const key = seasonKey(s);
       const rated = s.episodes.filter(function (e) { return e.rating !== null; });
       const average = rated.length ? ' · Episode average ' + (rated.reduce(function (n, e) { return n + e.rating; }, 0) / rated.length).toFixed(1) + '/10' : '';
-      return '<details class="tv-season" data-season-key="' + key + '"' + (openSeasons.has(key) ? ' open' : '') + '><summary>' + esc(s.number === 0 ? 'Specials' : 'Season ' + s.number) + (s.title && s.title !== 'Season ' + s.number ? ' · ' + esc(s.title) : '') + ' <small>' + s.episodeCount + ' episodes · ' + (s.rating === null ? 'Unrated' : s.rating + '/10') + average + (s.orphaned ? ' · Retained: missing from latest response' : '') + '</small></summary><div class="tv-season-body">' + (openSeasons.has(key) ? seasonContent(s) : '') + '</div></details>';
+      return '<details class="tv-season" data-season-key="' + key + '"' + (openSeasons.has(key) ? ' open' : '') + '><summary>' + esc(s.number === 0 ? 'Specials' : 'Season ' + s.number) + (s.title && s.title !== 'Season ' + s.number ? ' · ' + esc(s.title) : '') + ' <small>' + s.episodeCount + ' episodes · ' + (s.rating === null ? 'Unrated' : s.rating.toFixed(1) + '/10') + average + (s.orphaned ? ' · Retained: missing from latest response' : '') + '</small></summary><div class="tv-season-body">' + (openSeasons.has(key) ? seasonContent(s) : '') + '</div></details>';
     }).join('') || '<p>No seasons saved. Fetch show details or add a season manually.</p>';
   }
   function readFields() {
@@ -294,7 +294,7 @@
       } else if (button.dataset.seasonRating) {
         const s = seasonByKey(button.dataset.seasonRating); s.rating = button.dataset.score === '' ? null : Number(button.dataset.score);
         button.parentElement.querySelectorAll('[data-score]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.score !== '' && Number(b.dataset.score) === s.rating)); });
-        const summary = button.closest('.tv-season').querySelector('summary small'); summary.textContent = s.episodeCount + ' episodes · ' + (s.rating === null ? 'Unrated' : s.rating + '/10') + (s.orphaned ? ' · Retained' : ''); averages();
+        const summary = button.closest('.tv-season').querySelector('summary small'); summary.textContent = s.episodeCount + ' episodes · ' + (s.rating === null ? 'Unrated' : s.rating.toFixed(1) + '/10') + (s.orphaned ? ' · Retained' : ''); averages();
       } else if (button.hasAttribute('data-watched-through')) {
         readFields();
         const s = seasonByKey(button.dataset.season), e = s?.episodes.find(function (e) { return episodeKey(e) === button.dataset.episode; });
@@ -334,7 +334,7 @@
       const e = s.episodes.find(function (e) { return episodeKey(e) === el.dataset.episode; }); if (!e) return;
       if (el.hasAttribute('data-episode-notes')) e.notes = el.value;
       if (el.hasAttribute('data-episode-watched')) e.watched = el.checked;
-      if (el.hasAttribute('data-episode-rating')) { e.rating = el.value === '' ? null : Number(el.value); if (e.rating !== null) e.watched = e.rating > 1; const badge = el.parentElement.querySelector('.movie-score'); badge.textContent = e.rating ?? '—'; badge.style.background = e.rating === null ? 'var(--surface-2)' : App.movies.color(e.rating / 2, false); badge.style.color = e.rating === null ? 'var(--text)' : '#fff'; }
+      if (el.hasAttribute('data-episode-rating')) { e.rating = el.value === '' ? null : Number(el.value); if (e.rating !== null) e.watched = e.rating > 1; const badge = el.parentElement.querySelector('.movie-score'); badge.textContent = e.rating === null ? '—' : e.rating.toFixed(1); badge.style.background = e.rating === null ? 'var(--surface-2)' : App.movies.color(e.rating / 2, false); badge.style.color = e.rating === null ? 'var(--text)' : '#fff'; }
       averages(); renderProgress();
     });
   }
