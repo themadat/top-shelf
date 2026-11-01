@@ -115,7 +115,7 @@
       const episodeRated = s.seasons.some(function (season) { return season.episodes.some(function (episode) { return episode.rating !== null; }); });
       const indicators = (seasonRated ? '<span title="Season ratings or ranking saved" aria-label="Season ratings or ranking saved">S</span>' : '') + (episodeRated ? '<span title="Episode ratings saved" aria-label="Episode ratings saved">E</span>' : '');
       const detail = [avg.seasons.count ? 'Seasons: ' + avg.seasons.value.toFixed(1) + '/10' : '', avg.episodes.count ? 'Episodes: ' + avg.episodes.value.toFixed(1) + '/10' : '', s.seasonRanking.trim() ? 'Season ranking saved' : ''].filter(Boolean).join(' · ');
-      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (score === null ? '' : wishlist ? 'movie-priority' : 'movie-score') + '" style="' + (score === null ? '' : 'background:' + App.movies.color(score, wishlist)) + '" aria-hidden="true">' + (score ?? '—') + '</span><select data-tv-edit="' + field + '" aria-label="' + (wishlist ? 'Priority' : 'Show rating') + ' for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
+      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (score === null ? '' : wishlist ? 'movie-priority' : 'movie-score') + '" style="' + (score === null ? '' : 'background:' + App.movies.color(score, wishlist)) + '" aria-hidden="true">' + (score ?? '—') + '</span><select data-tv-edit="' + field + '" aria-label="' + (wishlist ? 'Priority' : 'Show rating') + ' for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><div class="tv-show-cell"><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button>' + (s.tmdbId ? '<span class="tv-show-actions"><button type="button" class="tv-row-refresh" data-tv-refresh-id="' + s.id + '"' + (batch ? ' disabled' : '') + ' aria-label="Refresh show ' + esc(s.title) + '" title="Refresh this show">' + App.icons.markup('arrowClockwise') + '</button><a href="https://www.themoviedb.org/tv/' + s.tmdbId + '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + esc(s.title) + ' on TMDB" title="Open on TMDB">' + App.icons.markup('link') + '</a></span>' : '') + '</div></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
         + '<td><select class="tv-tone-' + tone(viewingStatus) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, viewingStatus) + '</select></td>'
         + ['providerStatus', 'numberOfSeasons', 'numberOfEpisodes', 'lastAirDate'].map(function (key) { const cell = value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '">' + esc(cell ?? '—') + '</td>'; }).join('')
         + '<td title="' + esc(progress.releasedLabel ? 'Latest aired regular episode' : 'Refresh episode details to find the latest release') + '">' + esc(progress.releasedLabel || '—') + '</td>'
@@ -142,24 +142,26 @@
     const lengths = saved().map(function (s) { return ctx.measureText(String(value(s, key) ?? '—')).width + 36; });
     setWidth(key, Math.max(columns[index][2], ...lengths));
   }
-  async function refreshAll() {
+  async function refreshShows(id) {
     if (batch) return;
-    const shows = saved().filter(function (s) { return s.tmdbId; });
+    const shows = saved().filter(function (s) { return s.tmdbId && (!id || s.id === id); });
     const message = $('#tvBatchStatus');
+    if (id && App.tvEditor.isEditing(id)) { message.textContent = 'Save or close this show’s editor before refreshing it.'; return; }
     if (!shows.length) { message.textContent = 'No linked shows to refresh. Find a TMDB match in a show’s editor.'; return; }
     if (!App.tmdb.token()) { message.textContent = 'Save a token in Settings → Data Sync → TMDB Lookup Settings first.'; return; }
     if (navigator.onLine === false) { message.textContent = 'You’re offline. Saved shows and ratings can still be edited.'; return; }
     const controller = new AbortController(); batch = controller;
-    $('#tvStop').hidden = false; $('#tvRefresh').disabled = true;
+    $('#tvStop').hidden = false; $('#tvRefresh').disabled = true; render();
+    if (id) $('#tvStop').focus();
     let updated = 0, skipped = 0, errorMessage = '';
     try {
       const before = u.stableJson(state());
-      if (!await App.storage.saveRecoveryAsync('Before refreshing all TV shows')) throw new Error('Could not save recovery. No shows were changed.');
+      if (!await App.storage.saveRecoveryAsync(id ? 'Before refreshing TV show: ' + shows[0].title : 'Before refreshing all TV shows')) throw new Error('Could not save recovery. No shows were changed.');
       if (u.stableJson(state()) !== before) throw new Error('Saved data changed while preparing recovery. Refresh again.');
       for (let index = 0; index < shows.length; index++) {
         if (controller.signal.aborted) break;
         const old = shows[index];
-        message.textContent = 'Refreshing all ' + shows.length + ' linked shows · ' + (index + 1) + '/' + shows.length + ': ' + old.title;
+        message.textContent = id ? 'Refreshing ' + old.title + '…' : 'Refreshing all ' + shows.length + ' linked shows · ' + (index + 1) + '/' + shows.length + ': ' + old.title;
         if (App.tvEditor.isEditing(old.id)) { skipped++; continue; }
         const snapshot = u.stableJson(old), fresh = await App.tmdb.tvDetailsWithProgress(old, controller.signal);
         if (controller.signal.aborted) break;
@@ -173,7 +175,9 @@
       }
     } catch (error) { if (error.name !== 'AbortError') errorMessage = error.message; }
     finally {
-      batch = null; $('#tvStop').hidden = true; $('#tvRefresh').disabled = false;
+      const restoreFocus = document.activeElement === $('#tvStop') || document.activeElement === document.body;
+      batch = null; $('#tvStop').hidden = true; $('#tvRefresh').disabled = false; render();
+      if (restoreFocus) ($('#tvTable').querySelector('[data-tv-refresh-id="' + id + '"]') || $('#tvRefresh')).focus();
       message.textContent = (controller.signal.aborted ? 'Stopped. ' : '') + updated + ' of ' + shows.length + ' shows refreshed; ' + skipped + ' skipped because they were being edited or changed. ' + errorMessage;
     }
   }
@@ -210,8 +214,10 @@
     $('#tvAdd').addEventListener('click', function () { App.tvEditor.open(null, this); });
     $('#tvFilter').addEventListener('change', function () { preference({ filter: this.value }); });
     $('#tvSearch').addEventListener('input', function () { preference({ query: this.value }); });
-    $('#tvRefresh').addEventListener('click', refreshAll); $('#tvStop').addEventListener('click', function () { batch?.abort(); });
+    $('#tvRefresh').addEventListener('click', function () { refreshShows(); }); $('#tvStop').addEventListener('click', function () { batch?.abort(); });
     $('#tvTable').addEventListener('click', function (event) {
+      const refresh = event.target.closest('[data-tv-refresh-id]');
+      if (refresh) { refreshShows(refresh.dataset.tvRefreshId); return; }
       const step = event.target.closest('[data-tv-advance]');
       if (step) { advance(step.closest('[data-tv-id]').dataset.tvId, step.dataset.tvAdvance === 'all', step.dataset.tvAdvance); return; }
       const open = event.target.closest('[data-tv-open]'); if (open) App.tvEditor.open(open.dataset.tvOpen, open);

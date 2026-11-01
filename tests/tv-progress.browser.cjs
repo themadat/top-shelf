@@ -6,11 +6,12 @@ const assert = require('node:assert/strict');
   const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-    const page = await context.newPage(), errors = [];
+    const page = await context.newPage(), errors = [], tmdbCalls = [];
     page.on('pageerror', error => errors.push(error.message));
     let holdSeason = false, releaseSeason, seasonRequested;
     await page.route('https://api.github.com/**', route => route.fulfill({ status: 404, json: {} }));
     await page.route('https://api.themoviedb.org/**', async route => {
+      tmdbCalls.push(new URL(route.request().url()).pathname);
       if (route.request().url().includes('/season/')) {
         if (holdSeason) { seasonRequested?.(); await new Promise(resolve => { releaseSeason = resolve; }); }
         return route.fulfill({ json: { id: 71, season_number: 1, name: 'Season 1', episodes: [
@@ -55,8 +56,30 @@ const assert = require('node:assert/strict');
     });
     await row.locator('[data-tv-advance="all"]').click();
 
-    await page.locator('#tvRefresh').click();
+    // The row refresh must affect only the selected linked show.
+    const otherShows = await page.evaluate(() => {
+      const a = window.LocalApp;
+      a.storage.mutate(state => { state.workspace.tvShows.push(a.tv.normalize({ id: 'other-linked', title: 'Other linked', tmdbId: 456 }), a.tv.normalize({ id: 'manual', title: 'Manual show' })); }, { reason: 'tv-test' });
+      return a.utils.stableJson(a.storage.getState().workspace.tvShows.filter(s => s.id !== 'progress'));
+    });
+    const link = row.getByRole('link', { name: 'Open Progress Example on TMDB', exact: true });
+    assert.equal(await link.getAttribute('href'), 'https://www.themoviedb.org/tv/123');
+    assert.equal(await link.getAttribute('target'), '_blank');
+    assert.match(await link.getAttribute('rel'), /noopener/);
+    assert.equal(await page.locator('[data-tv-id="manual"] .tv-show-actions').count(), 0);
+    assert.ok(await row.locator('.tv-show-cell').evaluate(el => Math.abs(el.getBoundingClientRect().right - el.querySelector('a').getBoundingClientRect().right) < 1));
+    await context.route('https://www.themoviedb.org/**', route => route.fulfill({ contentType: 'text/html', body: '<title>Mock TMDB page</title>' }));
+    const popupPromise = page.waitForEvent('popup'); await link.click(); const popup = await popupPromise;
+    await popup.waitForLoadState(); assert.equal(popup.url(), 'https://www.themoviedb.org/tv/123');
+    assert.equal(await popup.evaluate(() => window.opener === null), true); await popup.close();
+    await row.locator('[data-tv-refresh-id]').click();
     await page.waitForFunction(() => document.querySelector('#tvBatchStatus').textContent.includes('1 of 1 shows refreshed'));
+    assert.deepEqual(tmdbCalls, ['/3/tv/123', '/3/tv/123/season/1']);
+    assert.equal(await page.evaluate(() => {
+      const a = window.LocalApp; return a.utils.stableJson(a.storage.getState().workspace.tvShows.filter(s => s.id !== 'progress'));
+    }), otherShows);
+    assert.equal(await row.locator('[data-tv-refresh-id]').isEnabled(), true);
+    await page.evaluate(() => window.LocalApp.storage.mutate(state => { state.workspace.tvShows = state.workspace.tvShows.filter(s => s.id === 'progress'); }, { reason: 'tv-test' }));
     assert.equal(await row.locator('.tv-behind').innerText(), '-1');
     assert.equal(await row.locator('[data-tv-edit="status"]').inputValue(), 'Watching');
     assert.deepEqual(await page.locator('#tvTable thead [data-tv-sort]').allTextContents(), ['#', 'Ave', 'Show ↑', 'Networks', 'My Status', 'Status', 'S', 'E', 'Last Air', 'Latest', 'Progress', 'Type', 'Genres', 'Notes']);
@@ -168,6 +191,13 @@ const assert = require('node:assert/strict');
     assert.equal(recovery.movies, 400); assert.equal(recovery.watched, 'S1 E2');
     await page.reload(); await page.waitForSelector('html.app-ready');
     assert.equal(await page.evaluate(() => window.LocalApp.storage.getState().workspace.movies.length), 400);
+    const rowRequested = new Promise(resolve => { seasonRequested = resolve; }); holdSeason = true;
+    await row.locator('[data-tv-refresh-id]').click(); await rowRequested;
+    assert.equal(await row.locator('[data-tv-refresh-id]').isDisabled(), true);
+    await page.evaluate(() => window.LocalApp.storage.mutate(state => { state.workspace.tvShows[0].notes = 'Edited during single-show refresh'; }, { reason: 'tv-test' }));
+    holdSeason = false; releaseSeason();
+    await page.waitForFunction(() => document.querySelector('#tvBatchStatus').textContent.includes('0 of 1 shows refreshed; 1 skipped'));
+    assert.equal(await page.evaluate(() => window.LocalApp.storage.getState().workspace.tvShows[0].notes), 'Edited during single-show refresh');
     // A failed per-show write must not publish an unsaved refresh or increment the success count.
     await page.evaluate(() => {
       const a = window.LocalApp;
@@ -175,7 +205,7 @@ const assert = require('node:assert/strict');
       window.tvReplace = a.storage.replace;
       a.storage.replace = () => { throw new Error('Synthetic storage full'); };
     });
-    await page.locator('#tvRefresh').click();
+    await row.locator('[data-tv-refresh-id]').click();
     await page.waitForFunction(() => document.querySelector('#tvBatchStatus').textContent.includes('Synthetic storage full'));
     assert.match(await page.locator('#tvBatchStatus').innerText(), /0 of 1 shows refreshed/);
     assert.equal(await page.evaluate(() => {
