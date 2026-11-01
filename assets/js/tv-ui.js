@@ -61,8 +61,20 @@
     return show[key];
   }
   function isCountColumn(key) { return key === 'numberOfSeasons' || key === 'numberOfEpisodes'; }
+  function contentWidth(key) {
+    const ctx = document.createElement('canvas').getContext('2d'), table = $('#tvTable');
+    ctx.font = getComputedStyle(table).font;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    if (key === 'title') return Math.ceil(Math.max(80, ...saved().map(function (s) { return ctx.measureText(s.title).width + (s.tmdbId ? 4.2 * rem : 0) + 18; })));
+    return Math.ceil(Math.max(100, ...saved().map(function (s) {
+      const p = tv.progress(s), badge = p.caughtUp ? rem : ctx.measureText(p.available ? '-' + p.available : '—').width;
+      return ctx.measureText(p.label || '—').width + badge + 4.8 * rem + 18;
+    })));
+  }
   function columnWidth(c) {
     const width = pref().widths[c[0]];
+    if (c[0] === 'title') return Math.max(width || 0, contentWidth('title'));
+    if (c[0] === 'progress') return contentWidth('progress');
     if (!isCountColumn(c[0])) return width || c[2];
     const ctx = document.createElement('canvas').getContext('2d'); ctx.font = getComputedStyle($('#tvTable')).font;
     const fitted = Math.ceil(Math.max(40, ...saved().map(function (s) { return ctx.measureText(String(s[c[0]] ?? '—')).width + 24; })));
@@ -72,8 +84,8 @@
     const badge = p.caughtUp ? '<span class="tv-caught-up" role="img" aria-label="Caught up" title="Caught up">' + App.icons.markup('check') + '</span>'
       : p.available ? '<span class="tv-behind" title="' + (p.complete ? '' : 'At least ') + p.available + ' aired episodes behind">-' + p.available + '</span>' : '<span class="tv-progress-unknown" title="Refresh episode details to check progress">—</span>';
     return '<div class="tv-progress-cell"><button type="button" class="tv-title-button tv-watched-episode" data-tv-open="' + show.id + '" aria-label="Edit latest watched episode for ' + esc(show.title) + '">' + esc(p.label || '—') + '</button>' + badge
-      + '<span class="tv-progress-actions"><button type="button" data-tv-advance="one"' + ' aria-label="Watch next episode of ' + esc(show.title) + '" title="Mark one more episode watched">&gt;</button>'
-      + '<button type="button" data-tv-advance="all"' + ' aria-label="Mark all caught up on ' + esc(show.title) + '" title="Mark all aired episodes watched">&gt;|</button></span></div>';
+      + '<span class="tv-progress-actions"><button type="button" data-tv-advance="one"' + ' aria-label="Watch next episode of ' + esc(show.title) + '" title="Mark one more episode watched">' + App.icons.markup('tvAdvance') + '</button>'
+      + '<button type="button" data-tv-advance="all"' + ' aria-label="Mark all caught up on ' + esc(show.title) + '" title="Mark all aired episodes watched">' + App.icons.markup('tvCatchUp') + '</button></span></div>';
   }
   function advance(id, all, trigger) {
     if (App.tvEditor.isEditing(id)) { $('#tvBatchStatus').textContent = 'Save or close this show’s editor before changing its progress.'; return; }
@@ -103,7 +115,7 @@
     $('#tvTable').style.width = widths.reduce(function (a, b) { return a + b; }, 0) + 'px';
     $('#tvTable colgroup').innerHTML = columns.map(function (c, i) { return '<col data-tv-col="' + c[0] + '" style="width:' + widths[i] + 'px">'; }).join('');
     $('#tvTable thead').innerHTML = '<tr>' + columns.map(function (c) {
-      return '<th scope="col" aria-sort="' + (p.sort === c[0] ? (p.direction === 'asc' ? 'ascending' : 'descending') : 'none') + '"><button type="button" data-tv-sort="' + c[0] + '">' + c[1] + (p.sort === c[0] ? (p.direction === 'asc' ? ' ↑' : ' ↓') : '') + '</button><button type="button" class="tv-resize" data-tv-resize="' + c[0] + '" aria-label="Resize ' + c[1] + ' column" title="Drag to resize. Double-click to fit. Arrow keys resize; Enter fits."></button></th>';
+      return '<th scope="col" aria-sort="' + (p.sort === c[0] ? (p.direction === 'asc' ? 'ascending' : 'descending') : 'none') + '"><button type="button" data-tv-sort="' + c[0] + '">' + c[1] + (p.sort === c[0] ? (p.direction === 'asc' ? ' ↑' : ' ↓') : '') + '</button>' + (c[0] === 'progress' ? '' : '<button type="button" class="tv-resize" data-tv-resize="' + c[0] + '" aria-label="Resize ' + c[1] + ' column" title="Drag to resize. Double-click to fit. Arrow keys resize; Enter fits."></button>') + '</th>';
     }).join('') + '</tr>';
     $('#tvTable tbody').innerHTML = rows.map(function (s) {
       const progress = tv.progress(s), viewingStatus = tv.viewingStatus(s);
@@ -115,7 +127,7 @@
       const episodeRated = s.seasons.some(function (season) { return season.episodes.some(function (episode) { return episode.rating !== null; }); });
       const indicators = (seasonRated ? '<span title="Season ratings or ranking saved" aria-label="Season ratings or ranking saved">S</span>' : '') + (episodeRated ? '<span title="Episode ratings saved" aria-label="Episode ratings saved">E</span>' : '');
       const detail = [avg.seasons.count ? 'Seasons: ' + avg.seasons.value.toFixed(1) + '/10' : '', avg.episodes.count ? 'Episodes: ' + avg.episodes.value.toFixed(1) + '/10' : '', s.seasonRanking.trim() ? 'Season ranking saved' : ''].filter(Boolean).join(' · ');
-      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (score === null ? '' : wishlist ? 'movie-priority' : 'movie-score') + '" style="' + (score === null ? '' : 'background:' + App.movies.color(score, wishlist)) + '" aria-hidden="true">' + (score ?? '—') + '</span><select data-tv-edit="' + field + '" aria-label="' + (wishlist ? 'Priority' : 'Show rating') + ' for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><div class="tv-show-cell"><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button>' + (s.tmdbId ? '<span class="tv-show-actions"><button type="button" class="tv-row-refresh" data-tv-refresh-id="' + s.id + '"' + (batch ? ' disabled' : '') + ' aria-label="Refresh show ' + esc(s.title) + '" title="Refresh this show">' + App.icons.markup('arrowClockwise') + '</button><a href="https://www.themoviedb.org/tv/' + s.tmdbId + '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + esc(s.title) + ' on TMDB" title="Open on TMDB">' + App.icons.markup('link') + '</a></span>' : '') + '</div></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
+      return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (score === null ? '' : wishlist ? 'movie-priority' : 'movie-score') + '" style="' + (score === null ? '' : 'background:' + App.movies.color(score, wishlist)) + '" aria-hidden="true">' + (score ?? '—') + '</span><select data-tv-edit="' + field + '" aria-label="' + (wishlist ? 'Priority' : 'Show rating') + ' for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><div class="tv-show-cell"><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button>' + (s.tmdbId ? '<span class="tv-show-actions"><button type="button" class="tv-row-refresh" data-tv-refresh-id="' + s.id + '"' + (batch ? ' disabled' : '') + ' aria-label="Refresh show ' + esc(s.title) + '" title="Refresh this show">' + App.icons.markup('tvRefresh') + '</button><a href="https://www.themoviedb.org/tv/' + s.tmdbId + '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + esc(s.title) + ' on TMDB" title="Open on TMDB">' + App.icons.markup('tvLink') + '</a></span>' : '') + '</div></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
         + '<td><select class="tv-tone-' + tone(viewingStatus) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, viewingStatus) + '</select></td>'
         + ['providerStatus', 'numberOfSeasons', 'numberOfEpisodes', 'lastAirDate'].map(function (key) { const cell = value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '">' + esc(cell ?? '—') + '</td>'; }).join('')
         + '<td title="' + esc(progress.releasedLabel ? 'Latest aired regular episode' : 'Refresh episode details to find the latest release') + '">' + esc(progress.releasedLabel || '—') + '</td>'
@@ -132,7 +144,7 @@
   }
   function resizedWidths(key, width) {
     const widths = Object.fromEntries(columns.map(function (c) { return [c[0], columnWidth(c)]; }));
-    widths[key] = Math.round(Math.max(isCountColumn(key) ? 40 : 65, Math.min(2000, width)));
+    widths[key] = Math.round(Math.max(key === 'title' ? contentWidth('title') : isCountColumn(key) ? 40 : 65, Math.min(2000, width)));
     return widths;
   }
   function setWidth(key, width) { preference({ widths: resizedWidths(key, width) }); }
@@ -253,8 +265,10 @@
     });
     window.addEventListener('app:statechange', function (event) {
       if (['import', 'sync-download', 'sync-merge', 'recovery', 'erase-all', 'restore-demo'].includes(event.detail.reason)) batch?.abort();
+      if (event.detail.reason === 'appearance') requestAnimationFrame(render);
       if (!resizing && (event.detail.reason.startsWith('tv-') || ['import', 'sync-download', 'sync-merge', 'recovery', 'erase-all', 'reset-preferences', 'restore-demo'].includes(event.detail.reason))) render();
     });
+    window.addEventListener('resize', u.debounce(function () { if (!resizing) render(); }, 100));
     render();
   }
   App.tvUI = { init: init, render: render, networkPill: networkPill };

@@ -258,7 +258,7 @@ test('tracked TV refresh downloads current and later seasons and preserves perso
   const episode = merged.seasons.find(s => s.number === 2).episodes[0];
   assert.equal(episode.rating, 8); assert.equal(episode.notes, 'Keep'); assert.equal(episode.watched, true);
   calls.length = 0;
-  await A.tmdb.tvDetailsWithProgress(show()); assert.deepEqual(calls, ['/3/tv/123', '/3/tv/123/season/3']);
+  await A.tmdb.tvDetailsWithProgress(show()); assert.deepEqual(calls, ['/3/tv/123', '/3/tv/123/season/1', '/3/tv/123/season/2', '/3/tv/123/season/3']);
 });
 
 test('tracked TV refresh rejects partial failures, wrong season identities and cancellation without changing saved data', async () => {
@@ -356,4 +356,24 @@ test('TV refresh skips empty seasons and loads the last nonempty season when pro
   assert.deepEqual(calls, ['/3/tv/123', '/3/tv/123/season/1']);
   assert.equal(A.tv.progress(fresh).releasedLabel, 'S1 E1');
   assert.equal(fresh.seasons[1].episodeCount, 0);
+});
+
+test('TV behind totals sum the remainder of the watched season and every later released season', () => {
+  const s = show({ lastWatched: 'S1 E3', seasons: [
+    { number: 0, episodeCount: 99 },
+    { number: 1, episodeCount: 10 },
+    { number: 2, episodeCount: 8 },
+    { number: 3, loaded: true, episodes: [{ number: 1, airDate: '2020-01-01' }, { number: 2, airDate: '2020-01-02' }, { number: 3, airDate: '2099-01-01' }] },
+    { number: 4, episodeCount: 0 },
+    { number: 5, episodeCount: 12, airDate: '2099-01-01' }
+  ] });
+  assert.equal(tv.progress(s).available, 7 + 8 + 2);
+  assert.equal(tv.advance(s, false).lastWatched, 'S1 E4');
+  assert.equal(tv.progress(tv.advance(s, false)).available, 6 + 8 + 2);
+  s.lastWatched = 'S2 E5'; assert.equal(tv.progress(s).available, 3 + 2);
+  s.lastWatched = ''; assert.equal(tv.progress(s).available, 10 + 8 + 2);
+  s.lastWatched = 'S3 E2'; assert.equal(tv.progress(s).available, 0);
+  s.lastWatched = 'S1 E3'; s.seasons[0].orphaned = true;
+  s.seasons[1].episodes = [{ number: 10, airDate: '2099-01-01' }];
+  assert.equal(tv.progress(s).available, 8 + 2, 'explicit future dates are never counted by an older-season estimate');
 });

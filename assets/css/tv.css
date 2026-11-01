@@ -18,8 +18,8 @@
 .tv-show-cell { display: flex; align-items: center; gap: .35rem; min-width: 0; }
 .tv-show-cell > .tv-title-button { flex: 1 1 auto; min-width: 0; }
 .tv-show-actions { display: inline-flex; align-items: center; gap: .2rem; margin-left: auto; flex: 0 0 auto; }
-.tv-show-actions button, .tv-show-actions a { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; padding: .25rem; border: 1px solid var(--line); border-radius: .3rem; background: var(--surface-2); color: var(--accent-strong); cursor: pointer; }
-.tv-show-actions svg { width: 1rem; height: 1rem; }
+.tv-show-actions button, .tv-show-actions a { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; padding: .15rem; border: 0; border-radius: .3rem; background: transparent; color: var(--accent-strong); cursor: pointer; }
+.tv-show-actions svg { width: 1.4rem; height: 1.4rem; }
 .tv-show-actions button:disabled { opacity: .4; cursor: default; }
 .tv-progress-link, .tv-new-episodes { display: block; max-width: 100%; margin-top: .25rem; padding: .15rem .2rem; border: 0; background: transparent; color: var(--accent-strong); font: inherit; font-size: .75rem; text-align: left; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
 .tv-progress-link:hover { text-decoration: underline; }
@@ -27,9 +27,11 @@
 .tv-progress-summary { padding: .5rem; font-size: .85rem; }
 .tv-episode-air-date { display: block; color: var(--muted); margin-top: .2rem; }
 .tv-progress-cell { display: flex; align-items: center; gap: .5rem; white-space: nowrap; }
-.tv-progress-cell .tv-watched-episode { flex: 0 1 auto; min-width: 3.6rem; }
+.tv-progress-cell .tv-watched-episode { flex: 0 0 auto; min-width: 0; }
 .tv-progress-actions { display: inline-flex; gap: .2rem; margin-left: auto; }
-.tv-progress-actions button { min-width: 1.75rem; min-height: 1.8rem; padding: .15rem .3rem; border: 1px solid var(--line); border-radius: .3rem; background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; }
+.tv-progress-actions button { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; padding: .15rem; border: 0; border-radius: .3rem; background: transparent; color: var(--accent-strong); cursor: pointer; }
+.tv-progress-actions svg { width: 1.4rem; height: 1.4rem; }
+.tv-show-actions button:hover, .tv-show-actions a:hover, .tv-progress-actions button:hover { background: var(--accent-soft); }
 .tv-progress-actions button:disabled { opacity: .4; cursor: default; }
 .tv-caught-up { display: inline-flex; color: light-dark(#23723a, #8cdda0); }
 .tv-caught-up svg { width: 1rem; height: 1rem; }

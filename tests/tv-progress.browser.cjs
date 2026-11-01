@@ -59,9 +59,20 @@ const assert = require('node:assert/strict');
     // The row refresh must affect only the selected linked show.
     const otherShows = await page.evaluate(() => {
       const a = window.LocalApp;
-      a.storage.mutate(state => { state.workspace.tvShows.push(a.tv.normalize({ id: 'other-linked', title: 'Other linked', tmdbId: 456 }), a.tv.normalize({ id: 'manual', title: 'Manual show' })); }, { reason: 'tv-test' });
+      a.storage.mutate(state => { state.ui.tv.widths.title = 80; state.ui.tv.widths.progress = 600; state.workspace.tvShows.push(a.tv.normalize({ id: 'other-linked', title: 'A Very Long Television Show Name That Must Remain Fully Visible Across The Whole Show Column', tmdbId: 456, lastWatched: 'S1 E3', seasons: [{ number: 1, episodeCount: 10 }, { number: 2, episodeCount: 8 }, { number: 3, loaded: true, episodes: [{ number: 1, airDate: '2020-01-01' }, { number: 2, airDate: '2020-01-02' }] }] }), a.tv.normalize({ id: 'manual', title: 'Manual show' })); }, { reason: 'tv-test' });
+      a.storage.saveNow();
       return a.utils.stableJson(a.storage.getState().workspace.tvShows.filter(s => s.id !== 'progress'));
     });
+    const longTitle = page.locator('[data-tv-id="other-linked"] .tv-show-cell > .tv-title-button');
+    assert.equal(await longTitle.evaluate(el => el.scrollWidth <= el.clientWidth + 1), true);
+    assert.equal(await page.locator('[data-tv-id="other-linked"] .tv-behind').innerText(), '-17');
+    assert.ok(await page.locator('[data-tv-col="progress"]').evaluate(el => parseFloat(el.style.width)) < 220);
+    assert.equal(await row.locator('[data-tv-advance="one"] svg').getAttribute('viewBox'), '0 0 24.1846 23.8281');
+    assert.equal(await row.locator('[data-tv-advance="all"] svg').getAttribute('viewBox'), '0 0 24.1846 23.8281');
+    assert.equal(await row.locator('[data-tv-refresh-id] svg').getAttribute('viewBox'), '0 0 26.6943 26.3477');
+    assert.equal(await row.locator('.tv-show-actions a svg').getAttribute('viewBox'), '0 0 26.6943 26.3477');
+    assert.equal(await row.locator('.tv-progress-cell').evaluate(el => el.scrollWidth <= el.clientWidth + 1), true);
+    await page.screenshot({ path: '/tmp/top-shelf-tv-new-icons.png' });
     const link = row.getByRole('link', { name: 'Open Progress Example on TMDB', exact: true });
     assert.equal(await link.getAttribute('href'), 'https://www.themoviedb.org/tv/123');
     assert.equal(await link.getAttribute('target'), '_blank');
@@ -73,7 +84,8 @@ const assert = require('node:assert/strict');
     await popup.waitForLoadState(); assert.equal(popup.url(), 'https://www.themoviedb.org/tv/123');
     assert.equal(await popup.evaluate(() => window.opener === null), true); await popup.close();
     await row.locator('[data-tv-refresh-id]').click();
-    await page.waitForFunction(() => document.querySelector('#tvBatchStatus').textContent.includes('1 of 1 shows refreshed'));
+    await page.waitForFunction(() => !document.querySelector('#tvRefresh').disabled);
+    assert.match(await page.locator('#tvBatchStatus').innerText(), /1 of 1 shows refreshed/);
     assert.deepEqual(tmdbCalls, ['/3/tv/123', '/3/tv/123/season/1']);
     assert.equal(await page.evaluate(() => {
       const a = window.LocalApp; return a.utils.stableJson(a.storage.getState().workspace.tvShows.filter(s => s.id !== 'progress'));
@@ -182,7 +194,8 @@ const assert = require('node:assert/strict');
     });
     assert.equal(overQuota, true, 'the full uncompressed snapshot exceeds real localStorage quota');
     await page.locator('#tvRefresh').click();
-    await page.waitForFunction(() => document.querySelector('#tvBatchStatus').textContent.includes('1 of 1 shows refreshed'));
+    await page.waitForFunction(() => !document.querySelector('#tvRefresh').disabled);
+    assert.match(await page.locator('#tvBatchStatus').innerText(), /1 of 1 shows refreshed/);
     const recovery = await page.evaluate(() => {
       const a = window.LocalApp;
       return { reason: a.storage.recoveryInfo().reason, localRecovery: localStorage.getItem(a.config.storage.recoveryKey), movies: a.storage.getState().workspace.movies.length, watched: a.storage.getState().workspace.tvShows[0].lastWatched };

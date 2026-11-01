@@ -103,8 +103,7 @@
   }
   async function tvDetailsWithProgress(show, signal) {
     const fresh = await tvDetails(show.tmdbId, signal), latest = App.tv.progress(show).latest;
-    const eligible = fresh.seasons.filter(function (s) { return s.number > 0 && s.episodeCount > 0 && (!s.airDate || s.airDate <= App.tv.today()); });
-    const start = latest?.season ?? Math.max(0, ...eligible.map(function (s) { return s.number; }));
+    const start = latest?.season ?? 1;
     for (let i = 0; i < fresh.seasons.length; i++) {
       const s = fresh.seasons[i];
       if (!s.number || !s.episodeCount || s.number < start || (s.airDate && s.airDate > App.tv.today())) continue;
