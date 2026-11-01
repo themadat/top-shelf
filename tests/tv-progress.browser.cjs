@@ -35,16 +35,30 @@ const assert = require('node:assert/strict');
     const open = async () => { await row.locator('[data-tv-open]').first().click(); await page.waitForSelector('#tvDialog[open]'); };
     const save = async () => { await page.getByRole('button', { name: 'Save Show', exact: true }).click(); await page.waitForSelector('#tvDialog:not([open])', { state: 'attached' }); };
     assert.equal(await row.locator('[data-tv-edit="status"]').inputValue(), 'Caught Up');
+    await page.evaluate(() => {
+      const a = window.LocalApp;
+      a.storage.mutate(s => { const show = s.workspace.tvShows[0]; show.lastWatched = ''; show.seasons[0].episodes[0].rating = null; show.seasons[0].episodes[0].watched = false; }, { reason: 'tv-test' });
+    });
+    assert.equal(await row.locator('[data-tv-advance="one"]').isEnabled(), true);
+    assert.equal(await row.locator('[data-tv-advance="all"]').isEnabled(), true);
+    await row.locator('[data-tv-advance="one"]').click();
+    assert.equal(await row.locator('.tv-watched-episode').innerText(), 'S1 E1');
+    await page.evaluate(() => {
+      const a = window.LocalApp;
+      a.storage.mutate(s => { const show = s.workspace.tvShows[0]; show.lastWatched = ''; show.seasons[0].episodes[0].rating = 8; show.seasons[0].episodes[0].watched = true; }, { reason: 'tv-test' });
+    });
+    await row.locator('[data-tv-advance="all"]').click();
+
     await page.locator('#tvRefresh').click();
     await page.waitForFunction(() => document.querySelector('#tvBatchStatus').textContent.includes('1 of 1 shows refreshed'));
-    assert.equal(await row.locator('.tv-behind').innerText(), '-1 episode behind');
+    assert.equal(await row.locator('.tv-behind').innerText(), '-1');
     assert.equal(await row.locator('[data-tv-edit="status"]').inputValue(), 'Watching');
-    assert.deepEqual(await page.locator('#tvTable thead [data-tv-sort]').allTextContents(), ['#', 'Ave', 'Show ↑', 'Networks', 'My Status', 'Status', 'S', 'E', 'Last Air', 'Latest Episode', 'Progress', 'Type', 'Genres', 'Notes']);
+    assert.deepEqual(await page.locator('#tvTable thead [data-tv-sort]').allTextContents(), ['#', 'Ave', 'Show ↑', 'Networks', 'My Status', 'Status', 'S', 'E', 'Last Air', 'Latest', 'Progress', 'Type', 'Genres', 'Notes']);
     assert.equal(await row.locator('td').nth(9).innerText(), 'S1 E2');
     assert.equal(await row.locator('[data-tv-advance="one"]').isEnabled(), true);
     await row.locator('[data-tv-advance="one"]').click();
     assert.equal(await row.locator('.tv-caught-up').getAttribute('aria-label'), 'Caught up');
-    assert.equal(await row.locator('[data-tv-advance="one"]').isDisabled(), true);
+    assert.equal(await row.locator('[data-tv-advance="one"]').isEnabled(), true);
     await open(); await page.locator('#tvLastWatched').fill('S1 E1'); await save();
     await row.locator('[data-tv-advance="all"]').click();
     assert.match(await row.locator('.tv-watched-episode').innerText(), /S1 E2/);
@@ -106,6 +120,42 @@ const assert = require('node:assert/strict');
     assert.equal(saved.seasons[0].episodes[0].rating, 8);
     assert.equal(saved.seasons[0].episodes[0].notes, 'Edited during check');
     assert.equal(saved.lastWatched, 'S1 E2');
+    await context.setOffline(false);
+    const overQuota = await page.evaluate(() => {
+      const a = window.LocalApp, state = a.utils.clone(a.storage.getState());
+      a.storage.saveRecovery('Legacy recovery fixture');
+      const review = 'Synthetic storage pressure review café 🎬. '.repeat(500).slice(0, 19000);
+      state.workspace.movies = Array.from({ length: 400 }, (_, i) => a.movies.normalize({ id: 'pressure-' + i, tmdbId: i + 1, rating: 4, title: 'Storage fixture ' + i, status: 'watched', review }));
+      let rejected = false;
+      try { localStorage.setItem('tv-recovery-quota-probe', JSON.stringify(state)); } catch (e) { rejected = e.name === 'QuotaExceededError'; } finally { localStorage.removeItem('tv-recovery-quota-probe'); }
+      a.storage.replace(state, { saveRecovery: false, reason: 'import' });
+      return rejected;
+    });
+    assert.equal(overQuota, true, 'the full uncompressed snapshot exceeds real localStorage quota');
+    await page.locator('#tvRefresh').click();
+    await page.waitForFunction(() => document.querySelector('#tvBatchStatus').textContent.includes('1 of 1 shows refreshed'));
+    const recovery = await page.evaluate(() => {
+      const a = window.LocalApp;
+      return { reason: a.storage.recoveryInfo().reason, localRecovery: localStorage.getItem(a.config.storage.recoveryKey), movies: a.storage.getState().workspace.movies.length, watched: a.storage.getState().workspace.tvShows[0].lastWatched };
+    });
+    assert.equal(recovery.reason, 'Before refreshing all TV shows'); assert.equal(recovery.localRecovery, null);
+    assert.equal(recovery.movies, 400); assert.equal(recovery.watched, 'S1 E2');
+    await page.reload(); await page.waitForSelector('html.app-ready');
+    assert.equal(await page.evaluate(() => window.LocalApp.storage.getState().workspace.movies.length), 400);
+    // A failed per-show write must not publish an unsaved refresh or increment the success count.
+    await page.evaluate(() => {
+      const a = window.LocalApp;
+      window.tvBeforeFailedWrite = a.utils.stableJson(a.storage.getState().workspace.tvShows);
+      window.tvReplace = a.storage.replace;
+      a.storage.replace = () => { throw new Error('Synthetic storage full'); };
+    });
+    await page.locator('#tvRefresh').click();
+    await page.waitForFunction(() => document.querySelector('#tvBatchStatus').textContent.includes('Synthetic storage full'));
+    assert.match(await page.locator('#tvBatchStatus').innerText(), /0 of 1 shows refreshed/);
+    assert.equal(await page.evaluate(() => {
+      const a = window.LocalApp; a.storage.replace = window.tvReplace;
+      return a.utils.stableJson(a.storage.getState().workspace.tvShows) === window.tvBeforeFailedWrite;
+    }), true);
     assert.deepEqual(errors, []);
     console.log('TV progress browser checks passed: refresh, highlights, status filters, episode selection, stale draft, offline reload and mobile.');
   } finally { await browser.close(); }

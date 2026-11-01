@@ -103,6 +103,20 @@ const assert = require('node:assert/strict');
     assert.match(JSON.stringify(remote), /Concurrent cloud conflict/);
     assert.equal(uploads.length, 2);
     assert.equal(await page.locator('#choiceDialog').isVisible(), false, 'background sync does not interrupt with a conflict dialog');
+    await page.evaluate(() => { void window.LocalApp.sync.syncNow(); });
+    await page.waitForSelector('#choiceDialog[open]');
+    const diff = page.locator('[data-choice-diff]');
+    assert.match(await diff.innerText(), /Local conflict stays safe/);
+    assert.match(await diff.innerText(), /Concurrent cloud conflict/);
+    assert.match(await diff.innerText(), /This device/);
+    assert.match(await diff.innerText(), /GitHub/);
+    assert.equal(uploads.length, 2);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await page.locator('#choiceDialog').evaluate(el => el.scrollWidth <= el.clientWidth), true);
+    await page.screenshot({ path: '/tmp/top-shelf-sync-diff.png' });
+    await page.locator('[data-choice-cancel]').click();
+    assert.match(await notes(), /Local conflict stays safe/);
+
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.evaluate(() => window.LocalApp.application.openSupport('dataSync'));

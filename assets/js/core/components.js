@@ -63,6 +63,49 @@
     const dialog = document.querySelector("#choiceDialog");
     dialog.querySelector("[data-choice-title]").textContent = settings.title;
     dialog.querySelector("[data-choice-message]").textContent = settings.message;
+    const diff = dialog.querySelector('[data-choice-diff]');
+    diff.replaceChildren(); diff.hidden = !settings.diff;
+    dialog.classList.toggle('has-sync-diff', !!settings.diff);
+    if (settings.diff) {
+      const summary = document.createElement('p'); summary.className = 'setting-note';
+      summary.textContent = settings.diff.count + ' field difference' + (settings.diff.count === 1 ? '' : 's') + ' in ' + settings.diff.groups.length + ' group' + (settings.diff.groups.length === 1 ? '' : 's') + '. Left: this device. Right: GitHub.';
+      diff.appendChild(summary);
+      let shown = 0;
+      const more = document.createElement('button'); more.type = 'button'; more.className = 'button small';
+      const renderMore = function () {
+        settings.diff.groups.slice(shown, shown + 25).forEach(function (group) {
+          const details = document.createElement('details'), heading = document.createElement('summary');
+          details.className = 'sync-diff-item'; details.open = settings.diff.groups.length <= 3 && !group.collapsed;
+          heading.textContent = group.label + ' · ' + group.rows.length + ' field' + (group.rows.length === 1 ? '' : 's'); details.appendChild(heading);
+          let loaded = false;
+          const renderRows = function () {
+            if (loaded || !details.open) return; loaded = true;
+            const table = document.createElement('table'), head = document.createElement('thead'), header = document.createElement('tr');
+            ['Field', 'This device', 'GitHub'].forEach(function (label) { const cell = document.createElement('th'); cell.scope = 'col'; cell.textContent = label; header.appendChild(cell); });
+            head.appendChild(header); table.appendChild(head);
+            const body = document.createElement('tbody'), nextRows = document.createElement('button');
+            nextRows.type = 'button'; nextRows.className = 'button small'; nextRows.textContent = 'Show next 100 field differences';
+            let visibleRows = 0;
+            const addRows = function () {
+              group.rows.slice(visibleRows, visibleRows + 100).forEach(function (row) {
+                const tr = document.createElement('tr'), field = document.createElement('th'); field.scope = 'row';
+                field.textContent = row.field.replace(/notesHtml/g, 'Formatting').replace(/([a-z])([A-Z])/g, '$1 $2'); tr.appendChild(field);
+                ['local', 'remote'].forEach(function (key) { const td = document.createElement('td'), pre = document.createElement('pre'); pre.textContent = row[key]; td.appendChild(pre); tr.appendChild(td); });
+                body.appendChild(tr);
+              });
+              visibleRows += 100; nextRows.hidden = visibleRows >= group.rows.length;
+            };
+            nextRows.addEventListener('click', addRows); addRows();
+            table.appendChild(body); details.appendChild(table);
+            details.appendChild(nextRows);
+          };
+          details.addEventListener('toggle', renderRows); renderRows(); diff.insertBefore(details, more);
+        });
+        shown += 25; more.hidden = shown >= settings.diff.groups.length;
+        more.textContent = 'Show next 25 changed items';
+      };
+      more.addEventListener('click', renderMore); diff.appendChild(more); renderMore();
+    }
     const container = dialog.querySelector("[data-choice-actions]");
     container.innerHTML = "";
     settings.choices.forEach(function (choice, index) {

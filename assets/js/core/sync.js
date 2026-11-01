@@ -506,6 +506,44 @@
     return performUpload();
   }
 
+  function contentDiff(localState, remoteState) {
+    // Compare only the credential-free content envelope used by sync.
+    const local = model.syncPayload(localState).data, remote = remoteState ? model.syncPayload(remoteState).data : {};
+    const groups = [];
+    const format = function (value) { return value === undefined ? 'Not present' : value === null ? '—' : typeof value === 'string' ? value || '(empty)' : JSON.stringify(value, null, 2); };
+    const identity = function (item) { return item && typeof item === 'object' ? item.id ? 'id:' + item.id : item.tmdbId ? 'tmdb:' + item.tmdbId : Number.isInteger(item.number) ? 'number:' + item.number : null : null; };
+    const name = function (item, fallback) { return item?.title || item?.name || (Number.isInteger(item?.number) ? '#' + item.number : fallback); };
+    const compare = function (a, b, path, rows) {
+      if (u.stableJson(a) === u.stableJson(b)) return;
+      if (Array.isArray(a) && Array.isArray(b) && a.concat(b).every(identity)) {
+        const left = new Map(a.map(function (item) { return [identity(item), item]; })), right = new Map(b.map(function (item) { return [identity(item), item]; }));
+        if (left.size === a.length && right.size === b.length) {
+          Array.from(new Set([...left.keys(), ...right.keys()])).sort().forEach(function (id) { compare(left.get(id), right.get(id), path + ' / ' + name(left.get(id) || right.get(id), id), rows); });
+          return;
+        }
+      }
+      if ((a === undefined || (a && typeof a === 'object' && !Array.isArray(a))) && (b === undefined || (b && typeof b === 'object' && !Array.isArray(b)))) {
+        Array.from(new Set(Object.keys(a || {}).concat(Object.keys(b || {})))).sort().forEach(function (key) { compare(a?.[key], b?.[key], path ? path + ' / ' + key : key, rows); });
+        return;
+      }
+      rows.push({ field: path, local: format(a), remote: format(b) });
+    };
+    const collections = { movies: 'Movie', tvShows: 'TV', books: 'Book', podcasts: 'Podcast', records: 'Legacy item' };
+    Object.keys(collections).forEach(function (key) {
+      const left = new Map((local[key] || []).map(function (item) { return [item.id, item]; })), right = new Map((remote[key] || []).map(function (item) { return [item.id, item]; }));
+      Array.from(new Set([...left.keys(), ...right.keys()])).sort().forEach(function (id) {
+        const a = left.get(id), b = right.get(id), rows = [];
+        compare(a, b, '', rows);
+        if (rows.length) groups.push({ label: collections[key] + ' · ' + name(a || b, id), rows: rows });
+      });
+    });
+    [['notes', 'Notes · Text'], ['notesHtml', 'Notes · Formatting (HTML)'], ['pivotSettings', 'Pivot settings']].forEach(function (entry) {
+      const rows = []; compare(local[entry[0]], remote[entry[0]], entry[0], rows);
+      if (rows.length) groups.push({ label: entry[1], rows: rows, collapsed: entry[0] === 'notesHtml' });
+    });
+    return { groups: groups, count: groups.reduce(function (count, group) { return count + group.rows.length; }, 0) };
+  }
+
   async function syncNow(trigger) {
     const info = getInfo();
     if (info.busy) return;
@@ -532,6 +570,7 @@
             { value: "download", symbol: STATE_PRESENTATIONS.downloading.symbol, label: "Download GitHub", description: "Overwrite local content with GitHub; keep this device’s settings. Recovery is best-effort.", kind: "secondary" }
           ];
       const sequence = runtime.requestSequence;
+      const reviewedHash = model.syncHash(storage.getState());
       runtime.deciding = true;
       emit();
       let choice;
@@ -539,12 +578,17 @@
         choice = await App.components.choose({
           title: state === "conflict" ? "Resolve sync conflict" : "Choose the first sync copy",
           message: getInfo().newer + " Nothing will be overwritten until you choose.",
+          diff: contentDiff(storage.getState(), runtime.remoteState),
           choices: choices,
           cancelLabel: "Cancel sync",
           trigger: trigger
         });
       } finally { runtime.deciding = false; emit(); }
       if (sequence !== runtime.requestSequence || navigator.onLine === false || !configured()) return;
+      if (choice !== 'cancel' && reviewedHash !== model.syncHash(storage.getState())) {
+        runtime.error = 'Saved content changed while you reviewed the differences. Sync again to review the latest copies.';
+        runtime.errorState = CloudSyncState.warning; emit(); return;
+      }
       if (choice === "upload") return performUpload();
       if (choice === "download") return performDownload();
       if (choice === "merge") return performMerge();
@@ -656,6 +700,7 @@
     testConnection: testConnection,
     check: check,
     syncNow: syncNow,
+    contentDiff: contentDiff,
     restoreFromCloud: restoreFromCloud,
     forget: forget
   };

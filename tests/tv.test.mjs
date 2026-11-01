@@ -285,10 +285,10 @@ test('TV latest release and progress actions follow aired season/episode order a
   const caughtUp = tv.advance(next, true);
   assert.equal(caughtUp.lastWatched, 'S2 E2'); assert.equal(caughtUp.status, 'Caught Up'); assert.equal(tv.progress(caughtUp).caughtUp, true);
   assert.equal(caughtUp.seasons[1].episodes[0].notes, 'Keep'); assert.equal(caughtUp.seasons[1].episodes[0].rating, 8);
-  assert.equal(tv.advance(caughtUp, false), caughtUp); assert.equal(tv.advance(caughtUp, true), caughtUp);
+  assert.equal(tv.advance(caughtUp, false).lastWatched, 'S2 E3'); assert.equal(tv.advance(caughtUp, true), caughtUp);
   assert.equal(s.lastWatched, 'S1 E2');
   s.lastWatched = ''; s.seasons[1].episodes[0].rating = null;
-  assert.equal(tv.advance(s, false).lastWatched, 'S1 E2');
+  assert.equal(tv.advance(s, false).lastWatched, 'S1 E1');
   assert.equal(tv.advance(s, true).lastWatched, 'S2 E2');
 });
 
@@ -316,4 +316,16 @@ test('TV progress columns sort numerically and retain device-local widths and so
     assert.equal(state.ui.tv.sort, key); assert.equal(state.ui.tv.widths[key], key === 'progress' ? 290 : 130);
     assert.equal(state.ui.tv.widths.numberOfSeasons, 40);
   }
+});
+
+test('TV buttons work without progress, missing episode lists, and after reaching the latest episode', () => {
+  const blank = show();
+  assert.equal(tv.advance(blank, false).lastWatched, 'S1 E1');
+  assert.equal(tv.advance(tv.advance(blank, false), false).lastWatched, 'S1 E2');
+  assert.equal(tv.advance(blank, true), blank);
+  const s = show({ lastWatched: '', seasons: [{ number: 1, episodeCount: 10, episodes: [] }, { number: 2, loaded: true, episodes: [{ number: 1, airDate: '2020-01-01' }, { number: 2, airDate: '2020-01-02' }] }] });
+  assert.equal(tv.advance(s, false).lastWatched, 'S1 E1');
+  assert.equal(tv.advance(s, true).lastWatched, 'S2 E2');
+  s.lastWatched = 'S1 E10';
+  assert.equal(tv.advance(s, false).lastWatched, 'S2 E1');
 });

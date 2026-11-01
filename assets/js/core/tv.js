@@ -212,8 +212,16 @@
       next: canStep ? candidate : null, caughtUp: !!(released && latest && !after(released, latest)) };
   }
   function advance(show, all, day) {
-    const p = progress(show, day), target = all ? p.released : p.next;
-    if (!target || p.caughtUp) return show;
+    const p = progress(show, day);
+    const following = p.latest ? show.seasons.filter(function (s) { return s.number > 0 && !s.orphaned; }).flatMap(function (s) {
+      return s.episodes.filter(function (e) { return !e.orphaned && (s.number > p.latest.season || (s.number === p.latest.season && e.number > p.latest.episode)); }).map(function (e) { return { season: s.number, episode: e.number }; });
+    }).sort(function (a, b) { return a.season - b.season || a.episode - b.episode; })[0] : null;
+    const currentSeason = p.latest && show.seasons.find(function (s) { return s.number === p.latest.season && !s.orphaned; });
+    const nextSeason = p.latest && show.seasons.filter(function (s) { return s.number > p.latest.season && !s.orphaned; }).sort(function (a, b) { return a.number - b.number; })[0];
+    const fallback = p.latest ? currentSeason?.episodeCount && p.latest.episode >= currentSeason.episodeCount && nextSeason
+      ? { season: nextSeason.number, episode: 1 } : { season: p.latest.season, episode: p.latest.episode + 1 } : { season: 1, episode: 1 };
+    const target = all ? p.released : following || fallback;
+    if (!target || (all && p.label === p.releasedLabel)) return show;
     const updated = Object.assign({}, show, { lastWatched: 'S' + target.season + ' E' + target.episode });
     if (progress(updated, day).caughtUp && ['Watching', 'Caught Up', 'Want to Watch'].includes(show.status)) updated.status = 'Caught Up';
     else if (show.status === 'Want to Watch') updated.status = 'Watching';

@@ -853,3 +853,34 @@ test('cloud restore never reports success or changes baseline after persistence 
   assert.equal(h.toasts.some(t => t.title === 'Sync complete'), false);
   assert.ok(h.toasts.some(t => /Storage is full/.test(t.message)));
 });
+
+test('sync conflict diffs show exact content fields, additions, deletions and exclude local settings and credentials', async () => {
+  const h = harness(), tv = h.App.tv;
+  h.state.workspace.tvShows = [tv.normalize({ id: 'show', title: 'Example', lastWatched: 'S1 E1', seasons: [{ number: 1, episodes: [{ number: 1, rating: 7, notes: 'Local note' }] }] })];
+  h.remote = structuredClone(h.state);
+  h.remote.workspace.tvShows[0].lastWatched = 'S1 E2';
+  h.remote.workspace.tvShows[0].seasons[0].episodes[0].notes = 'GitHub note';
+  h.remote.workspace.tvShows.push(tv.normalize({ id: 'added', title: 'Cloud only' }));
+  changeNotes(h.state, 'Local notes <img src=x onerror=alert(1)>'); changeNotes(h.remote, 'Cloud notes');
+  h.remote.preferences.appearance.mode = 'dark';
+  const diff = h.sync.contentDiff(h.state, h.remote), text = JSON.stringify(diff);
+  assert.match(text, /lastWatched/); assert.match(text, /S1 E1/); assert.match(text, /S1 E2/);
+  assert.match(text, /Local note/); assert.match(text, /GitHub note/); assert.match(text, /Cloud only/); assert.match(text, /Not present/);
+  assert.doesNotMatch(text, /test-token|rememberToken|baselineHash|appearance|lastMutationId/);
+  h.choice = 'cancel'; await h.sync.syncNow();
+  assert.equal(h.choices.length, 1); assert.ok(h.choices[0].diff.count > 0);
+  assert.equal(h.requests.filter(r => r.options.method === 'PUT').length, 0);
+  h.remote.workspace.tvShows[0] = tv.normalize({ id: 'show', deleted: true });
+  assert.match(JSON.stringify(h.sync.contentDiff(h.state, h.remote)), /deleted/);
+});
+
+test('sync rejects a decision when content changed after the displayed diff', async () => {
+  const h = harness(), deciding = deferred(), selected = deferred();
+  changeNotes(h.state, 'Local'); changeNotes(h.remote, 'Remote');
+  h.App.components.choose = async options => { h.choices.push(options); deciding.resolve(); return selected.promise; };
+  const pending = h.sync.syncNow(); await deciding.promise;
+  changeNotes(h.state, 'Edited while reviewing'); selected.resolve('upload'); await pending;
+  assert.equal(h.requests.filter(r => r.options.method === 'PUT').length, 0);
+  assert.equal(h.replacements.length, 0);
+  assert.match(h.sync.getInfo().message, /changed while you reviewed/);
+});

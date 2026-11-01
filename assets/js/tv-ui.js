@@ -2,7 +2,7 @@
   "use strict";
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['rating', '#', 105], ['voteAverage', 'Ave', 75], ['title', 'Show', 250], ['networks', 'Networks', 160], ['status', 'My Status', 140], ['providerStatus', 'Status', 110], ['numberOfSeasons', 'S', 40], ['numberOfEpisodes', 'E', 40], ['lastAirDate', 'Last Air', 110], ['latestEpisode', 'Latest Episode', 135], ['progress', 'Progress', 295], ['type', 'Type', 100], ['genres', 'Genres', 180], ['notes', 'Notes', 140]];
+  const columns = [['rating', '#', 105], ['voteAverage', 'Ave', 75], ['title', 'Show', 250], ['networks', 'Networks', 160], ['status', 'My Status', 140], ['providerStatus', 'Status', 110], ['numberOfSeasons', 'S', 40], ['numberOfEpisodes', 'E', 40], ['lastAirDate', 'Last Air', 110], ['latestEpisode', 'Latest', 105], ['progress', 'Progress', 295], ['type', 'Type', 100], ['genres', 'Genres', 180], ['notes', 'Notes', 140]];
   let batch = null, resizing = false, pivot = null;
   const networkColors = {
     'netflix': ['#e50914', '#fff'], 'hbo': ['#171717', '#fff'], 'hbo max': ['#5822b4', '#fff'], 'max': ['#002be7', '#fff'],
@@ -70,21 +70,21 @@
   }
   function progressCell(show, p) {
     const badge = p.caughtUp ? '<span class="tv-caught-up" role="img" aria-label="Caught up" title="Caught up">' + App.icons.markup('check') + '</span>'
-      : p.available ? '<span class="tv-behind">-' + p.available + (p.complete ? '' : '+') + ' episode' + (p.available === 1 ? '' : 's') + ' behind</span>' : '<span class="tv-progress-unknown" title="Refresh episode details to check progress">—</span>';
+      : p.available ? '<span class="tv-behind" title="' + (p.complete ? '' : 'At least ') + p.available + ' aired episodes behind">-' + p.available + '</span>' : '<span class="tv-progress-unknown" title="Refresh episode details to check progress">—</span>';
     return '<div class="tv-progress-cell"><button type="button" class="tv-title-button tv-watched-episode" data-tv-open="' + show.id + '" aria-label="Edit latest watched episode for ' + esc(show.title) + '">' + esc(p.label || '—') + '</button>' + badge
-      + '<span class="tv-progress-actions"><button type="button" data-tv-advance="one"' + (!p.next || p.caughtUp ? ' disabled' : '') + ' aria-label="Watch next episode of ' + esc(show.title) + '" title="Mark one more aired episode watched">&gt;</button>'
-      + '<button type="button" data-tv-advance="all"' + (!p.released || p.caughtUp ? ' disabled' : '') + ' aria-label="Mark all caught up on ' + esc(show.title) + '" title="Mark all aired episodes watched">&gt;|</button></span></div>';
+      + '<span class="tv-progress-actions"><button type="button" data-tv-advance="one"' + ' aria-label="Watch next episode of ' + esc(show.title) + '" title="Mark one more episode watched">&gt;</button>'
+      + '<button type="button" data-tv-advance="all"' + ' aria-label="Mark all caught up on ' + esc(show.title) + '" title="Mark all aired episodes watched">&gt;|</button></span></div>';
   }
   function advance(id, all, trigger) {
     if (App.tvEditor.isEditing(id)) { $('#tvBatchStatus').textContent = 'Save or close this show’s editor before changing its progress.'; return; }
     const snapshot = saved().find(function (s) { return s.id === id; }); if (!snapshot) return;
-    const next = tv.advance(snapshot, all); if (next === snapshot) return;
-    App.storage.mutate(function (state) {
-      const index = state.workspace.tvShows.findIndex(function (s) { return s.id === id; });
-      if (index < 0 || u.stableJson(state.workspace.tvShows[index]) !== u.stableJson(snapshot)) throw new Error('This show changed. Try updating progress again.');
-      state.workspace.tvShows[index] = next;
-    }, { reason: 'tv-progress' });
-    App.storage.saveNow();
+    const next = tv.advance(snapshot, all);
+    if (next === snapshot) { $('#tvBatchStatus').textContent = all && !tv.progress(snapshot).released ? 'Latest episode is unknown. Refresh Show Data or load episode details, then try again.' : 'Already at the latest episode.'; return; }
+    const state = u.clone(App.storage.getState()), index = state.workspace.tvShows.findIndex(function (s) { return s.id === id; });
+    if (index < 0 || u.stableJson(state.workspace.tvShows[index]) !== u.stableJson(snapshot)) { $('#tvBatchStatus').textContent = 'This show changed. Try updating progress again.'; return; }
+    state.workspace.tvShows[index] = next;
+    try { App.storage.replace(state, { saveRecovery: false, reason: 'tv-progress' }); }
+    catch (error) { $('#tvBatchStatus').textContent = error.message; return; }
     const row = $('#tvTable').querySelector('[data-tv-id="' + id + '"]');
     const control = row?.querySelector('[data-tv-advance="' + trigger + '"]:not(:disabled)') || row?.querySelector('.tv-watched-episode');
     (control || $('#tvFilter')).focus();
@@ -149,11 +149,13 @@
     if (!shows.length) { message.textContent = 'No linked shows to refresh. Find a TMDB match in a show’s editor.'; return; }
     if (!App.tmdb.token()) { message.textContent = 'Save a token in Settings → Data Sync → TMDB Lookup Settings first.'; return; }
     if (navigator.onLine === false) { message.textContent = 'You’re offline. Saved shows and ratings can still be edited.'; return; }
-    if (!App.storage.saveRecovery('Before refreshing all TV shows')) { message.textContent = 'Could not save recovery. No shows were changed.'; return; }
     const controller = new AbortController(); batch = controller;
     $('#tvStop').hidden = false; $('#tvRefresh').disabled = true;
     let updated = 0, skipped = 0, errorMessage = '';
     try {
+      const before = u.stableJson(state());
+      if (!await App.storage.saveRecoveryAsync('Before refreshing all TV shows')) throw new Error('Could not save recovery. No shows were changed.');
+      if (u.stableJson(state()) !== before) throw new Error('Saved data changed while preparing recovery. Refresh again.');
       for (let index = 0; index < shows.length; index++) {
         if (controller.signal.aborted) break;
         const old = shows[index];
@@ -164,8 +166,10 @@
         const current = saved().find(function (s) { return s.id === old.id; });
         if (!current || snapshot !== u.stableJson(current) || App.tvEditor.isEditing(old.id)) { skipped++; continue; }
         const merged = tv.refresh(current, fresh);
-        App.storage.mutate(function (s) { const i = s.workspace.tvShows.findIndex(function (x) { return x.id === old.id; }); s.workspace.tvShows[i] = merged; }, { reason: 'tv-refresh' });
-        updated++; App.storage.saveNow();
+        const next = u.clone(state()), position = next.workspace.tvShows.findIndex(function (s) { return s.id === old.id; });
+        next.workspace.tvShows[position] = merged;
+        App.storage.replace(next, { saveRecovery: false, reason: 'tv-refresh' });
+        updated++;
       }
     } catch (error) { if (error.name !== 'AbortError') errorMessage = error.message; }
     finally {
