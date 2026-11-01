@@ -15,6 +15,11 @@
 #tvTable td select { width: 100%; min-width: 0; padding: .2rem; font-size: .83rem; }
 .tv-title-button { max-width: 100%; padding: .15rem 0; border: 0; background: none; color: var(--text); text-align: left; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tv-title-button:hover { color: var(--accent-strong); text-decoration: underline; }
+.tv-progress-link, .tv-new-episodes { display: block; max-width: 100%; margin-top: .25rem; padding: .15rem .2rem; border: 0; background: transparent; color: var(--accent-strong); font: inherit; font-size: .75rem; text-align: left; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
+.tv-progress-link:hover { text-decoration: underline; }
+.tv-new-episodes, .tv-has-new-episodes { background: var(--accent-soft); color: var(--accent-strong); border-radius: .3rem; font-weight: 600; }
+.tv-progress-summary { padding: .5rem; font-size: .85rem; }
+.tv-episode-air-date { display: block; color: var(--muted); margin-top: .2rem; }
 .tv-table-averages { display: block; color: var(--muted); font-size: .72rem; }
 .tv-resize { position: absolute; right: 0; top: 0; bottom: 0; width: 9px; padding: 0; border: 0; background: transparent; cursor: col-resize; touch-action: none; }
 .tv-resize:hover, .tv-resize:focus-visible { background: var(--accent-soft); }

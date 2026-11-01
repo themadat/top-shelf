@@ -101,6 +101,19 @@
     if (mapped.number !== season) throw new Error('TMDB returned a different season.');
     return mapped;
   }
+  async function tvDetailsWithProgress(show, signal) {
+    const fresh = await tvDetails(show.tmdbId, signal), latest = App.tv.progress(show).latest;
+    if (!latest) return fresh;
+    for (let i = 0; i < fresh.seasons.length; i++) {
+      const s = fresh.seasons[i];
+      if (s.number < latest.season || (s.airDate && s.airDate > App.tv.today())) continue;
+      if (signal?.aborted) throw new DOMException('Stopped', 'AbortError');
+      const loaded = await tvSeason(show.tmdbId, s.number, signal);
+      if (s.tmdbId && loaded.tmdbId !== s.tmdbId) throw new Error('The season identity changed. Refresh again; your saved progress is preserved.');
+      fresh.seasons[i] = loaded;
+    }
+    return fresh;
+  }
   App.tmdb = { theatricalDate: theatricalDate, usTheatricalDate: usTheatricalDate, remembered: remembered, detailsResponse: detailsResponse, streamingResponse: streamingResponse, streaming: streaming, streamingNames: streamingNames, token: token, saveToken: saveToken, forget: forget, search: search, details: details };
-  Object.assign(App.tmdb, { searchTv: searchTv, tvDetails: tvDetails, tvSeason: tvSeason });
+  Object.assign(App.tmdb, { searchTv: searchTv, tvDetails: tvDetails, tvSeason: tvSeason, tvDetailsWithProgress: tvDetailsWithProgress });
 })();

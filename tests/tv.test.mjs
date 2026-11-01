@@ -214,3 +214,61 @@ test('TV half-point show ratings and priority survive status changes, refresh, b
   const oldLocal=JSON.parse(JSON.stringify(local));oldLocal.schemaVersion=8;delete oldLocal.workspace.tvShows[0].priority;
   assert.ok(model.prepare(oldLocal).migrations.includes('8→9'));
 });
+
+test('TV progress counts only aired regular episodes after an explicit latest-watched marker', () => {
+  const s = show({ status: 'Caught Up', lastWatched: 's01e02', seasons: [
+    { number: 0, episodes: [{ number: 9, airDate: '2020-01-01' }] },
+    { number: 1, episodes: [{ number: 1, airDate: '2020-01-01' }, { number: 2, airDate: '2020-01-02' }, { number: 3, airDate: '2026-11-01' }, { number: 4, airDate: '2026-11-02' }, { number: 5 }, { number: 6, airDate: '2020-01-01', orphaned: true }] },
+    { number: 2, episodes: [{ number: 1, airDate: '2026-10-30' }] },
+    { number: 3, orphaned: true, episodes: [{ number: 1, airDate: '2020-01-01' }] }
+  ] });
+  assert.equal(tv.progress(s, '2026-11-01').label, 'S1 E2');
+  assert.equal(tv.progress(s, '2026-11-01').available, 2);
+  assert.equal(tv.viewingStatus(s, '2026-11-01'), 'Watching');
+  assert.equal(s.status, 'Caught Up');
+  s.lastWatched = 'S2 E1';
+  assert.equal(tv.progress(s, '2026-11-01').available, 0);
+  assert.equal(tv.viewingStatus(s, '2026-11-01'), 'Caught Up');
+  for (const status of ['Watching', 'Stopped', 'Completed', 'Want to Watch']) {
+    s.status = status; s.lastWatched = 'S1 E1'; assert.equal(tv.viewingStatus(s, '2026-11-01'), status);
+  }
+});
+
+test('TV progress derives legacy watched/rated episodes but preserves explicit and unreadable markers', () => {
+  const s = show({ seasons: [{ number: 1, episodes: [{ number: 1, watched: true }, { number: 2, rating: 8 }, { number: 3, rating: 1, watched: true }, { number: 4, rating: 9, orphaned: true }] }] });
+  assert.equal(tv.progress(s).label, 'S1 E2');
+  s.lastWatched = 'S1 E1'; assert.equal(tv.progress(s).label, 'S1 E1');
+  s.lastWatched = 'halfway through season one'; assert.equal(tv.progress(s).latest, null); assert.equal(tv.progress(s).label, s.lastWatched);
+  for (const value of ['S0 E1', 'S1 E0', 'S100001 E1', 'S1 E1<script>', '1.2']) assert.equal(tv.position(value), null);
+  assert.equal(tv.progress(show()).available, 0);
+});
+
+test('tracked TV refresh downloads current and later seasons and preserves personal episode data', async () => {
+  const calls = [], raw = series();
+  raw.seasons = [0, 1, 2, 3, 4].map(n => ({ id: 70 + n, season_number: n, name: 'Season ' + n, air_date: n === 4 ? '2099-01-01' : '2020-01-01', episode_count: 2 }));
+  const A = harness(async url => {
+    calls.push(new URL(url).pathname);
+    const n = /\/season\/(\d+)/.exec(url)?.[1];
+    return { ok: true, json: async () => n ? { ...season(), id: 70 + Number(n), season_number: Number(n) } : raw };
+  });
+  const prior = show({ lastWatched: 'S2 E1', seasons: [{ tmdbId: 72, number: 2, loaded: true, episodes: [{ tmdbId: 91, number: 1, rating: 8, notes: 'Keep', watched: true }] }] });
+  const fresh = await A.tmdb.tvDetailsWithProgress(prior), merged = A.tv.refresh(prior, fresh);
+  assert.deepEqual(calls, ['/3/tv/123', '/3/tv/123/season/2', '/3/tv/123/season/3']);
+  assert.equal(merged.lastWatched, 'S2 E1');
+  const episode = merged.seasons.find(s => s.number === 2).episodes[0];
+  assert.equal(episode.rating, 8); assert.equal(episode.notes, 'Keep'); assert.equal(episode.watched, true);
+  calls.length = 0;
+  await A.tmdb.tvDetailsWithProgress(show()); assert.deepEqual(calls, ['/3/tv/123']);
+});
+
+test('tracked TV refresh rejects partial failures, wrong season identities and cancellation without changing saved data', async () => {
+  const prior = show({ lastWatched: 'S1 E1' }), before = JSON.stringify(prior);
+  for (const wrongIdentity of [false, true]) {
+    const A = harness(async url => url.includes('/season/') ? wrongIdentity ? { ok: true, json: async () => ({ ...season(), id: 999 }) } : { ok: false, status: 429 } : { ok: true, json: async () => series() });
+    await assert.rejects(() => A.tmdb.tvDetailsWithProgress(prior), wrongIdentity ? /identity/ : /busy/);
+    assert.equal(JSON.stringify(prior), before);
+  }
+  const c = new AbortController();
+  const A = harness(async () => { c.abort(); return { ok: true, json: async () => series() }; });
+  await assert.rejects(() => A.tmdb.tvDetailsWithProgress(prior, c.signal), { name: 'AbortError' });
+});

@@ -31,7 +31,7 @@
   function compare(a, b, key, direction) {
     const tie = function () { return compareScore(a, b, a.status === 'Want to Watch' ? 'asc' : 'desc') || a.title.localeCompare(b.title); };
     if (key === 'rating') return compareScore(a, b, direction) || a.title.localeCompare(b.title);
-    const get = function (s) { if (key === 'status') return statuses.indexOf(s.status); if (key === 'providerStatus') return seriesStatus(s); return Array.isArray(s[key]) ? s[key].join(', ') : s[key]; };
+    const get = function (s) { if (key === 'status') return statuses.indexOf(viewingStatus(s)); if (key === 'providerStatus') return seriesStatus(s); return Array.isArray(s[key]) ? s[key].join(', ') : s[key]; };
     const av = get(a), bv = get(b);
     if (av === null || bv === null) return av === bv ? tie() : av === null ? 1 : -1;
     const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { numeric: true });
@@ -168,7 +168,38 @@
     (copy.seasons || []).sort(byNumber).forEach(function (s) { delete s.fetchedAt; s.episodes.sort(byNumber); });
     return copy;
   }
-  function searchable(show) { return [show.title, show.originalTitle, show.type, show.notes, show.seasonRanking, show.status, seriesStatus(show)].concat(show.genres, show.networks, show.companies).join(' ').toLowerCase(); }
+  function today() {
+    const now = new Date();
+    return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  }
+  function position(value) {
+    const match = /^s\s*(\d{1,6})\s*e\s*(\d{1,6})$/i.exec((value || '').trim());
+    if (!match || !integer(Number(match[1]), 1, 100000) || !integer(Number(match[2]), 1, 100000)) return null;
+    return { season: Number(match[1]), episode: Number(match[2]) };
+  }
+  function progress(show, day) {
+    day ||= today();
+    let latest = position(show.lastWatched);
+    const after = function (a, b) { return a.season > b.season || (a.season === b.season && a.episode > b.episode); };
+    // An explicit marker takes precedence, including when the user moves it back.
+    if (!latest && !show.lastWatched) show.seasons.forEach(function (s) {
+      if (!s.number || s.orphaned) return;
+      s.episodes.forEach(function (e) {
+        const point = { season: s.number, episode: e.number };
+        if (!e.orphaned && e.rating !== 1 && (e.watched || e.rating > 1) && (!latest || after(point, latest))) latest = point;
+      });
+    });
+    let available = 0;
+    if (latest) show.seasons.forEach(function (s) {
+      if (!s.number || s.orphaned) return;
+      s.episodes.forEach(function (e) {
+        if (!e.orphaned && e.airDate && e.airDate <= day && after({ season: s.number, episode: e.number }, latest)) available++;
+      });
+    });
+    return { latest: latest, label: latest ? 'S' + latest.season + ' E' + latest.episode : show.lastWatched, available: available };
+  }
+  function viewingStatus(show, day) { return show.status === 'Caught Up' && progress(show, day).available ? 'Watching' : show.status; }
+  function searchable(show) { return [show.title, show.originalTitle, show.type, show.notes, show.seasonRanking, viewingStatus(show), progress(show).label, progress(show).available ? 'new episodes' : '', seriesStatus(show)].concat(show.genres, show.networks, show.companies).join(' ').toLowerCase(); }
   App.tv = { priority: priority, compare: compare, showRatingLabel: showRatingLabel, statuses: statuses, modes: modes, showLabels: showLabels, episodeLabels: episodeLabels, normalize: normalize, normalizeList: normalizeList, rating: rating,
-    seriesStatus: seriesStatus, averages: averages, fromTmdb: fromTmdb, seasonFromTmdb: seasonFromTmdb, mergeSeason: mergeSeason, refresh: refresh, content: content, searchable: searchable };
+    today: today, position: position, progress: progress, viewingStatus: viewingStatus, seriesStatus: seriesStatus, averages: averages, fromTmdb: fromTmdb, seasonFromTmdb: seasonFromTmdb, mergeSeason: mergeSeason, refresh: refresh, content: content, searchable: searchable };
 })();

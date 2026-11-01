@@ -64,7 +64,7 @@
     $('#tvListView').hidden = filtersView; $('#tvPivotsView').hidden = !filtersView;
     document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.tvView === (filtersView ? 'pivots' : 'list'))); });
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
-    const rows = shows.filter(function (s) { return (p.filter === 'all' || s.status === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
+    const rows = shows.filter(function (s) { return (p.filter === 'all' || tv.viewingStatus(s) === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
     rows.sort(function (a, b) { return tv.compare(a, b, p.sort, p.direction); });
     renderPivots(shows);
     App.tvPivotsUI.render(shows);
@@ -75,6 +75,7 @@
       return '<th scope="col" aria-sort="' + (p.sort === c[0] ? (p.direction === 'asc' ? 'ascending' : 'descending') : 'none') + '"><button type="button" data-tv-sort="' + c[0] + '">' + c[1] + (p.sort === c[0] ? (p.direction === 'asc' ? ' ↑' : ' ↓') : '') + '</button><button type="button" class="tv-resize" data-tv-resize="' + c[0] + '" aria-label="Resize ' + c[1] + ' column" title="Drag to resize. Double-click to fit. Arrow keys resize; Enter fits."></button></th>';
     }).join('') + '</tr>';
     $('#tvTable tbody').innerHTML = rows.map(function (s) {
+      const progress = tv.progress(s), viewingStatus = tv.viewingStatus(s);
       const wishlist = s.status === 'Want to Watch', field = wishlist ? 'priority' : 'rating', score = s[field];
       const choices = wishlist ? [1, 2, 3, 4, 5] : Array.from({ length: 11 }, function (_, i) { return i / 2; });
       const labels = '<option value="">—</option>' + choices.map(function (n) { const label = wishlist ? (n === 1 ? 'Highest' : n === 5 ? 'Lowest' : 'Priority') : tv.showRatingLabel(n); return '<option value="' + n + '"' + (score === n ? ' selected' : '') + '>' + n + ' · ' + esc(label) + '</option>'; }).join('');
@@ -84,7 +85,7 @@
       const indicators = (seasonRated ? '<span title="Season ratings or ranking saved" aria-label="Season ratings or ranking saved">S</span>' : '') + (episodeRated ? '<span title="Episode ratings saved" aria-label="Episode ratings saved">E</span>' : '');
       const detail = [avg.seasons.count ? 'Seasons: ' + avg.seasons.value.toFixed(1) + '/10' : '', avg.episodes.count ? 'Episodes: ' + avg.episodes.value.toFixed(1) + '/10' : '', s.seasonRanking.trim() ? 'Season ranking saved' : ''].filter(Boolean).join(' · ');
       return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (score === null ? '' : wishlist ? 'movie-priority' : 'movie-score') + '" style="' + (score === null ? '' : 'background:' + App.movies.color(score, wishlist)) + '" aria-hidden="true">' + (score ?? '—') + '</span><select data-tv-edit="' + field + '" aria-label="' + (wishlist ? 'Priority' : 'Show rating') + ' for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
-        + '<td><select class="tv-tone-' + tone(s.status) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, s.status) + '</select></td>'
+        + '<td><select class="tv-tone-' + tone(viewingStatus) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, viewingStatus) + '</select>' + (progress.label ? '<button type="button" class="tv-progress-link" data-tv-open="' + s.id + '" title="Latest watched episode">Watched ' + esc(progress.label) + '</button>' : '') + (progress.available ? '<button type="button" class="tv-new-episodes" data-tv-open="' + s.id + '">' + progress.available + ' new episode' + (progress.available === 1 ? '' : 's') + '</button>' : '') + '</td>'
         + ['providerStatus', 'lastAirDate', 'type', 'genres', 'numberOfSeasons', 'numberOfEpisodes'].map(function (key) { const cell = key === 'voteAverage' && s.voteAverage !== null ? s.voteAverage.toFixed(1) : value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '" title="' + esc(cell ?? '') + '">' + (key === 'voteAverage' && s.voteAverage !== null ? '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '">' + cell + '</span>' : esc(cell ?? '—')) + '</td>'; }).join('')
         + '<td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
     }).join('');
@@ -124,7 +125,7 @@
         const old = shows[index];
         message.textContent = 'Refreshing all ' + shows.length + ' linked shows · ' + (index + 1) + '/' + shows.length + ': ' + old.title;
         if (App.tvEditor.isEditing(old.id)) { skipped++; continue; }
-        const snapshot = u.stableJson(old), fresh = await App.tmdb.tvDetails(old.tmdbId, controller.signal);
+        const snapshot = u.stableJson(old), fresh = await App.tmdb.tvDetailsWithProgress(old, controller.signal);
         if (controller.signal.aborted) break;
         const current = saved().find(function (s) { return s.id === old.id; });
         if (!current || snapshot !== u.stableJson(current) || App.tvEditor.isEditing(old.id)) { skipped++; continue; }
