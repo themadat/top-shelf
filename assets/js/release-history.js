@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.25","date":"2026-11-01T12:00:00.000Z","title":"TV episode progress","summary":"Record your latest watched TV episode, highlight new aired episodes, and keep caught-up shows current with tracked season refresh.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.24","date":"2026-10-26T12:00:00.000Z","title":"Movie date picker","summary":"Open the calendar when clicking movie date fields or editing dates in the movie list.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.23","date":"2026-10-26T12:00:00.000Z","title":"Clearer text selection","summary":"Made selected text easier to see with a consistent blue highlight and white text throughout the app.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.22","date":"2026-10-26T12:00:00.000Z","title":"TMDB settings in Data Sync","summary":"Moved TMDB Lookup Settings into Data Sync and updated the movie lookup shortcut.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

@@ -103,10 +103,11 @@
   }
   async function tvDetailsWithProgress(show, signal) {
     const fresh = await tvDetails(show.tmdbId, signal), latest = App.tv.progress(show).latest;
-    if (!latest) return fresh;
+    const eligible = fresh.seasons.filter(function (s) { return s.number > 0 && (!s.airDate || s.airDate <= App.tv.today()); });
+    const start = latest?.season ?? Math.max(0, ...eligible.map(function (s) { return s.number; }));
     for (let i = 0; i < fresh.seasons.length; i++) {
       const s = fresh.seasons[i];
-      if (s.number < latest.season || (s.airDate && s.airDate > App.tv.today())) continue;
+      if (!s.number || s.number < start || (s.airDate && s.airDate > App.tv.today())) continue;
       if (signal?.aborted) throw new DOMException('Stopped', 'AbortError');
       const loaded = await tvSeason(show.tmdbId, s.number, signal);
       if (s.tmdbId && loaded.tmdbId !== s.tmdbId) throw new Error('The season identity changed. Refresh again; your saved progress is preserved.');

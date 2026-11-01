@@ -195,7 +195,7 @@
     const confirmed = await App.components.confirm({ title: 'Link this TV show?', message: 'Use the selected TMDB show’s title and metadata? Your ratings, viewing status, and notes will stay.', confirmLabel: 'Link show', cancelLabel: 'Keep searching' });
     if (!confirmed || !draft) return;
     request(async function (signal, current) {
-      const fresh = await App.tmdb.tvDetails(id, signal); if (!current()) return;
+      const fresh = await App.tmdb.tvDetailsWithProgress(Object.assign({}, draft, { tmdbId: id }), signal); if (!current()) return;
       if (App.storage.getState().workspace.tvShows.some(function (s) { return !s.deleted && s.tmdbId === id && s.id !== draft.id; })) throw new Error('This TV show is already in your library.');
       readFields(); draft = tv.refresh(draft, fresh); fill(); $('#tvLookup').open = false; status('Details loaded. Save Show to keep your changes.');
     });

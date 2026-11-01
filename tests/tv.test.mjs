@@ -258,7 +258,7 @@ test('tracked TV refresh downloads current and later seasons and preserves perso
   const episode = merged.seasons.find(s => s.number === 2).episodes[0];
   assert.equal(episode.rating, 8); assert.equal(episode.notes, 'Keep'); assert.equal(episode.watched, true);
   calls.length = 0;
-  await A.tmdb.tvDetailsWithProgress(show()); assert.deepEqual(calls, ['/3/tv/123']);
+  await A.tmdb.tvDetailsWithProgress(show()); assert.deepEqual(calls, ['/3/tv/123', '/3/tv/123/season/3']);
 });
 
 test('tracked TV refresh rejects partial failures, wrong season identities and cancellation without changing saved data', async () => {
@@ -271,4 +271,49 @@ test('tracked TV refresh rejects partial failures, wrong season identities and c
   const c = new AbortController();
   const A = harness(async () => { c.abort(); return { ok: true, json: async () => series() }; });
   await assert.rejects(() => A.tmdb.tvDetailsWithProgress(prior, c.signal), { name: 'AbortError' });
+});
+
+test('TV latest release and progress actions follow aired season/episode order and retain personal ratings', () => {
+  const s = show({ status: 'Watching', lastWatched: 'S1 E2', seasons: [
+    { number: 0, loaded: true, episodes: [{ number: 99, airDate: '2020-01-01' }] },
+    { number: 1, loaded: true, episodes: [{ number: 2, airDate: '2020-01-01', rating: 8, notes: 'Keep' }] },
+    { number: 2, loaded: true, episodes: [{ number: 1, airDate: '2020-01-02' }, { number: 2, airDate: '2020-01-03' }, { number: 3, airDate: '2099-01-01' }] }
+  ] });
+  assert.equal(tv.progress(s).releasedLabel, 'S2 E2');
+  const next = tv.advance(s, false);
+  assert.equal(next.lastWatched, 'S2 E1'); assert.equal(tv.progress(next).available, 1); assert.equal(next.status, 'Watching');
+  const caughtUp = tv.advance(next, true);
+  assert.equal(caughtUp.lastWatched, 'S2 E2'); assert.equal(caughtUp.status, 'Caught Up'); assert.equal(tv.progress(caughtUp).caughtUp, true);
+  assert.equal(caughtUp.seasons[1].episodes[0].notes, 'Keep'); assert.equal(caughtUp.seasons[1].episodes[0].rating, 8);
+  assert.equal(tv.advance(caughtUp, false), caughtUp); assert.equal(tv.advance(caughtUp, true), caughtUp);
+  assert.equal(s.lastWatched, 'S1 E2');
+  s.lastWatched = ''; s.seasons[1].episodes[0].rating = null;
+  assert.equal(tv.advance(s, false).lastWatched, 'S1 E2');
+  assert.equal(tv.advance(s, true).lastWatched, 'S2 E2');
+});
+
+test('TV incomplete episode lists cannot claim the latest release or advance across unknown episodes', () => {
+  const s = show({ lastWatched: 'S1 E1', seasons: [
+    { number: 1, loaded: true, episodes: [{ number: 1, airDate: '2020-01-01' }, { number: 2, airDate: '2020-01-02' }] },
+    { number: 2, episodeCount: 8, airDate: '2020-01-03' }
+  ] });
+  const p = tv.progress(s);
+  assert.equal(p.released, null); assert.equal(p.complete, false); assert.equal(p.caughtUp, false); assert.equal(p.next.episode, 2);
+  assert.equal(tv.advance(s, true), s);
+  const stepped = tv.advance(s, false); assert.equal(stepped.lastWatched, 'S1 E2'); assert.equal(tv.progress(stepped).next, null);
+  s.seasons[1].airDate = '2099-01-01';
+  assert.equal(tv.progress(s).releasedLabel, 'S1 E2');
+  assert.equal(tv.advance(s, false).lastWatched, 'S1 E2');
+});
+
+test('TV progress columns sort numerically and retain device-local widths and sorting through backup', () => {
+  const a = show({ id: 'a', lastWatched: 'S2 E9', seasons: [{ number: 2, loaded: true, episodes: [{ number: 9, airDate: '2020-01-01' }] }] });
+  const b = show({ id: 'b', lastWatched: 'S2 E10', seasons: [{ number: 2, loaded: true, episodes: [{ number: 10, airDate: '2020-01-01' }] }] });
+  for (const key of ['progress', 'latestEpisode']) {
+    assert.ok(tv.compare(a, b, key, 'asc') < 0); assert.ok(tv.compare(a, b, key, 'desc') > 0);
+    assert.ok(tv.compare(show(), b, key, 'asc') > 0);
+    const state = model.normalize({ ui: { tv: { sort: key, widths: { progress: 290, latestEpisode: 130, numberOfSeasons: 40, numberOfEpisodes: 48 } } } });
+    assert.equal(state.ui.tv.sort, key); assert.equal(state.ui.tv.widths[key], key === 'progress' ? 290 : 130);
+    assert.equal(state.ui.tv.widths.numberOfSeasons, 40);
+  }
 });

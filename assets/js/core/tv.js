@@ -31,7 +31,12 @@
   function compare(a, b, key, direction) {
     const tie = function () { return compareScore(a, b, a.status === 'Want to Watch' ? 'asc' : 'desc') || a.title.localeCompare(b.title); };
     if (key === 'rating') return compareScore(a, b, direction) || a.title.localeCompare(b.title);
-    const get = function (s) { if (key === 'status') return statuses.indexOf(viewingStatus(s)); if (key === 'providerStatus') return seriesStatus(s); return Array.isArray(s[key]) ? s[key].join(', ') : s[key]; };
+    const get = function (s) {
+      if (key === 'status') return statuses.indexOf(viewingStatus(s));
+      if (key === 'providerStatus') return seriesStatus(s);
+      if (key === 'latestEpisode' || key === 'progress') { const p = progress(s), point = key === 'latestEpisode' ? p.released : p.latest; return point ? point.season * 100001 + point.episode : null; }
+      return Array.isArray(s[key]) ? s[key].join(', ') : s[key];
+    };
     const av = get(a), bv = get(b);
     if (av === null || bv === null) return av === bv ? tie() : av === null ? 1 : -1;
     const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { numeric: true });
@@ -189,17 +194,33 @@
         if (!e.orphaned && e.rating !== 1 && (e.watched || e.rating > 1) && (!latest || after(point, latest))) latest = point;
       });
     });
-    let available = 0;
-    if (latest) show.seasons.forEach(function (s) {
-      if (!s.number || s.orphaned) return;
-      s.episodes.forEach(function (e) {
-        if (!e.orphaned && e.airDate && e.airDate <= day && after({ season: s.number, episode: e.number }, latest)) available++;
-      });
-    });
-    return { latest: latest, label: latest ? 'S' + latest.season + ' E' + latest.episode : show.lastWatched, available: available };
+    const seasons = show.seasons.filter(function (s) { return s.number > 0 && !s.orphaned && (!s.airDate || s.airDate <= day); });
+    const aired = seasons.flatMap(function (s) {
+      return s.episodes.filter(function (e) { return !e.orphaned && e.airDate && e.airDate <= day; }).map(function (e) { return { season: s.number, episode: e.number }; });
+    }).sort(function (a, b) { return a.season - b.season || a.episode - b.episode; });
+    const missing = function (s) { return !s.loaded && (!s.episodeCount || s.episodes.filter(function (e) { return !e.orphaned; }).length < s.episodeCount); };
+    let released = aired[aired.length - 1] || null;
+    if (released && seasons.some(function (s) { return s.number >= released.season && missing(s); })) released = null;
+    const complete = !seasons.some(function (s) { return (!latest || s.number >= latest.season) && missing(s); });
+    const remaining = aired.filter(function (point) { return latest ? after(point, latest) : !show.lastWatched; });
+    const candidate = remaining[0];
+    const canStep = candidate && ((latest && candidate.season === latest.season && candidate.episode === latest.episode + 1)
+      || !seasons.some(function (s) { return (!latest || s.number >= latest.season) && s.number <= candidate.season && missing(s); }));
+    const label = function (point) { return point ? 'S' + point.season + ' E' + point.episode : ''; };
+    return { latest: latest, label: latest ? label(latest) : show.lastWatched, available: remaining.length,
+      released: released, releasedLabel: label(released), complete: complete,
+      next: canStep ? candidate : null, caughtUp: !!(released && latest && !after(released, latest)) };
   }
-  function viewingStatus(show, day) { return show.status === 'Caught Up' && progress(show, day).available ? 'Watching' : show.status; }
+  function advance(show, all, day) {
+    const p = progress(show, day), target = all ? p.released : p.next;
+    if (!target || p.caughtUp) return show;
+    const updated = Object.assign({}, show, { lastWatched: 'S' + target.season + ' E' + target.episode });
+    if (progress(updated, day).caughtUp && ['Watching', 'Caught Up', 'Want to Watch'].includes(show.status)) updated.status = 'Caught Up';
+    else if (show.status === 'Want to Watch') updated.status = 'Watching';
+    return normalize(updated);
+  }
+  function viewingStatus(show, day) { const p = progress(show, day); return show.status === 'Caught Up' && p.latest && p.available ? 'Watching' : show.status; }
   function searchable(show) { return [show.title, show.originalTitle, show.type, show.notes, show.seasonRanking, viewingStatus(show), progress(show).label, progress(show).available ? 'new episodes' : '', seriesStatus(show)].concat(show.genres, show.networks, show.companies).join(' ').toLowerCase(); }
   App.tv = { priority: priority, compare: compare, showRatingLabel: showRatingLabel, statuses: statuses, modes: modes, showLabels: showLabels, episodeLabels: episodeLabels, normalize: normalize, normalizeList: normalizeList, rating: rating,
-    today: today, position: position, progress: progress, viewingStatus: viewingStatus, seriesStatus: seriesStatus, averages: averages, fromTmdb: fromTmdb, seasonFromTmdb: seasonFromTmdb, mergeSeason: mergeSeason, refresh: refresh, content: content, searchable: searchable };
+    today: today, position: position, progress: progress, advance: advance, viewingStatus: viewingStatus, seriesStatus: seriesStatus, averages: averages, fromTmdb: fromTmdb, seasonFromTmdb: seasonFromTmdb, mergeSeason: mergeSeason, refresh: refresh, content: content, searchable: searchable };
 })();
