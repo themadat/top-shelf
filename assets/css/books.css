@@ -128,3 +128,22 @@
   .book-toggle-group button { flex: 1 0 44px; min-height: 44px; }
   .book-dialog .book-fields input, .book-dialog .book-fields select, .book-dialog textarea { font-size: 16px; }
 }
+
+@media (max-width: 700px) {
+  .books-toolbar { flex-wrap: nowrap; justify-content: space-between; gap: .25rem; margin-bottom: .25rem; }
+  .books-toolbar-actions { display: flex; flex-wrap: nowrap; width: auto; gap: 0; }
+  #booksListView > .books-filters { display: flex; flex-wrap: nowrap; align-items: center; gap: .25rem; margin-bottom: .25rem; }
+  #booksListView > .books-filters > .books-search { flex: 1 1 auto; }
+  #booksListView > .books-filters > .books-filter-disclosure { flex: 0 0 44px; }
+  #booksCount { display: none; }
+  #booksTable .book-title { white-space: normal; }
+  .books-filter-disclosure .books-row-height { white-space: normal; }
+}
+
+@media (min-width: 620px) and (max-width: 700px) {
+  .books-workspace { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; column-gap: .25rem; }
+  .books-toolbar { grid-column: 1; grid-row: 1; }
+  #booksListView { display: contents; }
+  #booksListView > *, .books-batch, #booksPivotsView { grid-column: 1 / -1; }
+  #booksListView > .books-filters { grid-column: 2; grid-row: 1; }
+}

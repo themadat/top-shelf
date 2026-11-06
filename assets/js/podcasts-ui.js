@@ -73,7 +73,7 @@
    };
    return '<tr data-podcast-id="'+esc(r.id)+'">'+columns.map(([key])=>{const c=cells[key],tag=key==='title'?'th':'td';return '<'+tag+(tag==='th'?' scope="row"':'')+' data-column="'+key+'"'+(c.className?' class="'+c.className+'"':'')+(c.title?' title="'+esc(c.title)+'"':'')+'>'+c.html+'</'+tag+'>';}).join('')+'</tr>';
   }).join('');
-  const updated=all.map(r=>r.catalog.feedFetchedAt).filter(Boolean).sort().at(-1);$('#podcastsRefresh').textContent='Refresh ('+(updated?new Date(updated).toLocaleDateString():'Never updated')+')';$('#podcastsRefresh').disabled=refreshing;
+  const updated=all.map(r=>r.catalog.feedFetchedAt).filter(Boolean).sort().at(-1);$('#podcastsRefresh .compact-label').textContent='Refresh ('+(updated?new Date(updated).toLocaleDateString():'Never updated')+')';$('#podcastsRefresh').disabled=refreshing;
   renderPivots(rows);sizeTable();
  }
  async function edit(select){

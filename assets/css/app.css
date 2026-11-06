@@ -779,3 +779,44 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
   .notes-toolbar { gap: .15rem; padding: .35rem; }
   .support-tabs { scroll-padding-inline: .45rem; }
 }
+
+.compact-symbol { display: none; }
+.books-filter-disclosure > summary { display: none; }
+.books-filter-disclosure { display: block; flex: 4 1 500px; min-width: 0; }
+.books-filter-disclosure > .mobile-filter-panel { display: flex; flex-wrap: wrap; align-items: end; gap: .7rem; }
+/* Search owns its own grid track; action buttons cannot intrude into it. */
+.header-center { display: grid; grid-template-columns: minmax(0, auto) minmax(170px, 1fr); }
+.header-center .global-search-wrap { grid-area: auto; }
+.top-toolbar { max-width: 100%; }
+@media (max-width: 1350px) {
+  .app-header { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title toolbar" "search search" "shelves shelves"; }
+  .header-center { display: contents; }
+  .header-center .global-search-wrap { grid-area: search; min-width: 0; width: 100%; }
+  .title-cluster { overflow: hidden; }
+  .top-toolbar { overflow-x: auto; }
+}
+@media (max-width: 700px) {
+  :root[data-button-style] .top-toolbar .action-button { width: 44px; min-width: 44px; }
+  :root[data-button-style] .compact-symbol, :root[data-button-style] :is(.top-toolbar, .movie-add, .books-toolbar-actions, .tv-toolbar, .podcasts-toolbar) .button-icon { display: inline-flex; align-items: center; justify-content: center; }
+  .compact-symbol .sf-symbol { width: 22px; height: 22px; }
+  :root[data-button-style] .compact-label, :root[data-button-style] :is(.top-toolbar, .movie-add, .books-toolbar-actions, .tv-toolbar, .podcasts-toolbar) .button-label {
+    display: inline; position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+  :root :is(.movie-view-switch, .tv-view-switch, .books-views, .podcasts-toolbar .segmented) { flex-wrap: nowrap; width: auto; padding: 0; gap: 0; overflow: visible; }
+  :root :is(.movie-view-switch, .tv-view-switch, .books-views, .podcasts-toolbar .segmented) button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; min-width: 40px; height: 44px; padding: 0; }
+  :root[data-button-style] :is(.movie-add, .books-toolbar-actions, .tv-toolbar, .podcasts-toolbar) > .button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; min-width: 40px; height: 44px; min-height: 44px; padding: 0; }
+  .mobile-filter-menu { position: relative; margin: 0; min-width: 0; }
+  .mobile-filter-menu > summary { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; list-style: none; }
+  .mobile-filter-menu > summary::-webkit-details-marker { display: none; }
+  .mobile-filter-menu[open] > summary { color: var(--accent-strong); background: var(--accent-soft); }
+  .mobile-filter-menu > :not(summary) { position: absolute; z-index: 28; top: calc(100% + .35rem); right: 0; width: min(360px, calc(100vw - 1.5rem - var(--safe-left) - var(--safe-right))); max-height: 55dvh; overflow: auto; overscroll-behavior: contain; padding: .75rem; margin: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+  .books-filter-disclosure { display: block; }
+  .books-filter-disclosure > .mobile-filter-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+  .books-filter-disclosure label { display: grid; min-width: 0; gap: .3rem; font-size: .8rem; }
+  .books-filter-disclosure select { width: 100%; }
+  /* Mobile uses intrinsic column widths without changing saved desktop sizes. */
+  :root :is(.movie-table, #tvTable, #booksTable, #podcastsTable) { table-layout: auto; width: max-content !important; min-width: 0; }
+  :root :is(.movie-table, #tvTable, #booksTable, #podcastsTable) col { width: auto !important; }
+  :root :is(.movie-table, #tvTable, #booksTable, #podcastsTable) :is(th, td) { width: auto; min-width: 0; max-width: min(70vw, 24rem); white-space: normal; }
+  :root :is(.movie-column-resize, .book-resize, .podcast-resize, [data-tv-resize]) { display: none; }
+}

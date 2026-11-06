@@ -1135,6 +1135,19 @@
     components.init();
     portability.init();
     bindShelfNavigation();
+    const phoneLayout = window.matchMedia('(max-width: 700px)');
+    const bookFilters = $('.books-filter-disclosure');
+    const updateBookFilters = function () { bookFilters.open = !phoneLayout.matches; };
+    phoneLayout.addEventListener('change', updateBookFilters);
+    updateBookFilters();
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape' || !phoneLayout.matches) return;
+      $$('.mobile-filter-menu[open]').forEach(function (menu) { menu.open = false; $('summary', menu).focus(); });
+    });
+    document.addEventListener('click', function (event) {
+      if (!phoneLayout.matches) return;
+      $$('.mobile-filter-menu[open]').forEach(function (menu) { if (!menu.contains(event.target)) menu.open = false; });
+    });
     App.moviesUI.init();
     App.booksEditor.init();
     App.booksUI.init();

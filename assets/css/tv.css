@@ -203,3 +203,30 @@
   .tv-title-button, .tv-progress-link, .tv-status-dismiss { min-height: 44px; }
   .tv-show-actions button, .tv-show-actions a, .tv-progress-actions button { width: 44px; height: 44px; }
 }
+
+@media (max-width: 700px) {
+  .tv-sticky-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: .25rem; overflow: visible; max-height: none; }
+  .tv-toolbar { display: contents; }
+  .tv-view-switch { grid-row: 1; grid-column: 1; justify-self: start; }
+  #tvRefresh { grid-row: 1; grid-column: 2; }
+  #tvImportButton { grid-row: 1; grid-column: 3; }
+  #tvAdd { grid-row: 1; grid-column: 4; }
+  .tv-toolbar > label:has(#tvFilter) { grid-row: 2; grid-column: 2 / 4; max-width: 100px; }
+  #tvFilter { width: 100%; min-width: 0; font-size: .75rem; }
+  .tv-toolbar .tv-search { grid-row: 2; grid-column: 1; min-width: 0; height: 44px; }
+  .tv-search #tvCount { position: static; flex: 0 0 auto; }
+  .tv-search { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding-inline: .4rem; }
+  .tv-search input { flex: 1 1 auto; width: 0; min-width: 0; padding-inline: 0; border: 0; background: transparent; }
+  #tvFiltersDisclosure { grid-row: 2; grid-column: 4; margin: 0; }
+  #tvFiltersDisclosure > #tvPivots { display: grid; }
+  .tv-batch { grid-column: 1 / -1; }
+  #tvTable .tv-title-button { white-space: normal; }
+  #tvTable td select { width: auto; }
+}
+
+@media (min-width: 620px) and (max-width: 700px) {
+  .tv-sticky-controls { display: flex; flex-wrap: nowrap; }
+  .tv-toolbar .tv-search { flex: 1 1 120px; }
+  .tv-toolbar > label:has(#tvFilter) { flex: 0 0 100px; }
+  .tv-batch { position: absolute; top: 100%; }
+}

@@ -461,17 +461,28 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
   #movieDialog input:not([type="hidden"]):not([type="checkbox"]), #movieDialog select { height: 44px; min-height: 44px; font-size: 16px; }
   #movieDialog textarea { font-size: 16px; }
   #movieDialog .movie-identity-row textarea { height: 44px; }
-  .movie-toolbar:not(.showing-pivots) { grid-template-columns: repeat(10, minmax(0, 1fr)); }
-  .movie-toolbar:not(.showing-pivots) .movie-view-switch { grid-column: 1 / 7; }
-  .movie-toolbar:not(.showing-pivots) .movie-add { display: contents; }
-  .movie-toolbar:not(.showing-pivots) .movie-add > .button { grid-column: span 2; grid-row: 2; width: auto; min-width: 0; min-height: 44px; }
-  .movie-toolbar:not(.showing-pivots) .movie-add > .primary { grid-column: 7 / 11; grid-row: 1; }
-  .movie-toolbar:not(.showing-pivots) .movie-state-filters { grid-row: 3; }
-  .movie-toolbar:not(.showing-pivots) .movie-search { grid-row: 4; }
   .movie-toolbar .movie-add .button-label { white-space: normal; }
   .movie-toolbar .movie-search { height: 44px; }
   .movie-table th, .movie-table td { height: 44px; }
   .movie-title-link { height: auto; min-height: 44px; }
   .pivot-search input, .pivot-card header input, .pivot-scoring input { min-height: 44px; font-size: 16px; }
   .pivot-card header input { width: 64px; }
+}
+
+@media (max-width: 700px) {
+  #movieToolbar, #movieToolbar.showing-pivots { grid-template-columns: auto minmax(0, 1fr); gap: .25rem; padding: .25rem; }
+  #movieToolbar .movie-view-switch { grid-column: 1; grid-row: 1; justify-self: start; }
+  #movieToolbar .movie-add { grid-column: 1 / -1; grid-row: 1; width: calc(100% - 86px); display: flex; flex-wrap: nowrap; gap: 0; overflow-x: auto; max-width: 100%; justify-self: end; }
+  #movieToolbar .movie-add > .button, #movieToolbar .movie-add > .primary { grid-column: auto; grid-row: auto; }
+  #movieToolbar .movie-state-filters { grid-column: 1; grid-row: 2; width: auto; }
+  #movieToolbar .movie-state-filters button { display: inline-flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; height: 44px; padding: 0; }
+  #movieToolbar .movie-search { grid-column: 2; grid-row: 2; width: 100%; }
+  #movieToolbar .pivot-scoring { grid-column: 1 / -1; grid-row: 2; }
+  .movie-table-resizable .movie-cell, .movie-table-resizable .movie-title-link { width: max-content; max-width: min(70vw, 24rem); white-space: normal; overflow-wrap: anywhere; }
+  .movie-table-resizable .movie-column-sort { max-width: none; }
+}
+@media (min-width: 620px) and (max-width: 700px) {
+  #movieToolbar:not(.showing-pivots) { display: flex; flex-wrap: nowrap; }
+  #movieToolbar .movie-search { flex: 1 1 100px; min-width: 80px; }
+  #movieToolbar .movie-add { order: 4; flex-shrink: 0; width: auto; }
 }
