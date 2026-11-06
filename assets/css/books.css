@@ -116,3 +116,15 @@
   .books-lookup-row label { flex: 1 1 100%; }
   #bookEditorStatus { flex-basis: 100%; }
 }
+
+@media (max-width: 700px) {
+  .books-toolbar-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); width: 100%; align-items: center; }
+  .books-toolbar-actions > .button { white-space: normal; }
+  .books-row-height { justify-content: space-between; }
+  .books-filters { gap: .5rem; }
+  .book-title, .book-mark { min-height: 44px; }
+  .book-mark { min-width: 44px; }
+  .book-toggle-group { flex-wrap: wrap; overflow: visible; gap: .35rem; }
+  .book-toggle-group button { flex: 1 0 44px; min-height: 44px; }
+  .book-dialog .book-fields input, .book-dialog .book-fields select, .book-dialog textarea { font-size: 16px; }
+}

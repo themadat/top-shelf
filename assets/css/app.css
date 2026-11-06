@@ -751,3 +751,31 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
 .shelf-tab-icon,.shelf-tab-count,.shelf-tab-label,.shelf-key { align-self:center; }
 .shelf-tab-count { padding:.05rem .25rem; }
 .shelf-tab-bottom .shelf-key { margin:0; }
+
+/* Phone controls retain their labels and safe-area clearance in Safari and the PWA. */
+@media (max-width: 700px) {
+  .app-header { gap: .35rem; padding-block: calc(.4rem + var(--safe-top)) .35rem; }
+  .app-icon-button { flex: 0 0 44px; width: 44px; height: 44px; }
+  .top-toolbar { gap: 0; }
+  :root .top-toolbar .action-button, .top-toolbar #floatingStatusButton { width: 44px; min-width: 44px; min-height: 44px; padding-inline: .1rem; }
+  :root .top-toolbar .button-label { font-size: .6rem; }
+  .header-center .global-search-wrap { min-width: 0; height: 44px; }
+  .global-search-wrap > kbd, .shelf-key, .books-search > kbd, .podcasts-search > kbd, .movie-search > kbd { display: none; }
+  .global-search-wrap input { padding-right: .55rem; }
+  .shelf-nav { gap: .25rem; scroll-padding-inline: 3px; overscroll-behavior-x: contain; }
+  .shelf-tab { min-width: 60px; height: 52px; padding-inline: .5rem; }
+  .shelf-tab-label { font-size: .72rem; }
+  .shelf-tab-count { font-variant-numeric: tabular-nums; }
+  .whats-new-banner { position: relative; padding-right: 3.25rem; gap: .4rem; }
+  .whats-new-banner .banner-actions { align-self: flex-start; }
+  .whats-new-banner [data-dismiss-release] { position: absolute; top: .4rem; right: .4rem; }
+  .banner-actions .icon-button, .support-tabs button, .notes-toolbar button { min-width: 44px; min-height: 44px; }
+  .dialog-header { padding-inline: max(.75rem, var(--safe-left)) max(.75rem, var(--safe-right)); }
+  .dialog-body { padding-inline: max(.75rem, var(--safe-left)) max(.75rem, var(--safe-right)); }
+  .dialog-footer { flex-wrap: wrap; padding-inline: max(.75rem, var(--safe-left)) max(.75rem, var(--safe-right)); }
+  .dialog-footer > [role="status"] { flex: 1 0 100%; min-width: 0; overflow-wrap: anywhere; }
+  .dialog-footer > [role="status"]:empty { display: none; }
+  .dialog-footer > .button { flex: 1 1 auto; min-height: 44px; }
+  .notes-toolbar { gap: .15rem; padding: .35rem; }
+  .support-tabs { scroll-padding-inline: .45rem; }
+}
