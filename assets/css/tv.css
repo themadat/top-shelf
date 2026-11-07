@@ -255,3 +255,7 @@
   #tvTable .tv-status-cell select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; }
   .tv-status-cell:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
+
+/* Keep network names readable without reserving a wide, single-line strip. */
+.tv-network-pills { flex-wrap: wrap; max-width: 110px; }
+.tv-network-pill { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }

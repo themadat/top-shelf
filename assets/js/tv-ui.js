@@ -2,7 +2,7 @@
   "use strict";
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
-  const columns = [['rating', '#', 105], ['voteAverage', 'Ave', 75], ['title', 'Show', 250], ['networks', 'Networks', 160], ['status', 'My Status', 140], ['providerStatus', 'Status', 110], ['numberOfSeasons', 'S', 40], ['numberOfEpisodes', 'E', 40], ['lastAirDate', 'Last Air', 110], ['latestEpisode', 'Latest', 105], ['progress', 'Progress', 295], ['type', 'Type', 100], ['genres', 'Genres', 180], ['notes', 'Notes', 140]];
+  const columns = [['rating', '#', 105], ['voteAverage', 'Ave', 75], ['title', 'Show', 250], ['networks', 'Networks', 120], ['status', 'My Status', 100], ['providerStatus', 'Status', 110], ['numberOfSeasons', 'S', 40], ['numberOfEpisodes', 'E', 40], ['progress', 'Progress', 295], ['latestEpisode', 'Latest', 105], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['notes', 'Notes', 140]];
   let batch = null, resizing = false, pivot = null;
   const networkColors = {
     'netflix': ['#e50914', '#fff'], 'hbo': ['#171717', '#fff'], 'hbo max': ['#5822b4', '#fff'], 'max': ['#002be7', '#fff'],
@@ -21,7 +21,7 @@
     const palette = networkColors[name.trim().toLowerCase()];
     return '<span class="tv-network-pill"' + (palette ? ' style="background:' + palette[0] + ';color:' + palette[1] + '"' : '') + '>' + esc(name) + '</span>';
   }
-  function tone(value) { return ({ 'Want to Watch': 'gold', Watching: 'blue', 'Airing · Caught Up': 'green', 'Caught Up': 'green', Completed: 'purple', Stopped: 'red', Active: 'green', Ended: 'purple', Canceled: 'red', Upcoming: 'blue' })[value] || 'muted'; }
+  function tone(value) { return ({ 'Want to Watch': 'gold', Watching: 'blue', 'Airing': 'green', 'Caught Up': 'green', Completed: 'purple', Stopped: 'red', Active: 'green', Ended: 'purple', Canceled: 'red', Upcoming: 'blue' })[value] || 'muted'; }
   function balanceFilters() {
     const grid = $('#tvPivots'), sections = Array.from(grid.children), available = grid.clientWidth - 32;
     if (!grid.clientWidth || grid.clientWidth < 680) { grid.style.gridTemplateColumns = ''; return; }
@@ -75,6 +75,7 @@
     const width = pref().widths[c[0]];
     if (c[0] === 'title') return Math.max(width || 0, contentWidth('title'));
     if (c[0] === 'progress') return contentWidth('progress');
+    if ((c[0] === 'networks' && width === 160) || (c[0] === 'status' && width === 140)) return c[2];
     if (!isCountColumn(c[0])) return width || c[2];
     const ctx = document.createElement('canvas').getContext('2d'); ctx.font = getComputedStyle($('#tvTable')).font;
     const fitted = Math.ceil(Math.max(40, ...saved().map(function (s) { return ctx.measureText(String(s[c[0]] ?? '—')).width + 24; })));
@@ -134,9 +135,10 @@
       const detail = [avg.seasons.count ? 'Seasons: ' + avg.seasons.value.toFixed(1) + '/10' : '', avg.episodes.count ? 'Episodes: ' + avg.episodes.value.toFixed(1) + '/10' : '', s.seasonRanking.trim() ? 'Season ranking saved' : ''].filter(Boolean).join(' · ');
       return '<tr data-tv-id="' + s.id + '"><td><div class="tv-rating-cell"><span class="tv-rating-select"><span class="' + (score === null ? '' : wishlist ? 'movie-priority' : 'movie-score') + '" style="' + (score === null ? '' : 'background:' + App.movies.color(score, wishlist)) + '" aria-hidden="true">' + (score === null ? '—' : wishlist ? score : score.toFixed(1)) + '</span><select data-tv-edit="' + field + '" aria-label="' + (wishlist ? 'Priority' : 'Show rating') + ' for ' + esc(s.title) + '">' + labels + '</select></span>' + (indicators ? '<button type="button" class="tv-rating-indicators" data-tv-open="' + s.id + '" title="' + esc(detail) + '" aria-label="Open saved season and episode ratings for ' + esc(s.title) + '">' + indicators + '</button>' : '') + '</div></td><td>' + (s.voteAverage === null ? '—' : '<span class="movie-score ave-' + App.movies.averageBand(s.voteAverage) + '" title="TMDB average out of 10">' + s.voteAverage.toFixed(1) + '</span>') + '</td><td><div class="tv-show-cell"><button type="button" class="tv-title-button" data-tv-open="' + s.id + '">' + esc(s.title) + '</button>' + (s.tmdbId ? '<span class="tv-show-actions"><button type="button" class="tv-row-refresh" data-tv-refresh-id="' + s.id + '"' + (batch ? ' disabled' : '') + ' aria-label="Refresh show ' + esc(s.title) + '" title="Refresh this show">' + App.icons.markup('tvRefresh') + '</button><a href="https://www.themoviedb.org/tv/' + s.tmdbId + '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + esc(s.title) + ' on TMDB" title="Open on TMDB">' + App.icons.markup('tvLink') + '</a></span>' : '') + '</div></td><td><span class="tv-network-pills">' + (s.networks.map(networkPill).join('') || '—') + '</span></td>'
         + '<td><span class="tv-status-cell"><span class="tv-status-label tv-tone-' + tone(viewingStatus) + '" aria-hidden="true">' + esc(viewingStatus) + '</span><select class="tv-tone-' + tone(viewingStatus) + '" data-tv-edit="status" aria-label="My status for ' + esc(s.title) + '">' + options(tv.statuses, viewingStatus) + '</select></span></td>'
-        + ['providerStatus', 'numberOfSeasons', 'numberOfEpisodes', 'lastAirDate'].map(function (key) { const cell = value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '">' + esc(cell ?? '—') + '</td>'; }).join('')
-        + '<td title="' + esc(progress.releasedLabel ? 'Latest aired regular episode' : 'Refresh episode details to find the latest release') + '">' + esc(progress.releasedLabel || '—') + '</td>'
+        + ['providerStatus', 'numberOfSeasons', 'numberOfEpisodes'].map(function (key) { const cell = value(s, key); return '<td class="tv-tone-' + (key === 'providerStatus' ? tone(cell) : 'default') + '">' + esc(cell ?? '—') + '</td>'; }).join('')
         + '<td>' + progressCell(s, progress) + '</td>'
+        + '<td title="' + esc(progress.releasedLabel ? 'Latest aired regular episode' : 'Refresh episode details to find the latest release') + '">' + esc(progress.releasedLabel || '—') + '</td>'
+        + '<td>' + esc(value(s, 'lastAirDate') || '—') + '</td>'
         + ['type', 'genres'].map(function (key) { return '<td title="' + esc(value(s, key) || '') + '">' + esc(value(s, key) || '—') + '</td>'; }).join('')
         + '<td><button type="button" class="tv-title-button" data-tv-open="' + s.id + '" title="' + esc(s.notes) + '">' + esc(s.notes || 'Add notes') + '</button></td></tr>';
     }).join('');

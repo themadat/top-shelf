@@ -187,7 +187,7 @@ test('Sherlock supplied episode ratings seed once, preserve existing scores, and
 });
 
 test('TV status sorting follows the viewing order and wishlist ties use independent priority', () => {
-  const expected = ['Watching', 'Airing · Caught Up', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
+  const expected = ['Watching', 'Airing', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
   assert.deepEqual(Array.from(tv.statuses), expected);
   const items = expected.slice().reverse().map((status, i) => show({ id: 'status-' + i, status, title: 'Show ' + i }));
   assert.deepEqual(items.slice().sort((a,b)=>tv.compare(a,b,'status','asc')).map(s=>s.status), expected);
@@ -379,29 +379,42 @@ test('TV behind totals sum the remainder of the watched season and every later r
 });
 
 test('weekly viewing survives new episodes, catch-up, refresh, backups and sync without changing legacy statuses', () => {
-  const weekly = show({ status: 'Airing · Caught Up', lastWatched: 'S1 E1', rating: 4.5, notes: 'Keep weekly', seasons: [
+  const weekly = show({ status: 'Airing', lastWatched: 'S1 E1', rating: 4.5, notes: 'Keep weekly', seasons: [
     { number: 1, loaded: true, episodeCount: 3, episodes: [
       { number: 1, airDate: '2026-01-01' }, { number: 2, airDate: '2026-01-08' }, { number: 3, airDate: '2099-01-01' }
     ] }
   ] });
-  assert.equal(tv.viewingStatus(weekly, '2026-01-05'), 'Airing · Caught Up');
+  assert.equal(tv.viewingStatus(weekly, '2026-01-05'), 'Airing');
   assert.equal(tv.viewingStatus(weekly, '2026-01-09'), 'Watching');
-  assert.equal(weekly.status, 'Airing · Caught Up');
+  assert.equal(weekly.status, 'Airing');
   for (const all of [false, true]) {
     const caught = tv.advance(weekly, all, '2026-01-09');
     assert.equal(caught.lastWatched, 'S1 E2');
-    assert.equal(caught.status, 'Airing · Caught Up');
-    assert.equal(tv.viewingStatus(caught, '2026-01-09'), 'Airing · Caught Up');
+    assert.equal(caught.status, 'Airing');
+    assert.equal(tv.viewingStatus(caught, '2026-01-09'), 'Airing');
     assert.equal(caught.notes, 'Keep weekly'); assert.equal(caught.rating, 4.5);
   }
   const refreshed = tv.refresh(weekly, tv.fromTmdb(series()));
-  assert.equal(refreshed.status, 'Airing · Caught Up');
-  const local = model.normalize({ workspace: { tvShows: [weekly] }, ui: { tv: { filter: 'Airing · Caught Up' } } });
-  assert.equal(model.prepare(model.exportEnvelope(local)).state.workspace.tvShows[0].status, 'Airing · Caught Up');
-  assert.equal(model.prepareSync(model.syncPayload(local)).state.workspace.tvShows[0].status, 'Airing · Caught Up');
-  assert.equal(local.ui.tv.filter, 'Airing · Caught Up');
+  assert.equal(refreshed.status, 'Airing');
+  const local = model.normalize({ workspace: { tvShows: [weekly] }, ui: { tv: { filter: 'Airing' } } });
+  assert.equal(model.prepare(model.exportEnvelope(local)).state.workspace.tvShows[0].status, 'Airing');
+  assert.equal(model.prepareSync(model.syncPayload(local)).state.workspace.tvShows[0].status, 'Airing');
+  assert.equal(local.ui.tv.filter, 'Airing');
   const latest = tv.advance(weekly, true, '2026-01-09');
-  assert.ok(tv.searchable(latest).includes('airing · caught up'));
+  assert.ok(tv.searchable(latest).includes('airing'));
   assert.equal(show({ status: 'Caught Up' }).status, 'Caught Up');
   assert.equal(show({ status: 'Watching' }).status, 'Watching');
+});
+
+test('the previous airing label stays readable in saved shows, filters, backups and sync', () => {
+  const old = { ...show({ notes: 'Keep', lastWatched: 'S1 E2', rating: 4.5 }), status: 'Airing · Caught Up' };
+  const state = model.normalize({ workspace: { tvShows: [old] }, ui: { tv: { filter: 'Airing · Caught Up' } } });
+  assert.equal(state.workspace.tvShows[0].status, 'Airing');
+  assert.equal(state.workspace.tvShows[0].notes, 'Keep');
+  assert.equal(state.workspace.tvShows[0].lastWatched, 'S1 E2');
+  assert.equal(state.ui.tv.filter, 'Airing');
+  assert.equal(model.prepare(model.exportEnvelope(state)).state.workspace.tvShows[0].status, 'Airing');
+  const payload = JSON.parse(JSON.stringify(model.syncPayload(state)));
+  payload.data.tvShows[0].status = 'Airing · Caught Up';
+  assert.equal(model.prepareSync(payload).state.workspace.tvShows[0].status, 'Airing');
 });

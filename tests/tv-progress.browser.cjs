@@ -109,7 +109,7 @@ const assert = require('node:assert/strict');
     }));
 
     assert.equal(await row.locator('[data-tv-edit="status"]').inputValue(), 'Watching');
-    assert.deepEqual(await page.locator('#tvTable thead [data-tv-sort]').allTextContents(), ['#', 'Ave', 'Show ↑', 'Networks', 'My Status', 'Status', 'S', 'E', 'Last Air', 'Latest', 'Progress', 'Type', 'Genres', 'Notes']);
+    assert.deepEqual(await page.locator('#tvTable thead [data-tv-sort]').allTextContents(), ['#', 'Ave', 'Show ↑', 'Networks', 'My Status', 'Status', 'S', 'E', 'Progress', 'Latest', 'Last Air', 'Type', 'Genres', 'Notes']);
     assert.equal(await row.locator('td').nth(9).innerText(), 'S1 E2');
     assert.equal(await row.locator('[data-tv-advance="one"]').isEnabled(), true);
     await row.locator('[data-tv-advance="one"]').click();

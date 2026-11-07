@@ -9,7 +9,7 @@
     return input.shows.map(function (row, index) {
       const prefix = 'Show ' + (index + 1) + ': ';
       if (!row || typeof row.title !== 'string' || !row.title.trim() || row.title.length > 300) throw new Error(prefix + 'enter a title (up to 300 characters).');
-      if (!App.tv.statuses.includes(row.status)) throw new Error(prefix + 'choose a valid viewing status.');
+      if (!App.tv.statuses.includes(App.tv.normalizeStatus(row.status))) throw new Error(prefix + 'choose a valid viewing status.');
       if (!Object.hasOwn(row, 'rating')) throw new Error(prefix + 'rating must be 0–5 in half-points or null for unrated.');
       if (row.rating !== null && ((typeof row.rating !== 'number' || !Number.isInteger(row.rating * 2)) || row.rating < 0 || row.rating > 5)) throw new Error(prefix + 'rating must be 0–5 in half-points or null for unrated.');
       if (row.notes !== undefined && (typeof row.notes !== 'string' || row.notes.length > 20000)) throw new Error(prefix + 'notes must be text up to 20,000 characters.');

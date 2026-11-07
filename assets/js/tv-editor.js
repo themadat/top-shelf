@@ -119,7 +119,7 @@
     const p = tv.progress(draft);
     $('#tvProgress').textContent = (p.label ? 'Latest watched: ' + p.label + '. ' : 'Set your latest watched episode to track new releases. ')
       + (draft.lastWatched && !p.latest ? 'Enter both a season number and an episode number to track progress. ' : '')
-      + (p.available ? p.available + ' new aired episode' + (p.available === 1 ? '' : 's') + '.' + (['Caught Up', 'Airing · Caught Up'].includes(draft.status) ? ' Shown as Watching until you catch up.' : '') : 'No new aired episodes in saved details. Refresh to check for updates.');
+      + (p.available ? p.available + ' new aired episode' + (p.available === 1 ? '' : 's') + '.' + (['Caught Up', 'Airing'].includes(draft.status) ? ' Shown as Watching until you catch up.' : '') : 'No new aired episodes in saved details. Refresh to check for updates.');
     $('#tvProgress').classList.toggle('tv-has-new-episodes', p.available > 0);
     $('#tvCheckEpisodes').hidden = !draft.tmdbId;
   }

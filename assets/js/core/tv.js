@@ -1,7 +1,8 @@
 (function () {
   "use strict";
   const App = window.LocalApp, u = App.utils;
-  const statuses = ['Watching', 'Airing · Caught Up', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
+  const statuses = ['Watching', 'Airing', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
+  function normalizeStatus(value) { return value === 'Airing · Caught Up' ? 'Airing' : value; }
   const modes = ['Show', 'Season', 'Episode'];
   const showLabels = ['Terrible', 'Below Average', 'Average', 'Above Average', 'Elite', 'Legendary'];
   const episodeLabels = ['', 'Did not Finish', 'Wtf did I just watch', 'Horrible', 'Bad', 'Meh', 'Average', 'Good', 'Great', 'Phenomenal', 'Best of the Best'];
@@ -108,7 +109,7 @@
       firstAirDate: date(s.firstAirDate), lastAirDate: date(s.lastAirDate), type: u.cleanLine(s.type, 100), genres: names(s.genres), networks: names(s.networks), companies: names(s.companies),
       numberOfSeasons: count(s.numberOfSeasons), numberOfEpisodes: count(s.numberOfEpisodes), voteAverage: average(s.voteAverage),
       providerStatus: u.cleanLine(s.providerStatus, 100), inProduction: typeof s.inProduction === 'boolean' ? s.inProduction : null,
-      fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', status: statuses.includes(s.status) ? s.status : 'Watching', mode: modes.includes(s.mode) ? s.mode : 'Show',
+      fetchedAt: s.fetchedAt ? u.ensureIso(s.fetchedAt, '') : '', status: statuses.includes(normalizeStatus(s.status)) ? normalizeStatus(s.status) : 'Watching', mode: modes.includes(s.mode) ? s.mode : 'Show',
       rating: rating(s.rating, true), priority: priority(s.priority), notes: u.cleanText(s.notes, 20000), seasonRanking: u.cleanText(s.seasonRanking === undefined ? rankingSeeds[u.cleanLine(s.title, 300).toLowerCase()] : s.seasonRanking, 20000), lastWatched: u.cleanLine(s.lastWatched, 100), sherlockRatingsAdded: sherlockRatingsAdded, seasons: seasons };
   }
   function normalizeList(value) {
@@ -234,8 +235,8 @@
     else if (show.status === 'Want to Watch') updated.status = 'Watching';
     return normalize(updated);
   }
-  function viewingStatus(show, day) { const p = progress(show, day); return ['Caught Up', 'Airing · Caught Up'].includes(show.status) && p.latest && p.available ? 'Watching' : show.status; }
+  function viewingStatus(show, day) { const p = progress(show, day); return ['Caught Up', 'Airing'].includes(show.status) && p.latest && p.available ? 'Watching' : show.status; }
   function searchable(show) { return [show.title, show.originalTitle, show.type, show.notes, show.seasonRanking, viewingStatus(show), progress(show).label, progress(show).available ? 'new episodes' : '', seriesStatus(show)].concat(show.genres, show.networks, show.companies).join(' ').toLowerCase(); }
-  App.tv = { priority: priority, compare: compare, showRatingLabel: showRatingLabel, statuses: statuses, modes: modes, showLabels: showLabels, episodeLabels: episodeLabels, normalize: normalize, normalizeList: normalizeList, rating: rating,
+  App.tv = { normalizeStatus: normalizeStatus, priority: priority, compare: compare, showRatingLabel: showRatingLabel, statuses: statuses, modes: modes, showLabels: showLabels, episodeLabels: episodeLabels, normalize: normalize, normalizeList: normalizeList, rating: rating,
     today: today, position: position, progress: progress, advance: advance, viewingStatus: viewingStatus, seriesStatus: seriesStatus, averages: averages, fromTmdb: fromTmdb, seasonFromTmdb: seasonFromTmdb, mergeSeason: mergeSeason, refresh: refresh, content: content, searchable: searchable };
 })();

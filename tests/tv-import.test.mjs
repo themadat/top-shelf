@@ -84,8 +84,16 @@ test('TV imports accept half-point show scores and optional wishlist priority wi
 });
 
 test('bulk import accepts the explicit weekly viewing status', () => {
-  const data = file([row('Weekly example', { status: 'Airing · Caught Up', seriesStatus: 'Active' })]);
+  const data = file([row('Weekly example', { status: 'Airing', seriesStatus: 'Active' })]);
   const preview = importer.preview([], data);
   const result = importer.apply([], data, preview.snapshot, preview.entries.map(e => e.show.id));
-  assert.equal(result.shows[0].status, 'Airing · Caught Up');
+  assert.equal(result.shows[0].status, 'Airing');
+});
+
+test('bulk import accepts the previous airing label without changing other personal fields', () => {
+  const data = file([row('Old airing label', { status: 'Airing · Caught Up', notes: 'Keep' })]);
+  const preview = importer.preview([], data);
+  const result = importer.apply([], data, preview.snapshot, preview.entries.map(e => e.show.id));
+  assert.equal(result.shows[0].status, 'Airing');
+  assert.equal(result.shows[0].notes, 'Keep');
 });
