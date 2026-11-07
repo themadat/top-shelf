@@ -1135,17 +1135,43 @@
     components.init();
     portability.init();
     bindShelfNavigation();
-    const phoneLayout = window.matchMedia('(max-width: 700px)');
+    const compactLayout = window.matchMedia('(max-width: 1350px)');
     const bookFilters = $('.books-filter-disclosure');
-    const updateBookFilters = function () { bookFilters.open = !phoneLayout.matches; };
-    phoneLayout.addEventListener('change', updateBookFilters);
+    const updateBookFilters = function () { bookFilters.open = !compactLayout.matches; };
+    compactLayout.addEventListener('change', updateBookFilters);
+    // Move the existing controls so their listeners and desktop positions survive layout changes.
+    const compactMenus = ['.movie-add', '.books-toolbar-actions', '.tv-toolbar'].map(function (selector) {
+      const container = $(selector), buttons = $$('.button:not(.primary)', container);
+      const menu = document.createElement('details');
+      menu.className = 'compact-actions mobile-filter-menu';
+      menu.innerHTML = '<summary aria-label="More actions" title="More actions">' + icons.markup('detail') + '</summary><div class="compact-actions-panel"></div>';
+      container.insertBefore(menu, container.querySelector('.primary'));
+      const entries = buttons.map(function (button) {
+        const marker = document.createComment('Action position');
+        button.before(marker);
+        return { button: button, marker: marker };
+      });
+      return { menu: menu, entries: entries };
+    });
+    const updateCompactActions = function () {
+      compactMenus.forEach(function (item) {
+        item.menu.hidden = !compactLayout.matches;
+        item.menu.open = false;
+        item.entries.forEach(function (entry) {
+          if (compactLayout.matches) $('.compact-actions-panel', item.menu).appendChild(entry.button);
+          else entry.marker.after(entry.button);
+        });
+      });
+    };
+    compactLayout.addEventListener('change', updateCompactActions);
+    updateCompactActions();
     updateBookFilters();
     document.addEventListener('keydown', function (event) {
-      if (event.key !== 'Escape' || !phoneLayout.matches) return;
+      if (event.key !== 'Escape' || !compactLayout.matches || $('dialog[open]')) return;
       $$('.mobile-filter-menu[open]').forEach(function (menu) { menu.open = false; $('summary', menu).focus(); });
     });
     document.addEventListener('click', function (event) {
-      if (!phoneLayout.matches) return;
+      if (!compactLayout.matches || $('dialog[open]') || event.target.closest('dialog')) return;
       $$('.mobile-filter-menu[open]').forEach(function (menu) { if (!menu.contains(event.target)) menu.open = false; });
     });
     App.moviesUI.init();

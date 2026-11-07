@@ -486,3 +486,17 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
   #movieToolbar .movie-search { flex: 1 1 100px; min-width: 80px; }
   #movieToolbar .movie-add { order: 4; flex-shrink: 0; width: auto; }
 }
+
+@media (max-width: 1350px) {
+  #movieToolbar, #movieToolbar.showing-pivots { display: flex; flex-wrap: nowrap; gap: .15rem; }
+  #movieToolbar .movie-view-switch, #movieToolbar .movie-state-filters { flex: 0 0 auto; }
+  #movieToolbar .movie-state-filters button { width: 26px; min-width: 26px; height: 36px; min-height: 36px; }
+  #movieToolbar .movie-search { flex: 1 1 60px; min-width: 48px; width: auto; height: 36px; }
+  #movieToolbar .movie-search input { padding-inline: .15rem; }
+  #movieResultsCount { display: none; }
+  #movieToolbar .movie-add { order: 4; flex: 0 0 auto; width: auto; max-width: none; overflow: visible; gap: .15rem; }
+  #movieToolbar .pivot-scoring { flex: 1 1 auto; min-width: 0; gap: .2rem; }
+  #movieToolbar .pivot-scoring label { gap: .15rem; font-size: .65rem; }
+  #movieToolbar .pivot-scoring input { width: 42px; min-height: 36px; }
+  .movie-table-resizable .movie-cell, .movie-table-resizable .movie-title-link { max-width: min(42vw, 14rem); }
+}

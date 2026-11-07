@@ -172,3 +172,13 @@
   .podcasts-toolbar > .podcasts-search { flex: 1 1 120px; }
   .podcasts-filter-disclosure { order: 5; }
 }
+
+@media (max-width: 1350px) {
+  .podcasts-controls { display: flex; flex-wrap: nowrap; gap: .15rem; }
+  .podcasts-toolbar { display: contents; }
+  .podcasts-toolbar > .segmented { flex: 0 0 auto; }
+  .podcasts-toolbar > .podcasts-search { flex: 1 1 70px; min-width: 48px; width: auto; height: 36px; min-height: 36px; }
+  #podcastsCount { display: none; }
+  .podcasts-filter-disclosure { flex: 0 0 28px; order: 5; }
+  #podcastsTable .podcast-title-line { max-width: min(42vw, 14rem); }
+}

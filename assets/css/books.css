@@ -147,3 +147,16 @@
   #booksListView > *, .books-batch, #booksPivotsView { grid-column: 1 / -1; }
   #booksListView > .books-filters { grid-column: 2; grid-row: 1; }
 }
+
+@media (max-width: 1350px) {
+  .books-workspace { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; column-gap: .15rem; align-items: center; }
+  .books-toolbar, #booksListView, #booksListView > .books-filters { display: contents; }
+  .books-views { grid-column: 1; grid-row: 1; }
+  #booksListView > .books-filters > .books-search { grid-column: 2; grid-row: 1; min-width: 0; height: 36px; }
+  .books-toolbar-actions { display: flex; flex-wrap: nowrap; width: auto; grid-column: 3; grid-row: 1; gap: .15rem; }
+  #booksListView > .books-filters > .books-filter-disclosure { grid-column: 4; grid-row: 1; }
+  .books-batch, #booksListView > :not(.books-filters), #booksPivotsView { grid-column: 1 / -1; }
+  .books-search [role="status"] { display: none; }
+  .books-table-scroll { margin-top: .25rem; }
+  .book-mark { width: 24px; min-width: 24px; height: 32px; min-height: 32px; margin-left: .15rem; }
+}

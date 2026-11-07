@@ -230,3 +230,28 @@
   .tv-toolbar > label:has(#tvFilter) { flex: 0 0 100px; }
   .tv-batch { position: absolute; top: 100%; }
 }
+
+.tv-status-label { display: none; }
+@media (max-width: 1350px) {
+  .tv-sticky-controls { display: flex; flex-wrap: nowrap; gap: .15rem; max-height: none; overflow: visible; }
+  .tv-toolbar { display: contents; }
+  .tv-view-switch { flex: 0 0 auto; }
+  .tv-toolbar .tv-search { flex: 1 1 70px; min-width: 48px; height: 36px; }
+  .tv-search #tvCount { display: none; }
+  .tv-search { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding-inline: .4rem; }
+  .tv-search input { flex: 1 1 auto; width: 0; min-width: 0; padding-inline: 0; border: 0; background: transparent; }
+  .tv-toolbar > label:has(#tvFilter) { flex: 0 0 64px; width: 64px; }
+  #tvFilter { width: 100%; height: 36px; min-height: 36px; padding-inline: .15rem; font-size: .65rem; }
+  .tv-toolbar .compact-actions { order: 4; }
+  #tvAdd { order: 5; }
+  #tvFiltersDisclosure { margin: 0; order: 6; flex: 0 0 28px; }
+  .tv-batch { position: absolute; top: 100%; }
+  .tv-show-actions button, .tv-show-actions a, .tv-progress-actions button { width: 26px; height: 32px; }
+  .tv-show-actions svg, .tv-progress-actions svg { width: 18px; height: 18px; }
+  #tvTable .tv-title-button { max-width: min(42vw, 14rem); }
+  .tv-progress-cell { gap: .2rem; }
+  .tv-status-cell { position: relative; display: inline-grid; }
+  .tv-status-label { display: block; }
+  #tvTable .tv-status-cell select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; }
+  .tv-status-cell:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+}

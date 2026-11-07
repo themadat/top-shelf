@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const App = window.LocalApp, u = App.utils;
-  const statuses = ['Watching', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
+  const statuses = ['Watching', 'Airing · Caught Up', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
   const modes = ['Show', 'Season', 'Episode'];
   const showLabels = ['Terrible', 'Below Average', 'Average', 'Above Average', 'Elite', 'Legendary'];
   const episodeLabels = ['', 'Did not Finish', 'Wtf did I just watch', 'Horrible', 'Bad', 'Meh', 'Average', 'Good', 'Great', 'Phenomenal', 'Best of the Best'];
@@ -234,7 +234,7 @@
     else if (show.status === 'Want to Watch') updated.status = 'Watching';
     return normalize(updated);
   }
-  function viewingStatus(show, day) { const p = progress(show, day); return show.status === 'Caught Up' && p.latest && p.available ? 'Watching' : show.status; }
+  function viewingStatus(show, day) { const p = progress(show, day); return ['Caught Up', 'Airing · Caught Up'].includes(show.status) && p.latest && p.available ? 'Watching' : show.status; }
   function searchable(show) { return [show.title, show.originalTitle, show.type, show.notes, show.seasonRanking, viewingStatus(show), progress(show).label, progress(show).available ? 'new episodes' : '', seriesStatus(show)].concat(show.genres, show.networks, show.companies).join(' ').toLowerCase(); }
   App.tv = { priority: priority, compare: compare, showRatingLabel: showRatingLabel, statuses: statuses, modes: modes, showLabels: showLabels, episodeLabels: episodeLabels, normalize: normalize, normalizeList: normalizeList, rating: rating,
     today: today, position: position, progress: progress, advance: advance, viewingStatus: viewingStatus, seriesStatus: seriesStatus, averages: averages, fromTmdb: fromTmdb, seasonFromTmdb: seasonFromTmdb, mergeSeason: mergeSeason, refresh: refresh, content: content, searchable: searchable };

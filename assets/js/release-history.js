@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.34","date":"2026-11-06T12:00:00.000Z","title":"Compact mobile table controls","summary":"Keep mobile search and actions within two rows, use icon buttons, and size table columns to their content.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.33","date":"2026-11-06T12:00:00.000Z","title":"iPhone layout and touch controls","summary":"Roomier touch controls, clearer shelf navigation, and full-screen editors with reachable save actions on iPhone.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.32","date":"2026-11-01T12:00:00.000Z","title":"TV rating precision and alignment","summary":"Show whole-number TV ratings with .0 and right-align caught-up and behind indicators beside progress controls.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.31","date":"2026-11-01T12:00:00.000Z","title":"TV deletion and sticky controls","summary":"Delete TV shows with IndexedDB recovery, keep TV controls visible while scrolling, and dismiss status messages with a leading close button.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

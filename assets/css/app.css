@@ -795,7 +795,7 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
   .title-cluster { overflow: hidden; }
   .top-toolbar { overflow-x: auto; }
 }
-@media (max-width: 700px) {
+@media (max-width: 1350px) {
   :root[data-button-style] .top-toolbar .action-button { width: 44px; min-width: 44px; }
   :root[data-button-style] .compact-symbol, :root[data-button-style] :is(.top-toolbar, .movie-add, .books-toolbar-actions, .tv-toolbar, .podcasts-toolbar) .button-icon { display: inline-flex; align-items: center; justify-content: center; }
   .compact-symbol .sf-symbol { width: 22px; height: 22px; }
@@ -819,4 +819,36 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
   :root :is(.movie-table, #tvTable, #booksTable, #podcastsTable) col { width: auto !important; }
   :root :is(.movie-table, #tvTable, #booksTable, #podcastsTable) :is(th, td) { width: auto; min-width: 0; max-width: min(70vw, 24rem); white-space: normal; }
   :root :is(.movie-column-resize, .book-resize, .podcast-resize, [data-tv-resize]) { display: none; }
+}
+
+/* The narrow app header has two rows: search/actions, then shelves. */
+@media (max-width: 1350px) {
+  .app-header { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "title search toolbar" "shelves shelves shelves"; }
+}
+@media (max-width: 700px) {
+  .app-header { gap: .2rem; padding-inline: max(.35rem, var(--safe-left)) max(.35rem, var(--safe-right)); }
+  .title-cluster { gap: 0; }
+  .identity-copy { display: none; }
+  .app-icon-button { flex-basis: 32px; width: 32px; height: 36px; }
+  .header-center .global-search-wrap { height: 36px; }
+  .global-search-wrap input { padding-left: 1.75rem; font-size: 16px; }
+  .global-search-wrap .search-icon { left: .4rem; }
+  .top-toolbar { overflow: visible; }
+  :root[data-button-style] .top-toolbar .action-button, .top-toolbar #floatingStatusButton { flex: 0 0 30px; width: 30px; min-width: 30px; max-width: 30px; height: 36px; min-height: 36px; padding: 0; }
+  .shelf-tab { height: 44px; min-width: 52px; }
+  .top-toolbar .button-icon .sf-symbol, .top-toolbar .floating-status-icon .sf-symbol { width: 20px; height: 20px; }
+  .global-search-results { position: fixed; left: max(.35rem, var(--safe-left)); right: max(.35rem, var(--safe-right)); top: calc(48px + var(--safe-top)); }
+}
+@media (max-width: 1350px) {
+  :root :is(.movie-view-switch, .tv-view-switch, .books-views, .podcasts-toolbar .segmented) button { flex-basis: 28px; width: 28px; min-width: 28px; height: 36px; min-height: 36px; }
+  :root[data-button-style] :is(.movie-add, .books-toolbar-actions, .tv-toolbar, .podcasts-toolbar) > .button { flex-basis: 28px; width: 28px; min-width: 28px; height: 36px; min-height: 36px; }
+  .compact-symbol .sf-symbol { width: 18px; height: 18px; }
+  .compact-actions { flex: 0 0 28px; }
+  .mobile-filter-menu > summary { width: 28px; height: 36px; }
+  .compact-actions > summary .sf-symbol { width: 18px; height: 18px; }
+  .compact-actions > .compact-actions-panel { display: flex; flex-direction: column; gap: .35rem; width: min(300px, calc(100vw - 6rem - var(--safe-left) - var(--safe-right))); }
+  :root[data-button-style] .compact-actions-panel .button { flex-direction: row; justify-content: flex-start; gap: .6rem; width: 100%; min-width: 0; height: auto; min-height: 36px; padding: .4rem .55rem; }
+  :root[data-button-style] .compact-actions-panel :is(.button-label, .compact-label) { position: static; display: inline; width: auto; height: auto; margin: 0; clip-path: none; overflow: visible; white-space: normal; font-size: .8rem; }
+  :root :is(.movie-table, #tvTable, #booksTable, #podcastsTable) { font-size: .75rem; }
+  :root :is(.movie-table, #tvTable, #booksTable, #podcastsTable) :is(th, td) { max-width: min(42vw, 14rem); padding-inline: .25rem; }
 }

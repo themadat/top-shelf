@@ -187,7 +187,7 @@ test('Sherlock supplied episode ratings seed once, preserve existing scores, and
 });
 
 test('TV status sorting follows the viewing order and wishlist ties use independent priority', () => {
-  const expected = ['Watching', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
+  const expected = ['Watching', 'Airing · Caught Up', 'Caught Up', 'Want to Watch', 'Completed', 'Stopped'];
   assert.deepEqual(Array.from(tv.statuses), expected);
   const items = expected.slice().reverse().map((status, i) => show({ id: 'status-' + i, status, title: 'Show ' + i }));
   assert.deepEqual(items.slice().sort((a,b)=>tv.compare(a,b,'status','asc')).map(s=>s.status), expected);
@@ -376,4 +376,32 @@ test('TV behind totals sum the remainder of the watched season and every later r
   s.lastWatched = 'S1 E3'; s.seasons[0].orphaned = true;
   s.seasons[1].episodes = [{ number: 10, airDate: '2099-01-01' }];
   assert.equal(tv.progress(s).available, 8 + 2, 'explicit future dates are never counted by an older-season estimate');
+});
+
+test('weekly viewing survives new episodes, catch-up, refresh, backups and sync without changing legacy statuses', () => {
+  const weekly = show({ status: 'Airing · Caught Up', lastWatched: 'S1 E1', rating: 4.5, notes: 'Keep weekly', seasons: [
+    { number: 1, loaded: true, episodeCount: 3, episodes: [
+      { number: 1, airDate: '2026-01-01' }, { number: 2, airDate: '2026-01-08' }, { number: 3, airDate: '2099-01-01' }
+    ] }
+  ] });
+  assert.equal(tv.viewingStatus(weekly, '2026-01-05'), 'Airing · Caught Up');
+  assert.equal(tv.viewingStatus(weekly, '2026-01-09'), 'Watching');
+  assert.equal(weekly.status, 'Airing · Caught Up');
+  for (const all of [false, true]) {
+    const caught = tv.advance(weekly, all, '2026-01-09');
+    assert.equal(caught.lastWatched, 'S1 E2');
+    assert.equal(caught.status, 'Airing · Caught Up');
+    assert.equal(tv.viewingStatus(caught, '2026-01-09'), 'Airing · Caught Up');
+    assert.equal(caught.notes, 'Keep weekly'); assert.equal(caught.rating, 4.5);
+  }
+  const refreshed = tv.refresh(weekly, tv.fromTmdb(series()));
+  assert.equal(refreshed.status, 'Airing · Caught Up');
+  const local = model.normalize({ workspace: { tvShows: [weekly] }, ui: { tv: { filter: 'Airing · Caught Up' } } });
+  assert.equal(model.prepare(model.exportEnvelope(local)).state.workspace.tvShows[0].status, 'Airing · Caught Up');
+  assert.equal(model.prepareSync(model.syncPayload(local)).state.workspace.tvShows[0].status, 'Airing · Caught Up');
+  assert.equal(local.ui.tv.filter, 'Airing · Caught Up');
+  const latest = tv.advance(weekly, true, '2026-01-09');
+  assert.ok(tv.searchable(latest).includes('airing · caught up'));
+  assert.equal(show({ status: 'Caught Up' }).status, 'Caught Up');
+  assert.equal(show({ status: 'Watching' }).status, 'Watching');
 });
