@@ -74,3 +74,53 @@ test('failed replacement preserves live and persisted state and emits no replace
   storage.replace(next, { saveRecovery: false });
   assert.equal(storage.getState().workspace.title, 'Cloud replacement');
 });
+
+test('async recovery flushes pending saves but still rejects writes from another tab', async () => {
+  const values = new Map();
+  let finishRecovery;
+  const localStorage = {
+    getItem: key => values.get(key) ?? null,
+    removeItem: key => values.delete(key),
+    setItem: (key, value) => values.set(key, String(value))
+  };
+  const indexedDB = {
+    open() {
+      const request = {};
+      queueMicrotask(() => {
+        request.result = {
+          close() {},
+          transaction() {
+            const transaction = { objectStore: () => ({ put: () => ({}) }) };
+            finishRecovery = () => transaction.oncomplete();
+            return transaction;
+          }
+        };
+        request.onsuccess();
+      });
+      return request;
+    }
+  };
+  const window = { addEventListener() {}, dispatchEvent() {}, setTimeout() { return 1; }, clearTimeout() {} };
+  const context = vm.createContext({ window, localStorage, sessionStorage: localStorage, indexedDB, navigator: {}, CustomEvent: class {}, Blob, TextEncoder, TextDecoder, structuredClone, setTimeout, clearTimeout });
+  for (const file of ['config.js', 'core/utils.js', 'core/movies.js', 'core/tv.js', 'core/books.js', 'core/podcasts.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
+  window.LocalApp.utils.richTextToPlainText = String; window.LocalApp.utils.sanitizeRichHtml = String;
+  for (const file of ['core/state.js', 'core/storage-codec.js', 'core/storage.js']) vm.runInContext(readFileSync(new URL('../assets/js/' + file, import.meta.url), 'utf8'), context);
+  const { storage, config } = window.LocalApp;
+  storage.load();
+  storage.mutate(state => { state.modules.cloudSync.lastCheckedAt = '2026-11-09T12:00:00.000Z'; }, { touch: false, reason: 'sync-check' });
+  const recovery = storage.saveRecoveryAsync('Before downloading GitHub data');
+  await Promise.resolve();
+  // Simulate the pending autosave firing while IndexedDB commits.
+  storage.saveNow();
+  finishRecovery();
+  assert.equal(await recovery, true);
+
+  const concurrent = storage.saveRecoveryAsync('Concurrent tab');
+  await Promise.resolve();
+  const other = JSON.parse(values.get(config.storage.stateKey));
+  other.workspace.title = 'Changed in another tab';
+  values.set(config.storage.stateKey, JSON.stringify(other));
+  finishRecovery();
+  await assert.rejects(concurrent, /Saved data changed in another tab/);
+  assert.equal(JSON.parse(values.get(config.storage.stateKey)).workspace.title, 'Changed in another tab');
+});

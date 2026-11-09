@@ -110,6 +110,9 @@
   }
 
   async function saveRecoveryAsync(reason, state) {
+    // Commit this tab's pending autosave before watching for other-tab writes.
+    // Sync checks queue metadata saves that can otherwise race the IDB commit.
+    saveNow();
     const snapshot = { createdAt: u.isoNow(), reason: u.cleanLine(reason || "Before data replacement", 160), state: model.normalize(u.clone(state || getState())) };
     const prior = readLocal(config.storage.recoveryKey), persisted = readLocal(config.storage.stateKey);
     try {
