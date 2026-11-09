@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.37","date":"2026-11-09T12:00:00.000Z","title":"Keep TV activity above the table","summary":"Reserve space for TV activity messages below the compact controls so refresh feedback never covers table rows.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.36","date":"2026-11-07T12:00:00.000Z","title":"TV column order and shorter Airing status","summary":"Place Progress before Latest and Last Air, narrow Networks and My Status, and shorten the weekly viewing status to Airing.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.35","date":"2026-11-07T12:00:00.000Z","title":"Two-line header and weekly TV status","summary":"Move search into the first header row, keep mobile table controls on one line, tighten columns, and add Airing · Caught Up.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.34","date":"2026-11-06T12:00:00.000Z","title":"Compact mobile table controls","summary":"Keep mobile search and actions within two rows, use icon buttons, and size table columns to their content.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

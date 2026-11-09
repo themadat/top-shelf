@@ -118,6 +118,7 @@
         selectedDocumentId: documents[0] ? documents[0].id : "",
         selectedShelf: config.shelves[0].id,
         movieSorts: {},
+        movieHowFilter: "",
         books: App.books.preferences(),
         podcasts: App.podcasts.preferences(),
         tv: { view: "list", sort: "title", direction: "asc", widths: {}, filter: "all", query: "" },
@@ -508,6 +509,7 @@
         selectedShelf: config.shelves.some(function (shelf) { return shelf.id === sourceUi.selectedShelf; }) ? sourceUi.selectedShelf : config.shelves[0].id,
         search: u.cleanLine(sourceUi.search, 200),
         movieColumnWidths: movieWidths(sourceUi.movieColumnWidths),
+        movieHowFilter: typeof sourceUi.movieHowFilter === "string" && (sourceUi.movieHowFilter === "missing" || /^value:.{1,302}$/u.test(sourceUi.movieHowFilter)) ? sourceUi.movieHowFilter : "",
         books: App.books.preferences(sourceUi.books),
         podcasts: App.podcasts.preferences(sourceUi.podcasts),
         tv: {
@@ -620,6 +622,7 @@
     next.ui.search = "";
     next.ui.records = defaults.ui.records;
     next.ui.movieSorts = defaults.ui.movieSorts;
+    next.ui.movieHowFilter = defaults.ui.movieHowFilter;
     next.ui.tv = defaults.ui.tv;
     next.ui.books = defaults.ui.books;
     next.ui.podcasts = defaults.ui.podcasts;

@@ -500,3 +500,16 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
   #movieToolbar .pivot-scoring input { width: 42px; min-height: 36px; }
   .movie-table-resizable .movie-cell, .movie-table-resizable .movie-title-link { max-width: min(42vw, 14rem); }
 }
+
+.movie-state-select { display: none; }
+.movie-how-filter { min-width: 0; }
+#movieHowFilter { max-width: 180px; height: 40px; }
+#movieToolbar:not(.showing-pivots) { grid-template-columns: auto auto auto minmax(110px, 1fr) auto; }
+@media (max-width: 1350px) {
+  #movieToolbar .movie-state-filters { display: none; }
+  #movieToolbar .movie-state-select { display: block; flex: 0 0 48px; min-width: 0; }
+  #movieStateFilter { width: 48px; }
+  #movieToolbar .movie-how-filter { flex: 0 0 60px; }
+  #movieHowFilter { width: 60px; }
+  #movieStateFilter, #movieHowFilter { height: 36px; min-height: 36px; padding-inline: .15rem; font-size: .65rem; }
+}

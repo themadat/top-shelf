@@ -35,6 +35,20 @@
       }).sort(function (a, b) { return howRank(a) - howRank(b); }).join(' / ');
     }).filter(function (part) { const key = part.toLowerCase(); if (!part || seen.has(key)) return false; seen.add(key); return true; }).sort(function (a, b) { return howRank(a) - howRank(b); }).join(', ') + suffix;
   }
+  function howValues(value) {
+    const seen = new Set();
+    return cleanHow(value).split(/,| \/ /).map(function (part) {
+      return part.trim().replace(/^\*+\s*/, '').replace(/^Likely /, '').replace(/ \(~ .*\)$/, '').trim();
+    }).filter(function (part) {
+      const key = part.toLowerCase();
+      if (!part || seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+  }
+  function matchesHow(movie, selection) {
+    const values = howValues(movie.how);
+    return !selection || (selection === 'missing' ? !values.length : values.some(function (value) { return 'value:' + value.toLowerCase() === selection; }));
+  }
   function subgenreName(value) {
     const text = String(value || '').trim().replace(/^subgenre(?:\s*:\s*|\s+)/i, '').replace(/\s+/g, ' ').replace(/\s*[-–—]\s*/g, '-').toLowerCase();
     if (text === 'homesian' || text === 'holmesian') return 'Holmesian';
@@ -181,6 +195,6 @@
       movies: entries
     }, null, 2);
   }
-  App.movies = { cleanOther: cleanOther, averageBand: averageBand, howProvider: howProvider, howRank: howRank, analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
+  App.movies = { howValues: howValues, matchesHow: matchesHow, cleanOther: cleanOther, averageBand: averageBand, howProvider: howProvider, howRank: howRank, analysisText: analysisText, cleanHow: cleanHow, incomplete: incomplete, bulkPivots: bulkPivots, sortPreference: sortPreference, compare: compare, historicalRatings: historicalRatings, normalize: normalize, normalizeList: normalizeList, validate: validate, fromTmdb: fromTmdb, color: color, searchable: searchable, date: date };
   App.movies.subgenreName = subgenreName;
 })();

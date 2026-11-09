@@ -172,3 +172,32 @@ test('Ave color bands floor at 3 and step through seven one-point ranges',()=>{
  for(const [value,expected] of [[0,'purple'],[2.9,'purple'],[3,'purple'],[3.99,'purple'],[4,'red'],[5,'orange'],[6,'yellow'],[7,'yellow-green'],[8,'green'],[9,'dark-green'],[10,'dark-green']]) assert.equal(band(value),expected,String(value));
  assert.equal(band(null),'neutral');
 });
+
+test('How filtering matches individual aliased providers without changing personal text', () => {
+  const movie = { how: '* Likely Netflix / Amazon Prime Video (~ date unknown), Cinema' };
+  const before = movie.how;
+  assert.deepEqual(Array.from(App.movies.howValues(movie.how)).sort(), ['Cinema', 'Netflix', 'Prime']);
+  assert.equal(App.movies.matchesHow(movie, 'value:netflix'), true);
+  assert.equal(App.movies.matchesHow(movie, 'value:prime'), true);
+  assert.equal(App.movies.matchesHow(movie, 'value:cinema'), true);
+  assert.equal(App.movies.matchesHow(movie, 'value:net'), false);
+  assert.equal(App.movies.matchesHow(movie, 'missing'), false);
+  assert.equal(App.movies.matchesHow({ how: '' }, 'missing'), true);
+  assert.equal(App.movies.matchesHow({ how: 'No US streaming listed; destination unknown' }, 'missing'), true);
+  assert.equal(App.movies.matchesHow({ how: 'Local <Disc>' }, 'value:local <disc>'), true);
+  assert.equal(App.movies.matchesHow(movie, ''), true);
+  assert.equal(movie.how, before);
+  assert.equal(App.movies.howValues('Netflix / Netflix').length, 1);
+});
+
+test('How filter is a local preference retained by backups and cleared by preference reset', () => {
+  const model = App.stateModel;
+  const state = model.normalize({ ui: { movieHowFilter: 'value:netflix' } });
+  assert.equal(state.ui.movieHowFilter, 'value:netflix');
+  assert.equal(model.prepare(model.exportEnvelope(state)).state.ui.movieHowFilter, 'value:netflix');
+  assert.equal(model.resetPreferences(state).ui.movieHowFilter, '');
+  assert.equal(model.normalize({ ui: { movieHowFilter: 'invalid' } }).ui.movieHowFilter, '');
+  assert.equal(model.normalize({}).ui.movieHowFilter, '');
+  assert.equal(model.normalize({ ui: { movieHowFilter: 'missing' } }).ui.movieHowFilter, 'missing');
+  assert.equal(model.syncHash(state), model.syncHash(model.normalize({ ui: { movieHowFilter: 'value:hulu' } })));
+});
