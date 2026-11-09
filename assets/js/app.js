@@ -1140,12 +1140,12 @@
     const updateBookFilters = function () { bookFilters.open = !compactLayout.matches; };
     compactLayout.addEventListener('change', updateBookFilters);
     // Move the existing controls so their listeners and desktop positions survive layout changes.
-    const compactMenus = ['.movie-add', '.books-toolbar-actions', '.tv-toolbar'].map(function (selector) {
-      const container = $(selector), buttons = $$('.button:not(.primary)', container);
+    const compactMenus = ['.movie-add', '.books-toolbar-actions', '.tv-toolbar-actions'].map(function (selector) {
+      const container = $(selector), buttons = $$('.button:not(.primary):not([data-filter-toggle])', container);
       const menu = document.createElement('details');
       menu.className = 'compact-actions mobile-filter-menu';
       menu.innerHTML = '<summary aria-label="More actions" title="More actions">' + icons.markup('detail') + '</summary><div class="compact-actions-panel"></div>';
-      container.insertBefore(menu, container.querySelector('.primary'));
+      container.insertBefore(menu, container.querySelector('[data-filter-toggle], .primary'));
       const entries = buttons.map(function (button) {
         const marker = document.createComment('Action position');
         button.before(marker);
@@ -1173,6 +1173,20 @@
     document.addEventListener('click', function (event) {
       if (!compactLayout.matches || $('dialog[open]') || event.target.closest('dialog')) return;
       $$('.mobile-filter-menu[open]').forEach(function (menu) { if (!menu.contains(event.target)) menu.open = false; });
+    });
+    $$('[data-filter-toggle]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const panel = document.getElementById(button.dataset.filterToggle);
+        panel.hidden = !panel.hidden;
+        button.setAttribute('aria-expanded', String(!panel.hidden));
+      });
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape' || $('dialog[open]')) return;
+      $$('[data-filter-toggle][aria-expanded="true"]').forEach(function (button) {
+        document.getElementById(button.dataset.filterToggle).hidden = true;
+        button.setAttribute('aria-expanded', 'false'); button.focus();
+      });
     });
     App.moviesUI.init();
     App.booksEditor.init();

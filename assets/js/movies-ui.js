@@ -55,7 +55,7 @@
   }
   let inlineEdit = null;
   const batches = App.createMovieBatches({ saved: saved, lookupSettings: lookupSettings, isEditing: function (id) { return (draft?.id === id && $('#movieDialog').open) || inlineEdit?.id === id; } });
-  let filter = "all", query = "", incompleteOnly = false;
+  let filter = "all", query = "", incompleteOnly = false, pivotFilter = "", genreFilter = "";
   function saved() { return App.storage.getState().workspace.movies.filter(function (movie) { return !movie.deleted; }); }
   function cancelLookup() { generation += 1; lookupController?.abort(); lookupController = null; $("#movieLookupButton").disabled = false; $("#movieLookupResults").removeAttribute("aria-busy"); }
   function fields() {
@@ -247,6 +247,15 @@
     $('#movieHowFilter').value = selection;
     $('#movieHowFilter').title = 'How: ' + ($('#movieHowFilter').selectedOptions[0]?.textContent || 'All How');
   }
+  function moviePivots(movie) {
+    return model.cleanOther(movie.other).split(/\n/).filter(function (line) { return !line.trim().startsWith('Original availability note:'); }).join(',').split(',').map(function (tag) { return tag.trim(); }).filter(Boolean);
+  }
+  function renderCategoryFilter(selector, items, selected, label) {
+    const values = new Set(items);
+    if (selected) values.add(selected);
+    $(selector).innerHTML = '<option value="">All ' + label + '</option>' + Array.from(values).sort(function (a, b) { return a.localeCompare(b); }).map(function (value) { return '<option value="' + esc(value) + '">' + esc(value) + '</option>'; }).join('');
+    $(selector).value = selected;
+  }
   function render() {
     if (inlineEdit) return;
     $('#wishlistRatingsButton').hidden = filter !== 'wishlist';
@@ -254,13 +263,15 @@
     const items = saved(), wishlist = items.filter(function (movie) { return movie.status === "wishlist"; }).length;
     document.querySelectorAll("[data-movie-filter]").forEach(function (button) { const value = button.dataset.movieFilter; button.setAttribute("aria-pressed", String(filter === value)); button.querySelector("small").textContent = value === "all" ? items.length : value === "wishlist" ? wishlist : items.length - wishlist; });
     renderHowFilter(items);
+    renderCategoryFilter("#moviePivotFilter", items.flatMap(moviePivots), pivotFilter, "Pivots");
+    renderCategoryFilter("#movieGenreFilter", items.flatMap(function (movie) { return movie.genres; }), genreFilter, "Genres");
     $('#movieStateFilter').value = filter;
     const howFilter = App.storage.getState().ui.movieHowFilter || '';
-    const visible = items.filter(function (movie) { return model.matchesHow(movie, howFilter) && (filter === "all" || movie.status === filter) && (!incompleteOnly || model.incomplete(movie)) && model.searchable(movie).includes(query.toLowerCase().trim()); });
+    const visible = items.filter(function (movie) { return (!pivotFilter || moviePivots(movie).includes(pivotFilter)) && (!genreFilter || movie.genres.includes(genreFilter)) && model.matchesHow(movie, howFilter) && (filter === "all" || movie.status === filter) && (!incompleteOnly || model.incomplete(movie)) && model.searchable(movie).includes(query.toLowerCase().trim()); });
     $("#movieIncompleteButton").setAttribute("aria-pressed", String(incompleteOnly));
     const sort = sortPreference();
     visible.sort(function (a, b) { return model.compare(a, b, sort); });
-    $("#movieResultsCount").textContent = visible.length + " Shown";
+    $("#movieResultsCount").textContent = visible.length + " / " + items.length;
     const cell = function (value, className) { return '<td class="' + (className || '') + '"><span class="movie-cell" title="' + esc(String(value || '')) + '">' + esc(String(value || '—')) + '</span></td>'; };
     const headers = [['#', 'score'], ['Title', 'title'], ['Review/Notes', 'review'], ['How', 'how'], ['Date', 'date'], ['Release', 'release'], ['Other Pivots', 'other'], ['Collections', 'collections'], ['Genres', 'genres'], ['Actors', 'actors'], ['Directors', 'directors'], ['Companies', 'companies']];
     if (filter === 'wishlist') headers.splice(1, 0, ['Ave', 'tmdbAverage']);
@@ -307,6 +318,8 @@
     $('#wishlistStreamingCancel').addEventListener('click', batches.cancel);
     $("#wishlistStreamingButton").addEventListener("click", batches.how);
     $("#movieSearch").addEventListener("input", function (event) { query = event.target.value; render(); });
+    $('#moviePivotFilter').addEventListener('change', function () { pivotFilter = this.value; render(); });
+    $('#movieGenreFilter').addEventListener('change', function () { genreFilter = this.value; render(); });
     $('#movieStateFilter').addEventListener('change', function () { filter = this.value; render(); });
     $('#movieHowFilter').addEventListener('change', function () {
       const selected = this.value;

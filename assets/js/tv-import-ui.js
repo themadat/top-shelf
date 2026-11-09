@@ -42,7 +42,7 @@
     } catch (error) { $('#tvImportError').textContent = error.message; $('#tvImportApply').disabled = true; }
   }
   function init() {
-    $('#tvImportButton').addEventListener('click', function () {
+    $('#tvImportButton')?.addEventListener('click', function () {
       generation++; input = null; preview = null;
       $('#tvImportFile').value = ''; $('#tvImportRows').innerHTML = ''; $('#tvImportSummary').textContent = ''; $('#tvImportError').textContent = ''; $('#tvImportApply').disabled = true;
       App.components.openDialog('#tvImportDialog', { trigger: this, focus: '#tvImportFile' });

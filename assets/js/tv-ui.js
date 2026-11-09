@@ -110,7 +110,7 @@
   function render() {
     const shows = saved(), p = pref(), needle = p.query.toLowerCase();
     const filtersView = p.view === 'pivots';
-    $('#tvListView').hidden = filtersView; $('#tvPivotsView').hidden = !filtersView; $('#tvFiltersDisclosure').hidden = filtersView;
+    $('#tvListView').hidden = filtersView; $('#tvPivotsView').hidden = !filtersView; $('#tvFiltersButton').hidden = filtersView; if (filtersView) { $('#tvFiltersDisclosure').hidden = true; $('#tvFiltersButton').setAttribute('aria-expanded', 'false'); }
     document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.tvView === (filtersView ? 'pivots' : 'list'))); });
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
     const rows = shows.filter(function (s) { return (p.filter === 'all' || tv.viewingStatus(s) === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
@@ -232,7 +232,7 @@
     $('#tvFilter').innerHTML = '<option value="all">All shows</option>' + options(tv.statuses, pref().filter);
     await clearLegacyNotes();
     App.tvPivotsUI.init();
-    $('#tvFiltersDisclosure').addEventListener('toggle', balanceFilters);
+    $('#tvFiltersButton').addEventListener('click', function () { requestAnimationFrame(balanceFilters); });
     let lastFilterWidth = 0;
     new ResizeObserver(function (entries) { const width = entries[0].contentRect.width; if (width !== lastFilterWidth) { lastFilterWidth = width; requestAnimationFrame(balanceFilters); } }).observe($('#tvPivots'));
     document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.addEventListener('click', function () { preference({ view: button.dataset.tvView }); }); });

@@ -31,7 +31,7 @@ test('Movies renders safe How options, filters combined providers and retains a 
   a.movieColumns = { resize() {} };
   vm.runInContext(readFileSync(new URL('../assets/js/movies-ui.js', import.meta.url), 'utf8'), context);
   a.moviesUI.render();
-  assert.equal(node('#movieResultsCount').textContent, '2 Shown');
+  assert.equal(node('#movieResultsCount').textContent, '2 / 5');
   assert.match(node('#movieList').innerHTML, /data-edit-movie="shared"/);
   assert.match(node('#movieList').innerHTML, /data-edit-movie="netflix"/);
   assert.doesNotMatch(node('#movieList').innerHTML, /data-edit-movie="hulu"/);
@@ -42,15 +42,15 @@ test('Movies renders safe How options, filters combined providers and retains a 
   assert.doesNotMatch(options, /Hidden provider|<Disc>/);
   assert.equal(node('#movieHowFilter').value, 'value:netflix');
   state.ui.movieHowFilter = 'missing'; a.moviesUI.render();
-  assert.equal(node('#movieResultsCount').textContent, '1 Shown');
+  assert.equal(node('#movieResultsCount').textContent, '1 / 5');
   assert.match(node('#movieList').innerHTML, /data-edit-movie="blank"/);
   state.ui.movieHowFilter = 'value:local <disc>'; a.moviesUI.render();
-  assert.equal(node('#movieResultsCount').textContent, '1 Shown');
+  assert.equal(node('#movieResultsCount').textContent, '1 / 5');
   assert.match(node('#movieList').innerHTML, /data-edit-movie="custom"/);
   state.workspace.movies = state.workspace.movies.filter(movie => ['hulu', 'blank'].includes(movie.id));
   state.ui.movieHowFilter = 'value:netflix'; a.moviesUI.render();
-  assert.equal(node('#movieResultsCount').textContent, '0 Shown');
+  assert.equal(node('#movieResultsCount').textContent, '0 / 2');
   assert.match(node('#movieHowFilter').innerHTML, /value="value:netflix">Netflix/);
   state.ui.movieHowFilter = ''; a.moviesUI.render();
-  assert.equal(node('#movieResultsCount').textContent, '2 Shown');
+  assert.equal(node('#movieResultsCount').textContent, '2 / 2');
 });

@@ -30,3 +30,5 @@ Live multi-device GitHub verification remains a separate setup step (README). A 
 Podcast browser regression: `node tests/podcasts.browser.cjs` against the local preview (or `PODCAST_TEST_URL`). It uses synthetic data and mocked public catalog/RSS responses in a fresh Chromium profile.
 
 TV progress regression: `node tests/tv-progress.browser.cjs` against the local preview (or `TV_TEST_URL`). Synthetic shows and mocked TMDB cover tracked refresh, latest-release/progress columns and numeric sorting, single-step/catch-up buttons, compact S/E widths, highlights/status filters, episode selection, stale draft rejection, offline editing/reload and 390/320px layouts.
+
+Movie/TV toolbar regression: `node tests/media-toolbars.browser.cjs` against the local preview (or `MEDIA_TEST_URL`). Synthetic shelves cover intersecting Pivots/Genres/How/search filters, matching/total counts, Filters and More ordering, disclosure toggling/Escape, view changes and desktop/1000/390/320px layouts.
