@@ -228,12 +228,13 @@
   .tv-sticky-controls { display: flex; flex-wrap: nowrap; }
   .tv-toolbar .tv-search { flex: 1 1 120px; }
   .tv-toolbar > label:has(#tvFilter) { flex: 0 0 100px; }
-  .tv-batch { position: absolute; top: 100%; }
 }
 
 .tv-status-label { display: none; }
 @media (max-width: 1350px) {
-  .tv-sticky-controls { display: flex; flex-wrap: nowrap; gap: .15rem; max-height: none; overflow: visible; }
+  .tv-sticky-controls { display: flex; flex-wrap: wrap; gap: .15rem; max-height: none; overflow: visible; }
+  .tv-batch { flex: 0 0 100%; order: 7; min-width: 0; align-items: flex-start; }
+  #tvBatchStatus { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }
   .tv-toolbar { display: contents; }
   .tv-view-switch { flex: 0 0 auto; }
   .tv-toolbar .tv-search { flex: 1 1 70px; min-width: 48px; height: 36px; }
@@ -245,7 +246,6 @@
   .tv-toolbar .compact-actions { order: 4; }
   #tvAdd { order: 5; }
   #tvFiltersDisclosure { margin: 0; order: 6; flex: 0 0 28px; }
-  .tv-batch { position: absolute; top: 100%; }
   .tv-show-actions button, .tv-show-actions a, .tv-progress-actions button { width: 26px; height: 32px; }
   .tv-show-actions svg, .tv-progress-actions svg { width: 18px; height: 18px; }
   #tvTable .tv-title-button { max-width: min(42vw, 14rem); }
