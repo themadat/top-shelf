@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.42","date":"2026-11-10T12:00:00.000Z","title":"Consistent media shelf spacing","summary":"Match movie and TV toolbar spacing, expand compact filter menus below their controls, and shorten the Subgenres label.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.41","date":"2026-11-10T12:00:00.000Z","title":"Counted movie and TV filters","summary":"Align filter dropdown counts, TV shortcuts and update controls, and keep mobile table rows on one line.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.40","date":"2026-11-09T12:00:00.000Z","title":"Aligned movie and TV toolbars","summary":"Match movie and TV control order, show search totals, and open category filters from toolbar buttons.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.39","date":"2026-11-09T12:00:00.000Z","title":"Reliable sync recovery","summary":"Flush pending local saves before recovery so sync does not mistake its own autosave for a change in another tab.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

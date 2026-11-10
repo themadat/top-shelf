@@ -276,7 +276,7 @@
 .tv-toolbar .tv-search:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 #movieToolbar #movieResultsCount, .tv-toolbar .tv-search #tvCount { display: inline; flex: 0 0 auto; position: static; font-size: .72rem; white-space: nowrap; color: var(--muted); }
 .tv-toolbar .tv-search kbd { position: static; }
-#movieToolbar .movie-add, .tv-toolbar-actions { display: flex; align-items: center; flex: 0 0 auto; gap: .4rem; width: auto; max-width: 100%; overflow: visible; margin-left: auto; order: 0; }
+#movieToolbar .movie-add, .tv-toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; flex: 0 1 auto; gap: .4rem; width: auto; max-width: 100%; overflow: visible; margin-left: auto; order: 0; }
 .tv-toolbar-actions > .compact-actions, .tv-toolbar-actions > #tvAdd { order: 0; }
 :root[data-button-style] :is(.movie-add, .tv-toolbar-actions) > .action-button {
   display: inline-flex; flex-direction: column; align-items: center; justify-content: center;

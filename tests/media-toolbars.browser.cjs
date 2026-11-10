@@ -9,6 +9,9 @@ const assert = require('node:assert/strict');
     await page.route('https://api.github.com/**', route => route.fulfill({ status: 404, json: {} }));
     await page.goto(process.env.MEDIA_TEST_URL || 'http://localhost:8000');
     await page.waitForSelector('html.app-ready');
+    for (const selector of ['[data-dismiss-release]', '[data-dismiss-hint="shell-basics"]']) {
+      if (await page.locator(selector).isVisible()) await page.locator(selector).click();
+    }
     await page.evaluate(() => {
       const a = window.LocalApp, state = a.utils.clone(a.storage.getState());
       state.workspace.movies = [
@@ -19,8 +22,8 @@ const assert = require('node:assert/strict');
       state.workspace.tvShows = [a.tv.normalize({ id: 'show', title: 'Synthetic Show', status: 'Watching', type: 'Scripted', genres: ['Drama'], networks: ['Example'] })];
       a.storage.replace(state, { saveRecovery: false, reason: 'import' }); a.application.switchModule('movies');
     });
-    for (const width of [1440, 1000, 390, 320]) {
-      await page.setViewportSize({ width, height: 1000 });
+    for (const width of [1440, 1000, 720, 540, 390, 320]) {
+      await page.setViewportSize({ width, height: width === 720 ? 540 : width === 540 ? 720 : 1000 });
       await page.locator('[data-shelf="movies"]').click();
       assert.equal(await page.locator('#movieResultsCount').innerText(), '3 / 3');
       await page.locator('#movieFiltersButton').click();
@@ -55,14 +58,15 @@ const assert = require('node:assert/strict');
         const add = page.locator(shelf === 'movies' ? '#movieToolbar [data-add-movie]' : '#tvAdd');
         const f = await filters.boundingBox(), b = await add.boundingBox();
         assert.ok(f && b && f.x < b.x && Math.abs(f.y - b.y) < 2, `Filters before Add: ${shelf} ${width}`);
-        if (width <= 1350) {
-          const more = await page.locator(shelf === 'movies' ? '.movie-add .compact-actions' : '.tv-toolbar-actions .compact-actions').boundingBox();
-          assert.ok(more && more.x < f.x, `More before Filters: ${shelf} ${width}`);
-        }
+        assert.equal(await page.locator(shelf === 'movies' ? '.movie-add .compact-actions' : '.tv-toolbar-actions .compact-actions').count(), 0);
+        const actions = page.locator(shelf === 'movies' ? '.movie-add > .button:not([hidden])' : '.tv-toolbar-actions > .button:not([hidden])');
+        for (const action of await actions.all()) assert.equal(await action.isVisible(), true);
         assert.equal(await filters.locator('.button-label').isVisible(), true);
         const search = await page.locator(shelf === 'movies' ? '#movieToolbar .movie-search' : '.tv-search').boundingBox();
         assert.equal(Math.round(search.height), Math.round(b.height), `Search matches actions: ${shelf} ${width}`);
         if (shelf === 'movies' && width <= 1350) {
+          const rowHeight = await page.locator('.movie-table tbody tr').first().evaluate(row => row.getBoundingClientRect().height);
+          assert.ok(rowHeight < 36, `Compact row at ${width}: ${rowHeight}`);
           const longCell = page.locator('.movie-col-actors .movie-cell').first();
           assert.equal(await longCell.evaluate(node => getComputedStyle(node).whiteSpace), 'nowrap');
           assert.ok(await longCell.evaluate(node => node.scrollWidth > node.clientWidth));
@@ -89,6 +93,6 @@ const assert = require('node:assert/strict');
       await page.locator('#tvFiltersButton').click();
     }
     assert.deepEqual(errors, []);
-    console.log('Media toolbars passed: category intersections, counts, disclosures, actions, pivots and desktop/1000/390/320px layout.');
+    console.log('Media toolbars passed: category intersections, counts, disclosures, actions, pivots and desktop/1000/720×540/540×720/390/320px layout.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

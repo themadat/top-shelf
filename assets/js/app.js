@@ -1140,7 +1140,7 @@
     const updateBookFilters = function () { bookFilters.open = !compactLayout.matches; };
     compactLayout.addEventListener('change', updateBookFilters);
     // Move the existing controls so their listeners and desktop positions survive layout changes.
-    const compactMenus = ['.movie-add', '.books-toolbar-actions', '.tv-toolbar-actions'].map(function (selector) {
+    const compactMenus = ['.books-toolbar-actions'].map(function (selector) {
       const container = $(selector), buttons = $$('.button:not(.primary):not([data-filter-toggle])', container);
       const menu = document.createElement('details');
       menu.className = 'compact-actions mobile-filter-menu';

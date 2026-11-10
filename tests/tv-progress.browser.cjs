@@ -220,7 +220,6 @@ const assert = require('node:assert/strict');
       return rejected;
     });
     assert.equal(overQuota, true, 'the full uncompressed snapshot exceeds real localStorage quota');
-    if (!await page.locator('#tvRefresh').isVisible()) await page.locator('.tv-toolbar-actions .compact-actions > summary').click();
     await page.locator('#tvRefresh').click();
     await page.waitForFunction(() => !document.querySelector('#tvRefresh').disabled);
     assert.match(await page.locator('#tvBatchStatus').innerText(), /1 of 1 shows refreshed/);

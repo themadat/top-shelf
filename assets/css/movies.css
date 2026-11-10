@@ -463,8 +463,6 @@ fieldset.movie-fields { padding: 1rem; border: 1px solid var(--line); border-rad
   #movieDialog .movie-identity-row textarea { height: 44px; }
   .movie-toolbar .movie-add .button-label { white-space: normal; }
   .movie-toolbar .movie-search { height: 44px; }
-  .movie-table th, .movie-table td { height: 44px; }
-  .movie-title-link { height: auto; min-height: 44px; }
   .pivot-search input, .pivot-card header input, .pivot-scoring input { min-height: 44px; font-size: 16px; }
   .pivot-card header input { width: 64px; }
 }
