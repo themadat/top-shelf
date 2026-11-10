@@ -1,18 +1,18 @@
-.tv-workspace { min-width: 0; padding: .25rem 0; }
-.tv-sticky-controls { position: sticky; top: var(--tv-header-height, 0px); z-index: 12; background: var(--bg); padding: .3rem 0; max-height: min(55dvh, calc(100dvh - var(--tv-header-height, 0px) - 8rem)); overflow-y: auto; }
-#tvListView > .tv-table-scroll { max-height: max(10rem, calc(100dvh - var(--tv-header-height, 0px) - var(--tv-controls-height, 4rem) - 1.5rem)); }
+.tv-workspace { min-width: 0; width: 100%; margin: 0; padding: 0 0 1rem; }
+.tv-sticky-controls { position: sticky; top: var(--tv-header-height, 0px); z-index: 12; background: var(--bg); padding: 0; margin-bottom: .5rem; max-height: min(55dvh, calc(100dvh - var(--tv-header-height, 0px) - 8rem)); overflow-y: auto; }
+#tvListView > .tv-table-scroll { max-height: max(240px, calc(100dvh - var(--tv-header-height, 0px) - var(--tv-controls-height, 4rem) - 24px)); }
 #tvTable thead th { position: sticky; top: 0; z-index: 2; }
 .tv-status-dismiss { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 1.7rem; height: 1.7rem; padding: .2rem; background: transparent; border: 0; border-radius: .3rem; color: var(--muted); cursor: pointer; }
 .tv-status-dismiss .sf-symbol { width: 1rem; height: 1rem; }
 .tv-status-dismiss:hover { background: var(--accent-soft); color: var(--text); }
 .tv-toolbar, .tv-lookup-row, .tv-manual-row, .tv-season-tools, .tv-batch { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.tv-toolbar { margin-bottom: .4rem; }
+.tv-toolbar { margin: 0; }
 .tv-toolbar input, .tv-toolbar select { min-height: 2.5rem; }
 .tv-search { flex: 1 1 150px; min-width: 100px; }
 .tv-search input { width: 100%; }
 #tvCount { font-size: .8rem; white-space: nowrap; color: var(--muted); }
 .tv-batch:has(:not(:empty)) { margin-bottom: .4rem; font-size: .85rem; }
-.tv-table-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: .5rem; }
+.tv-table-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-small); }
 #tvTable { table-layout: fixed; border-collapse: collapse; font-size: .88rem; min-width: 0; }
 #tvTable th, #tvTable td, .tv-episodes td, .tv-episodes th { padding: .4rem .45rem; border-bottom: 1px solid var(--line); text-align: left; }
 #tvTable th { position: relative; background: var(--surface-2); }
@@ -311,7 +311,7 @@
 .counted-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%; min-height: 40px; padding: .4rem .6rem; border: 1px solid var(--line); border-radius: var(--radius-small); color: var(--text); background: var(--surface); text-align: left; font: inherit; }
 .counted-select-trigger::after { content: '⌄'; flex-shrink: 0; color: var(--muted); }
 .counted-select-menu { position: fixed; inset: auto; margin: 0; padding: .3rem; overflow-y: auto; border: 1px solid var(--line-strong); border-radius: var(--radius-small); color: var(--text); background: var(--surface); box-shadow: var(--shadow); }
-.counted-select-menu [role="option"] { display: flex; align-items: center; gap: 1.2rem; width: 100%; min-height: 40px; padding: .45rem .6rem; border: 1px solid transparent; border-radius: .3rem; color: inherit; background: transparent; text-align: left; font: inherit; }
+.counted-select-menu [role="option"] { display: flex; align-items: center; gap: 1.2rem; width: 100%; min-height: 28px; padding: .2rem .6rem; border: 1px solid transparent; border-radius: .3rem; color: inherit; background: transparent; text-align: left; font: inherit; }
 .counted-select-menu [role="option"] > span:first-child { overflow-wrap: anywhere; }
 .counted-select-menu [role="option"][aria-selected="true"], .counted-select-menu [role="option"]:hover { background: var(--accent-soft); }
 .filter-option-count { margin-left: auto; flex-shrink: 0; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }

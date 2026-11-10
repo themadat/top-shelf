@@ -19,8 +19,8 @@
   function clear() { pending = null; reviewed = null; $('#subgenreApply').disabled = true; $('#subgenrePreview').textContent = ''; $('#subgenreError').textContent = ''; }
   function render() {
     const items = movies(), queue = model.queue(items), supported = model.vocabulary(items);
-    $('#subgenreReviewButton .button-label').textContent = 'Subgenre Review (' + queue.length + ')';
-    $('#subgenreReviewButton').setAttribute('aria-label', 'Subgenre Review (' + queue.length + ')');
+    $('#subgenreReviewButton .button-label').textContent = 'Subgenres (' + queue.length + ')';
+    $('#subgenreReviewButton').setAttribute('aria-label', 'Subgenres (' + queue.length + ')');
     $('#subgenreReviewSummary').textContent = queue.length + ' movies need review · ' + supported.length + ' supported subgenres';
     $('#subgenreQueue').innerHTML = queue.map(function (movie) { return '<li>' + esc(movie.title) + ' (' + esc(movie.releaseDate.slice(0, 4) || '????') + ') · TMDB ' + movie.tmdbId + '</li>'; }).join('') || '<li>All movies have been reviewed.</li>';
     $('#subgenreVocabulary').innerHTML = supported.map(function (name) { return '<li>' + esc(name) + '</li>'; }).join('') || '<li>Add subgenres in a movie editor to define supported subgenres first.</li>';

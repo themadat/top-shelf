@@ -8,8 +8,8 @@
       "name": "Top Shelf",
       "shortName": "Top Shelf",
       "description": "A collection of personal rating lists across movies, TV, books, podcasts, restaurants, scotches, and more, with Movies, TV, Books and Podcasts available.",
-      "version": "2.0.0.41",
-      "buildId": "2.0.0.41",
+      "version": "2.0.0.42",
+      "buildId": "2.0.0.42",
       "repository": {
         "label": "App repository",
         "url": "https://github.com/themadat/top-shelf"
@@ -162,7 +162,7 @@
       "danger": "#a74747"
     },
     "releases": [
-      {"version":"2.0.0.41","date":"2026-11-10T12:00:00.000Z","title":"Counted movie and TV filters","summary":"Align filter dropdown counts, TV shortcuts and update controls, and keep mobile table rows on one line.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
+      {"version":"2.0.0.42","date":"2026-11-10T12:00:00.000Z","title":"Consistent media shelf spacing","summary":"Match movie and TV toolbar spacing, expand compact filter menus below their controls, and shorten the Subgenres label.","features":[],"improvements":[],"fixes":[],"knownIssues":[]}
     ],
     "roadmap": [{"id": "movie-people-lookup", "title": "Look Up Movies By Actor Or Director", "description": "From the spreadsheet backlog: look up movies by actors and directors and sort the results.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 2, "createdAt": "2026-09-13"}, {"id": "movie-selection-link", "title": "Open A TMDB Search For Selected Text", "description": "From the spreadsheet backlog: add a lookup button that opens a TMDB link using the current text.", "state": "wishlist", "priority": 2, "target": "Unscheduled", "effort": 1, "createdAt": "2026-09-13"}],
     "help": [

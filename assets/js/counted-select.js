@@ -25,11 +25,10 @@
     const open = () => {
       refresh(); const rect = trigger.getBoundingClientRect(), width = Math.min(Math.max(rect.width, 220), innerWidth - 16);
       menu.style.width = width + 'px'; menu.style.left = Math.max(8, Math.min(rect.left, innerWidth - width - 8)) + 'px';
-      const below = innerHeight - rect.bottom - 12, above = rect.top - 12;
-      const opensBelow = below >= Math.min(250, above);
-      menu.style.maxHeight = Math.max(60, Math.min(320, opensBelow ? below : above)) + 'px';
+      const viewportBottom = window.visualViewport ? window.visualViewport.offsetTop + window.visualViewport.height : innerHeight;
+      menu.style.maxHeight = Math.max(0, viewportBottom - rect.bottom - 12) + 'px';
+      menu.style.top = (rect.bottom + 4) + 'px';
       menu.showPopover();
-      menu.style.top = (opensBelow ? rect.bottom + 4 : Math.max(8, rect.top - menu.getBoundingClientRect().height - 4)) + 'px';
       (menu.querySelector('[aria-selected="true"]') || menu.firstElementChild)?.focus();
     };
     trigger.addEventListener('click', event => { event.preventDefault(); menu.matches(':popover-open') ? close() : open(); });
