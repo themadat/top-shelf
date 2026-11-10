@@ -304,3 +304,33 @@
   #movieToolbar .movie-search, .tv-toolbar .tv-search { flex-basis: 100px; }
   #movieToolbar .movie-add { order: 0; }
 }
+
+/* Counted dropdowns keep labels and library totals in separate columns. */
+.counted-select { display: block; min-width: 0; position: relative; }
+.counted-select-native { position: absolute !important; width: 1px !important; height: 1px !important; min-height: 0 !important; opacity: 0; pointer-events: none; padding: 0 !important; }
+.counted-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%; min-height: 40px; padding: .4rem .6rem; border: 1px solid var(--line); border-radius: var(--radius-small); color: var(--text); background: var(--surface); text-align: left; font: inherit; }
+.counted-select-trigger::after { content: '⌄'; flex-shrink: 0; color: var(--muted); }
+.counted-select-menu { position: fixed; inset: auto; margin: 0; padding: .3rem; overflow-y: auto; border: 1px solid var(--line-strong); border-radius: var(--radius-small); color: var(--text); background: var(--surface); box-shadow: var(--shadow); }
+.counted-select-menu [role="option"] { display: flex; align-items: center; gap: 1.2rem; width: 100%; min-height: 40px; padding: .45rem .6rem; border: 1px solid transparent; border-radius: .3rem; color: inherit; background: transparent; text-align: left; font: inherit; }
+.counted-select-menu [role="option"] > span:first-child { overflow-wrap: anywhere; }
+.counted-select-menu [role="option"][aria-selected="true"], .counted-select-menu [role="option"]:hover { background: var(--accent-soft); }
+.filter-option-count { margin-left: auto; flex-shrink: 0; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+#movieFiltersDisclosure, #tvFiltersDisclosure { display: flex; flex-wrap: wrap; gap: .75rem; order: 10; overflow: visible; }
+#tvFiltersDisclosure { flex: 0 0 100%; }
+#movieFiltersDisclosure > label, #tvFiltersDisclosure > label { display: grid; gap: .3rem; flex: 1 1 150px; min-width: 0; font-size: .8rem; }
+#movieToolbar:not(.showing-pivots) { margin-bottom: .5rem; }
+:root[data-button-style] #movieToolbar .movie-add .button { border: 1px solid var(--line-strong); }
+#movieToolbar .movie-search, .tv-toolbar .tv-search { height: 52px; }
+#movieToolbar .segmented, .tv-toolbar .segmented { box-sizing: border-box; min-height: 52px; }
+#movieToolbar .segmented button, .tv-toolbar .segmented button { min-height: 44px; height: auto; }
+#movieToolbar .movie-state-select select, .tv-toolbar > label .counted-select-trigger { height: 52px; }
+@media (max-width: 1350px) {
+  #movieToolbar .movie-view-switch button, .tv-toolbar .tv-view-switch button { height: 44px; }
+  .tv-toolbar > label:has(#tvFilter) { flex-basis: 118px; width: 118px; }
+  :root .movie-table-resizable :is(.movie-cell, .movie-title-link), :root .movie-table :is(th, td), :root #tvTable :is(th, td), :root #tvTable .tv-title-button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  :root .movie-table-resizable .movie-cell, :root .movie-table-resizable .movie-title-link { width: max-content; max-width: min(42vw, 14rem); }
+  :root .movie-table :is(.movie-col-actors, .movie-col-directors, .movie-col-companies, .movie-col-genres) .movie-cell { width: 10rem; max-width: 10rem; }
+  :root #tvTable { table-layout: fixed; }
+  :root #tvTable .tv-network-pills { max-width: 100%; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+  :root #tvTable .tv-network-pill { white-space: nowrap; }
+}

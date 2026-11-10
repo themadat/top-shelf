@@ -50,7 +50,7 @@ test('Movies renders safe How options, filters combined providers and retains a 
   state.workspace.movies = state.workspace.movies.filter(movie => ['hulu', 'blank'].includes(movie.id));
   state.ui.movieHowFilter = 'value:netflix'; a.moviesUI.render();
   assert.equal(node('#movieResultsCount').textContent, '0 / 2');
-  assert.match(node('#movieHowFilter').innerHTML, /value="value:netflix">Netflix/);
+  assert.match(node('#movieHowFilter').innerHTML, /value="value:netflix" data-count="0">Netflix/);
   state.ui.movieHowFilter = ''; a.moviesUI.render();
   assert.equal(node('#movieResultsCount').textContent, '2 / 2');
 });

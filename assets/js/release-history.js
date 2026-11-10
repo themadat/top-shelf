@@ -1,5 +1,6 @@
 // Historical data only. Read config.js for the current release.
 window.LocalApp.config.releases.push(...[
+  {"version":"2.0.0.40","date":"2026-11-09T12:00:00.000Z","title":"Aligned movie and TV toolbars","summary":"Match movie and TV control order, show search totals, and open category filters from toolbar buttons.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.39","date":"2026-11-09T12:00:00.000Z","title":"Reliable sync recovery","summary":"Flush pending local saves before recovery so sync does not mistake its own autosave for a change in another tab.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.38","date":"2026-11-09T12:00:00.000Z","title":"Filter Movies by How","summary":"Select a streaming provider or personal How value, including combined providers, alongside movie state and search.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},
   {"version":"2.0.0.37","date":"2026-11-09T12:00:00.000Z","title":"Keep TV activity above the table","summary":"Reserve space for TV activity messages below the compact controls so refresh feedback never covers table rows.","features":[],"improvements":[],"fixes":[],"knownIssues":[]},

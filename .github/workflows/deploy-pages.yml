@@ -1,4 +1,4 @@
-name: Deploy Top Shelf v2.0.0.40
+name: Deploy Top Shelf v2.0.0.41
 
 run-name: Deploy ${{ github.event.head_commit.message }}
 

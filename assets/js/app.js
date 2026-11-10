@@ -941,8 +941,8 @@
     }
     if (event.repeat) return;
     const mainPageActive = !$("dialog[open]");
-    if (mainPageActive && state().ui.selectedShelf === "movies" && !event.ctrlKey && !event.altKey && !event.shiftKey && ["KeyL", "KeyP"].includes(event.code)) {
-      runShortcut(event, function () { $('[data-movie-view="' + (event.code === "KeyL" ? 'list' : 'pivots') + '"]').click(); }); return;
+    if (mainPageActive && ["movies", "tv"].includes(state().ui.selectedShelf) && !event.ctrlKey && !event.altKey && !event.shiftKey && ["KeyL", "KeyP"].includes(event.code)) {
+      runShortcut(event, function () { $('[data-' + (state().ui.selectedShelf === 'tv' ? 'tv' : 'movie') + '-view="' + (event.code === "KeyL" ? 'list' : 'pivots') + '"]').click(); }); return;
     }
     if (mainPageActive && state().ui.selectedShelf === 'movies' && !event.ctrlKey && !event.altKey && !event.shiftKey && ['KeyA', 'KeyI', 'KeyW'].includes(event.code)) {
       runShortcut(event, function () { $('[data-movie-view="list"]').click(); $('[data-movie-filter="' + ({ KeyA: 'all', KeyI: 'wishlist', KeyW: 'watched' }[event.code]) + '"]').click(); }); return;
@@ -1198,6 +1198,7 @@
     App.tvEditor.init();
     await App.tvUI.init();
     App.tvImportUI.init();
+    App.countedSelect.init();
     App.subgenresUI.init();
     App.pivotsUI.init();
     bindGeneralEvents();

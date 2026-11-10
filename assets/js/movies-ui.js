@@ -241,8 +241,8 @@
     if (selection.startsWith('value:') && !values.has(selection)) {
       const name = selection.slice(6); values.set(selection, model.howProvider(name).name || name);
     }
-    $('#movieHowFilter').innerHTML = '<option value="">All How</option><option value="missing">Not set</option>' + Array.from(values).sort(function (a, b) { return a[1].localeCompare(b[1], undefined, { numeric: true, sensitivity: 'base' }); }).map(function (entry) {
-      return '<option value="' + esc(entry[0]) + '">' + esc(entry[1]) + '</option>';
+    $('#movieHowFilter').innerHTML = '<option value="" data-count="' + items.length + '">All How</option><option value="missing" data-count="' + items.filter(function (movie) { return model.matchesHow(movie, 'missing'); }).length + '">Not set</option>' + Array.from(values).sort(function (a, b) { return a[1].localeCompare(b[1], undefined, { numeric: true, sensitivity: 'base' }); }).map(function (entry) {
+      return '<option value="' + esc(entry[0]) + '" data-count="' + items.filter(function (movie) { return model.matchesHow(movie, entry[0]); }).length + '">' + esc(entry[1]) + '</option>';
     }).join('');
     $('#movieHowFilter').value = selection;
     $('#movieHowFilter').title = 'How: ' + ($('#movieHowFilter').selectedOptions[0]?.textContent || 'All How');
@@ -250,10 +250,10 @@
   function moviePivots(movie) {
     return model.cleanOther(movie.other).split(/\n/).filter(function (line) { return !line.trim().startsWith('Original availability note:'); }).join(',').split(',').map(function (tag) { return tag.trim(); }).filter(Boolean);
   }
-  function renderCategoryFilter(selector, items, selected, label) {
+  function renderCategoryFilter(selector, items, selected, label, total) {
     const values = new Set(items);
     if (selected) values.add(selected);
-    $(selector).innerHTML = '<option value="">All ' + label + '</option>' + Array.from(values).sort(function (a, b) { return a.localeCompare(b); }).map(function (value) { return '<option value="' + esc(value) + '">' + esc(value) + '</option>'; }).join('');
+    $(selector).innerHTML = '<option value="" data-count="' + total + '">All ' + label + '</option>' + Array.from(values).sort(function (a, b) { return a.localeCompare(b); }).map(function (value) { return '<option value="' + esc(value) + '" data-count="' + items.filter(function (item) { return item === value; }).length + '">' + esc(value) + '</option>'; }).join('');
     $(selector).value = selected;
   }
   function render() {
@@ -263,8 +263,8 @@
     const items = saved(), wishlist = items.filter(function (movie) { return movie.status === "wishlist"; }).length;
     document.querySelectorAll("[data-movie-filter]").forEach(function (button) { const value = button.dataset.movieFilter; button.setAttribute("aria-pressed", String(filter === value)); button.querySelector("small").textContent = value === "all" ? items.length : value === "wishlist" ? wishlist : items.length - wishlist; });
     renderHowFilter(items);
-    renderCategoryFilter("#moviePivotFilter", items.flatMap(moviePivots), pivotFilter, "Pivots");
-    renderCategoryFilter("#movieGenreFilter", items.flatMap(function (movie) { return movie.genres; }), genreFilter, "Genres");
+    renderCategoryFilter("#moviePivotFilter", items.flatMap(function (movie) { return Array.from(new Set(moviePivots(movie))); }), pivotFilter, "Pivots", items.length);
+    renderCategoryFilter("#movieGenreFilter", items.flatMap(function (movie) { return Array.from(new Set(movie.genres)); }), genreFilter, "Genres", items.length);
     $('#movieStateFilter').value = filter;
     const howFilter = App.storage.getState().ui.movieHowFilter || '';
     const visible = items.filter(function (movie) { return (!pivotFilter || moviePivots(movie).includes(pivotFilter)) && (!genreFilter || movie.genres.includes(genreFilter)) && model.matchesHow(movie, howFilter) && (filter === "all" || movie.status === filter) && (!incompleteOnly || model.incomplete(movie)) && model.searchable(movie).includes(query.toLowerCase().trim()); });

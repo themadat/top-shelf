@@ -12,7 +12,7 @@ const assert = require('node:assert/strict');
     await page.evaluate(() => {
       const a = window.LocalApp, state = a.utils.clone(a.storage.getState());
       state.workspace.movies = [
-        a.movies.normalize({ id: 'one', tmdbId: 1, title: 'First Movie', status: 'watched', rating: 4, genres: ['Drama'], how: 'Netflix', other: 'Favorite, Subgenre: Mystery' }),
+        a.movies.normalize({ id: 'one', tmdbId: 1, title: 'First Movie', status: 'watched', rating: 4, genres: ['Drama'], how: 'Netflix', other: 'Favorite, Subgenre: Mystery', actors: ['A very long synthetic actor name', 'Another very long synthetic actor name'], directors: ['A very long synthetic director name', 'Another very long synthetic director name'] }),
         a.movies.normalize({ id: 'two', tmdbId: 2, title: 'Second Movie', status: 'wishlist', genres: ['Comedy'], how: 'Netflix', other: 'Favorite' }),
         a.movies.normalize({ id: 'three', tmdbId: 3, title: 'Third Movie', status: 'wishlist', genres: ['Drama'], how: 'Disc', other: '<Special>' })
       ];
@@ -25,7 +25,13 @@ const assert = require('node:assert/strict');
       assert.equal(await page.locator('#movieResultsCount').innerText(), '3 / 3');
       await page.locator('#movieFiltersButton').click();
       assert.equal(await page.locator('#movieFiltersButton').getAttribute('aria-expanded'), 'true');
-      await page.selectOption('#moviePivotFilter', 'Favorite');
+      await page.locator('#moviePivotFilter + .counted-select .counted-select-trigger').click();
+      const favorite = page.locator('#moviePivotFilterMenu [role="option"]').filter({ hasText: 'Favorite' });
+      assert.equal(await favorite.locator('.filter-option-count').innerText(), '2');
+      if (process.env.MEDIA_SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.MEDIA_SCREENSHOT_DIR}/movie-menu-${width}.png` });
+      const parts = await favorite.locator('span').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().x));
+      assert.ok(parts[1] > parts[0]);
+      await favorite.click();
       assert.equal(await page.locator('#movieResultsCount').innerText(), '2 / 3');
       await page.selectOption('#movieGenreFilter', 'Drama');
       await page.selectOption('#movieHowFilter', 'value:netflix');
@@ -54,6 +60,13 @@ const assert = require('node:assert/strict');
           assert.ok(more && more.x < f.x, `More before Filters: ${shelf} ${width}`);
         }
         assert.equal(await filters.locator('.button-label').isVisible(), true);
+        const search = await page.locator(shelf === 'movies' ? '#movieToolbar .movie-search' : '.tv-search').boundingBox();
+        assert.equal(Math.round(search.height), Math.round(b.height), `Search matches actions: ${shelf} ${width}`);
+        if (shelf === 'movies' && width <= 1350) {
+          const longCell = page.locator('.movie-col-actors .movie-cell').first();
+          assert.equal(await longCell.evaluate(node => getComputedStyle(node).whiteSpace), 'nowrap');
+          assert.ok(await longCell.evaluate(node => node.scrollWidth > node.clientWidth));
+        }
         if (process.env.MEDIA_SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.MEDIA_SCREENSHOT_DIR}/${shelf}-${width}.png` });
         await filters.click();
         assert.equal(await page.locator(`#${prefix}FiltersDisclosure`).isVisible(), true);
@@ -62,8 +75,16 @@ const assert = require('node:assert/strict');
       if (process.env.MEDIA_SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.MEDIA_SCREENSHOT_DIR}/tv-${width}.png` });
       assert.equal(await page.locator('#tvImportButton').count(), 0);
       assert.equal(await page.locator('#tvCount').innerText(), '1 / 1');
+      await page.locator('#tvFilter + .counted-select .counted-select-trigger').click();
+      assert.equal(await page.locator('#tvFilterMenu [role="option"]').filter({ hasText: 'Watching' }).locator('.filter-option-count').innerText(), '1');
+      await page.keyboard.press('Escape');
+      await page.locator('#tvTitle').focus();
+      await page.keyboard.press('p');
+      assert.equal(await page.locator('#tvPivotsView').isVisible(), true);
+      await page.keyboard.press('l');
+      assert.equal(await page.locator('#tvListView').isVisible(), true);
       await page.locator('#tvFiltersButton').click();
-      await page.locator('[data-tv-pivot="genres"]').click();
+      await page.selectOption('#tvGenresFilter', 'Drama');
       assert.equal(await page.locator('#tvCount').innerText(), '1 / 1');
       await page.locator('#tvFiltersButton').click();
     }

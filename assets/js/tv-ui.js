@@ -3,7 +3,8 @@
   const App = window.LocalApp, u = App.utils, tv = App.tv, esc = u.escapeHtml;
   const $ = function (s) { return document.querySelector(s); };
   const columns = [['rating', '#', 105], ['voteAverage', 'Ave', 75], ['title', 'Show', 250], ['networks', 'Networks', 120], ['status', 'My Status', 100], ['providerStatus', 'Status', 110], ['numberOfSeasons', 'S', 40], ['numberOfEpisodes', 'E', 40], ['progress', 'Progress', 295], ['latestEpisode', 'Latest', 105], ['lastAirDate', 'Last Air', 110], ['type', 'Type', 100], ['genres', 'Genres', 180], ['notes', 'Notes', 140]];
-  let batch = null, resizing = false, pivot = null;
+  let batch = null, resizing = false;
+  const filters = { type: "", genres: "", networks: "" };
   const networkColors = {
     'netflix': ['#e50914', '#fff'], 'hbo': ['#171717', '#fff'], 'hbo max': ['#5822b4', '#fff'], 'max': ['#002be7', '#fff'],
     'bbc': ['#111', '#fff'], 'bbc one': ['#b90016', '#fff'], 'bbc two': ['#007f80', '#fff'], 'bbc three': ['#ed008c', '#fff'],
@@ -22,30 +23,17 @@
     return '<span class="tv-network-pill"' + (palette ? ' style="background:' + palette[0] + ';color:' + palette[1] + '"' : '') + '>' + esc(name) + '</span>';
   }
   function tone(value) { return ({ 'Want to Watch': 'gold', Watching: 'blue', 'Airing': 'green', 'Caught Up': 'green', Completed: 'purple', Stopped: 'red', Active: 'green', Ended: 'purple', Canceled: 'red', Upcoming: 'blue' })[value] || 'muted'; }
-  function balanceFilters() {
-    const grid = $('#tvPivots'), sections = Array.from(grid.children), available = grid.clientWidth - 32;
-    if (!grid.clientWidth || grid.clientWidth < 680) { grid.style.gridTemplateColumns = ''; return; }
-    const widths = sections.map(function (section) { return Array.from(section.querySelectorAll('button')).map(function (button) { return button.offsetWidth; }); });
-    const rowsAt = function (items, width) { let rows = 1, used = 0; items.forEach(function (w) { if (used && used + 6 + w > width) { rows++; used = w; } else used += (used ? 6 : 0) + w; }); return rows; };
-    let sizes;
-    for (let rows = 1; rows <= Math.max(1, ...widths.map(function (items) { return items.length; })); rows++) {
-      sizes = widths.map(function (items) {
-        let low = Math.max(110, ...items), high = Math.max(low, items.reduce(function (a, b) { return a + b + 6; }, 0));
-        while (high - low > 1) { const mid = Math.floor((low + high) / 2); if (rowsAt(items, mid) <= rows) high = mid; else low = mid + 1; }
-        return high;
-      });
-      if (sizes.reduce(function (a, b) { return a + b; }, 0) <= available) break;
-    }
-    const extra = Math.max(0, available - sizes.reduce(function (a, b) { return a + b; }, 0)) / 3;
-    grid.style.gridTemplateColumns = sizes.map(function (size) { return (size + extra) + 'px'; }).join(' ');
-  }
-  function renderPivots(shows) {
-    $('#tvPivots').innerHTML = ['type', 'genres', 'networks'].map(function (key) {
+  function renderFilters(shows) {
+    ['type', 'genres', 'networks'].forEach(function (key) {
       const groups = new Map();
-      shows.forEach(function (s) { const values = key === 'type' ? [s.type] : s[key]; new Set(values.filter(Boolean)).forEach(function (v) { groups.set(v, (groups.get(v) || 0) + 1); }); });
-      return '<section><h3>' + ({ type: 'Type', genres: 'Genres', networks: 'Networks' })[key] + '</h3><div class="tv-filter-pills">' + Array.from(groups).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }).map(function (entry) { return '<button type="button" class="button small" data-tv-pivot="' + key + '" data-value="' + esc(entry[0]) + '" aria-pressed="' + !!(pivot && pivot.key === key && pivot.value === entry[0]) + '">' + esc(entry[0]) + ' <small>' + entry[1] + '</small></button>'; }).join('') + '</div></section>';
-    }).join('');
-    requestAnimationFrame(balanceFilters);
+      shows.forEach(function (show) { new Set((key === 'type' ? [show.type] : show[key]).filter(Boolean)).forEach(function (value) { groups.set(value, (groups.get(value) || 0) + 1); }); });
+      if (filters[key] && !groups.has(filters[key])) groups.set(filters[key], 0);
+      const label = { type: 'Type', genres: 'Genres', networks: 'Networks' }[key], select = $('#tv' + key[0].toUpperCase() + key.slice(1) + 'Filter');
+      select.innerHTML = '<option value="" data-count="' + shows.length + '">All ' + label + '</option>' + Array.from(groups).sort(function (a, b) { return a[0].localeCompare(b[0]); }).map(function (entry) { return '<option value="' + esc(entry[0]) + '" data-count="' + entry[1] + '">' + esc(entry[0]) + '</option>'; }).join('');
+      select.value = filters[key];
+    });
+    $('#tvFilter').innerHTML = '<option value="all" data-count="' + shows.length + '">All shows</option>' + tv.statuses.map(function (status) { return '<option data-count="' + shows.filter(function (show) { return tv.viewingStatus(show) === status; }).length + '">' + esc(status) + '</option>'; }).join('');
+    $('#tvFilter').value = pref().filter;
   }
   function state() { return App.storage.getState(); }
   function saved() { return state().workspace.tvShows.filter(function (s) { return !s.deleted; }); }
@@ -97,7 +85,7 @@
     if (App.tvEditor.isEditing(id)) { setBatchStatus('Save or close this show’s editor before changing its progress.'); return; }
     const snapshot = saved().find(function (s) { return s.id === id; }); if (!snapshot) return;
     const next = tv.advance(snapshot, all);
-    if (next === snapshot) { setBatchStatus(all && !tv.progress(snapshot).released ? 'Latest episode is unknown. Refresh Show Data or load episode details, then try again.' : 'Already at the latest episode.'); return; }
+    if (next === snapshot) { setBatchStatus(all && !tv.progress(snapshot).released ? 'Latest episode is unknown. Update Shows or load episode details, then try again.' : 'Already at the latest episode.'); return; }
     const state = u.clone(App.storage.getState()), index = state.workspace.tvShows.findIndex(function (s) { return s.id === id; });
     if (index < 0 || u.stableJson(state.workspace.tvShows[index]) !== u.stableJson(snapshot)) { setBatchStatus('This show changed. Try updating progress again.'); return; }
     state.workspace.tvShows[index] = next;
@@ -113,9 +101,9 @@
     $('#tvListView').hidden = filtersView; $('#tvPivotsView').hidden = !filtersView; $('#tvFiltersButton').hidden = filtersView; if (filtersView) { $('#tvFiltersDisclosure').hidden = true; $('#tvFiltersButton').setAttribute('aria-expanded', 'false'); }
     document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.tvView === (filtersView ? 'pivots' : 'list'))); });
     $('#tvSearch').value = p.query; $('#tvFilter').value = p.filter;
-    const rows = shows.filter(function (s) { return (p.filter === 'all' || tv.viewingStatus(s) === p.filter) && (!needle || tv.searchable(s).includes(needle)) && (!pivot || (pivot.key === 'type' ? s.type === pivot.value : s[pivot.key].includes(pivot.value))); });
+    const rows = shows.filter(function (s) { return (p.filter === 'all' || tv.viewingStatus(s) === p.filter) && (!needle || tv.searchable(s).includes(needle)) && Object.keys(filters).every(function (key) { return !filters[key] || (key === 'type' ? s.type === filters[key] : s[key].includes(filters[key])); }); });
     rows.sort(function (a, b) { return tv.compare(a, b, p.sort, p.direction); });
-    renderPivots(shows);
+    renderFilters(shows);
     App.tvPivotsUI.render(shows);
     const widths = columns.map(columnWidth);
     $('#tvTable').style.width = widths.reduce(function (a, b) { return a + b; }, 0) + 'px';
@@ -232,11 +220,10 @@
     $('#tvFilter').innerHTML = '<option value="all">All shows</option>' + options(tv.statuses, pref().filter);
     await clearLegacyNotes();
     App.tvPivotsUI.init();
-    $('#tvFiltersButton').addEventListener('click', function () { requestAnimationFrame(balanceFilters); });
-    let lastFilterWidth = 0;
-    new ResizeObserver(function (entries) { const width = entries[0].contentRect.width; if (width !== lastFilterWidth) { lastFilterWidth = width; requestAnimationFrame(balanceFilters); } }).observe($('#tvPivots'));
     document.querySelectorAll('[data-tv-view]').forEach(function (button) { button.addEventListener('click', function () { preference({ view: button.dataset.tvView }); }); });
-    $('#tvPivots').addEventListener('click', function (event) { const button = event.target.closest('[data-tv-pivot]'); if (!button) return; const next = { key: button.dataset.tvPivot, value: button.dataset.value }; pivot = pivot && pivot.key === next.key && pivot.value === next.value ? null : next; preference({ view: 'list' }); });
+    Object.keys(filters).forEach(function (key) {
+      $('#tv' + key[0].toUpperCase() + key.slice(1) + 'Filter').addEventListener('change', function () { filters[key] = this.value; render(); });
+    });
     $('#tvAdd').addEventListener('click', function () { App.tvEditor.open(null, this); });
     $('#tvFilter').addEventListener('change', function () { preference({ filter: this.value }); });
     $('#tvSearch').addEventListener('input', function () { preference({ query: this.value }); });
